@@ -1,0 +1,18 @@
+[project]
+name = "flexsignal-ai-backend"
+version = "0.1.0"
+description = "Minimal FastAPI backend for FlexSignal AI read-only decision support."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
