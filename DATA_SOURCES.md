@@ -23,6 +23,8 @@ Update frequency: TODO, depends on selected datasets.
 
 Candidate endpoints can be manually validated with `scripts/validate_data_sources.py` before ingestion code is implemented.
 
+Manual validation results are documented in [docs/DATA_SOURCE_VALIDATION.md](docs/DATA_SOURCE_VALIDATION.md).
+
 ### Energi Data Service
 
 Energi Data Service is the primary candidate source for Danish energy system data.
