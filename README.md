@@ -19,7 +19,7 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 - Critical operational system responsibilities.
 - LLMs as the primary forecasting engine or sole decision-making component.
 - Production infrastructure deployment.
-- Database schema implementation.
+- Runtime database integration or migrations.
 - Backend or frontend implementation code.
 
 ## Technology Stack
@@ -34,9 +34,15 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 - Auth: Microsoft Entra ID
 - AI/LLM: explanation and report generation only
 
+## Database Schema
+
+A documented PostgreSQL/TimescaleDB schema baseline is available in
+[`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md). The schema is not yet wired
+into the FastAPI application and no database migrations are run in `v0.1`.
+
 ## Backend Local Development
 
-The current backend is a minimal FastAPI API for `v0.1` read-only decision support. It does not include control endpoints, authentication, database code, data ingestion, forecasting logic, or infrastructure deployment.
+The current backend is a minimal FastAPI API for `v0.1` read-only decision support. It does not include control endpoints, authentication, runtime database code, data ingestion, forecasting logic, or infrastructure deployment.
 
 From the `backend/` directory:
 
