@@ -34,9 +34,29 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 - Auth: Microsoft Entra ID
 - AI/LLM: explanation and report generation only
 
-## Local Development
+## Backend Local Development
 
-TODO: Add local development instructions after the initial backend, frontend, and database setup is defined.
+The current backend is a minimal FastAPI API for `v0.1` read-only decision support. It does not include control endpoints, authentication, database code, data ingestion, forecasting logic, or infrastructure deployment.
+
+From the `backend/` directory:
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+```
+
+Run tests:
+
+```bash
+pytest
+```
+
+Start the API locally:
+
+```bash
+uvicorn app.main:app --reload
+```
 
 ## Compliance Principles
 
@@ -47,4 +67,3 @@ TODO: Add local development instructions after the initial backend, frontend, an
 - Auditability for forecasts, recommendations, explanations, and user actions.
 - Least-privilege access to systems and data.
 - LLMs are limited to explanation and reporting, not core forecasting or final decision-making.
-
