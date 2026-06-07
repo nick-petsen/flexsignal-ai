@@ -52,6 +52,8 @@ Run tests:
 pytest
 ```
 
+Backend tests also run in GitHub Actions on pull requests and pushes to `main`.
+
 Start the API locally:
 
 ```bash
