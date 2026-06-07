@@ -19,6 +19,59 @@ Planned datasets may include:
 
 Update frequency: TODO, depends on selected datasets.
 
+## Candidate API Sources
+
+### Energi Data Service
+
+Energi Data Service is the primary candidate source for Danish energy system data.
+
+API base pattern:
+
+```text
+https://api.energidataservice.dk/dataset/{datasetName}
+```
+
+The API requires exact dataset names. Do not assume `PowerProduction` is a valid dataset; it returned "table not found" during manual browser testing.
+
+Candidate datasets to investigate:
+
+- `ElectricityProdex5MinRealtime`: electricity production and exchange in MW, 5-minute resolution, updated every 5 minutes.
+- `DayAheadPrices`: day-ahead spot prices for DK1/DK2 and neighboring bidding zones.
+- `ProductionConsumptionSettlement`: production and consumption settlement data, useful for historical backtesting.
+- `ElectricityBalanceNonv`: non-validated electricity balance data, useful for near-real-time features.
+
+API usage must respect each dataset's update frequency and avoid unnecessary polling.
+
+### Elprisenligenu
+
+Elprisenligenu is a secondary or backup candidate source for Danish electricity spot prices.
+
+API pattern:
+
+```text
+https://www.elprisenligenu.dk/api/v1/prices/[YEAR]/[MONTH]-[DAY]_[PRICE_AREA].json
+```
+
+`PRICE_AREA` is `DK1` or `DK2`.
+
+Example resolved URL format:
+
+```text
+https://www.elprisenligenu.dk/api/v1/prices/2026/06-07_DK1.json
+```
+
+Placeholders must be replaced before testing in a browser. The API may return `404` if data is not ready. Prices are without VAT and taxes.
+
+Treat Elprisenligenu as a secondary source until license, stability, and data quality are reviewed.
+
+## Open Questions
+
+- Which Energi Data Service datasets should be primary for v0.1?
+- Should spot prices come from `DayAheadPrices` or Elprisenligenu?
+- What polling/update frequency is acceptable for each source?
+- Which fields are required for surplus-risk scoring?
+- What data should be stored for backtesting?
+
 ## DMI / Weather Data
 
 DMI and other weather data sources may support forecasting through weather features.
@@ -53,4 +106,3 @@ Update frequency: TODO, depends on selected datasets and provider access.
 - Duplicate records
 - Unit consistency
 - Sudden source schema changes
-
