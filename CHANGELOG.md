@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Added an explicit manual local PostgreSQL smoke-test script for hardcoded DK1
+  sample records through the existing write-plan, SQL builder, and transaction
+  boundaries, guarded by `DATABASE_URL`, local-host validation, dry-run default,
+  and `--confirm-local-db-write` for real local writes.
 - Documented the future manual local PostgreSQL validation runbook, including
   local-only migration usage, explicit shell-only `DATABASE_URL`, safety
   boundaries, and the acceptance checklist required before real DB write code.

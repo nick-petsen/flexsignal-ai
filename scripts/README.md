@@ -75,3 +75,31 @@ python3 scripts/preview_eds_write_plan.py --dataset DayAheadPrices --price-area 
 python3 scripts/preview_eds_write_plan.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 5
 python3 scripts/preview_eds_write_plan.py --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 5
 ```
+
+## Local PostgreSQL Smoke Test
+
+`local_db_smoke_test.py` is an explicit manual local-only smoke test for the
+existing EDS database write path. It uses two hardcoded DK1 normalized sample
+records only, builds them through the write-plan and SQL builder helpers, and
+defaults to dry-run output.
+
+The script requires `DATABASE_URL` and refuses to run unless the parsed host is
+`localhost` or `127.0.0.1`. It does not read secrets from files, make HTTP
+requests, use live Energi Data Service data, create ingestion jobs, import
+FastAPI, expose endpoints, forecast, dispatch, activate, or control assets.
+
+Dry-run:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smoke_test.py
+```
+
+Real local write, only after manually running migrations against a local
+database:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smoke_test.py --confirm-local-db-write
+```
+
+The write path requires an already available PostgreSQL DB-API driver such as
+`psycopg` or `psycopg2`. No backend dependency is added for this manual script.

@@ -191,7 +191,9 @@ Manual local PostgreSQL validation is documented in
 - Alembic baseline exists.
 - SQL builder exists.
 - Mocked executor and transaction boundaries exist.
-- No real database connection is implemented yet.
+- `scripts/local_db_smoke_test.py` exists as an explicit manual local-only smoke
+  test for hardcoded DK1 sample records.
+- No application runtime database connection is implemented.
 
 Alembic commands should be run from the `backend/` directory only by a developer
 using a manually configured local PostgreSQL database. The migration environment
@@ -211,10 +213,11 @@ DATABASE_URL='<local-postgresql-url>' alembic upgrade head --sql
 ```
 
 Migrations and database writes must never run automatically during FastAPI
-startup, tests, import time, or API request handling. Future manual persistence
-smoke tests must be explicit local commands, require `DATABASE_URL`, use small
-DK1/DK2-only limits, document audit/log output, test rollback/error behavior,
-and remain separate from FastAPI startup.
+startup, tests, import time, or API request handling. The manual persistence
+smoke test is an explicit local command, requires `DATABASE_URL`, refuses
+non-local hosts, defaults to dry-run, requires `--confirm-local-db-write` for
+writes, uses hardcoded DK1 sample records only, prints audit-style summary
+output, and remains separate from FastAPI startup.
 
 There is no Azure database, production database, automatic ingestion job,
 committed secret, repository-stored `DATABASE_URL`, control workflow, dispatch
