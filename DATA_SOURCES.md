@@ -25,6 +25,8 @@ Candidate endpoints can be manually validated with `scripts/validate_data_source
 
 Manual validation results are documented in [docs/DATA_SOURCE_VALIDATION.md](docs/DATA_SOURCE_VALIDATION.md).
 
+Validated source-to-schema field mappings are documented in [docs/DATA_FIELD_MAPPING.md](docs/DATA_FIELD_MAPPING.md).
+
 ### Energi Data Service
 
 Energi Data Service is the primary candidate source for Danish energy system data.
