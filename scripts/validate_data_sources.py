@@ -49,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--source",
         required=True,
-        choices=("energi-data-service", "elprisenligenu"),
+        choices=("energi-data-service", "elprisenligenu", "dmi-url"),
         help="Candidate source to validate.",
     )
     parser.add_argument(
@@ -72,6 +72,10 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("DK1", "DK2"),
         help="Elprisenligenu price area. Required for --source elprisenligenu.",
     )
+    parser.add_argument(
+        "--url",
+        help="DMI Open Data URL. Required for --source dmi-url.",
+    )
     return parser
 
 
@@ -85,11 +89,29 @@ def validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
         if not args.price_area:
             parser.error("--price-area is required when --source is elprisenligenu")
 
+    if args.source == "dmi-url":
+        if not args.url:
+            parser.error("--url is required when --source is dmi-url")
+        url = args.url.strip()
+        if not url.startswith("https://opendataapi.dmi.dk/"):
+            parser.error(
+                "--url must start with https://opendataapi.dmi.dk/ for --source dmi-url"
+            )
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme != "https" or parsed.netloc != "opendataapi.dmi.dk":
+            parser.error(
+                "--url must use the opendataapi.dmi.dk host for --source dmi-url"
+            )
+        args.url = url
+
 
 def build_url(args: argparse.Namespace) -> str:
     if args.source == "energi-data-service":
         dataset = urllib.parse.quote(args.dataset.strip(), safe="")
         return f"https://api.energidataservice.dk/dataset/{dataset}?limit={args.limit}"
+
+    if args.source == "dmi-url":
+        return args.url
 
     year, month, day = args.date.split("-")
     return (
@@ -117,7 +139,7 @@ def find_records(payload: Any) -> tuple[int | None, Any | None]:
     if not isinstance(payload, dict):
         return None, None
 
-    for key in ("records", "data", "results", "items"):
+    for key in ("records", "data", "results", "items", "features", "observations"):
         value = payload.get(key)
         if isinstance(value, list):
             return len(value), value[0] if value else None

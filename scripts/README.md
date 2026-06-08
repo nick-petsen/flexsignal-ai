@@ -13,3 +13,18 @@ python scripts/validate_data_sources.py --source energi-data-service --dataset D
 python scripts/validate_data_sources.py --source energi-data-service --dataset ElectricityProdex5MinRealtime --limit 5
 python scripts/validate_data_sources.py --source elprisenligenu --date 2026-06-07 --price-area DK1
 ```
+
+## DMI Validation
+
+DMI Open Data validation is manual and read-only. The validator only performs a
+single HTTP `GET` request against a pasted DMI Open Data URL and prints a compact
+response summary. It does not store data, create ingestion jobs, or change
+application behavior.
+
+Paste a candidate DMI Open Data URL from the DMI documentation:
+
+```bash
+python scripts/validate_data_sources.py --source dmi-url --url "https://opendataapi.dmi.dk/..."
+```
+
+DMI endpoints must be documented before any ingestion implementation is added.
