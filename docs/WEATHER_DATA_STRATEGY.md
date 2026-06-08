@@ -8,6 +8,8 @@ Weather data is required for the MVP forecast model, especially wind speed, wind
 
 DMI Open Data meteorological observations are a candidate source for observed weather data.
 
+Manual DMI/Open Data endpoint validation results are documented in [DMI Validation Results](DMI_VALIDATION_RESULTS.md).
+
 They may support historical backtesting and feature validation with candidate fields including:
 
 - wind speed
