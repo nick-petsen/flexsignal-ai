@@ -83,6 +83,11 @@ The schema supports ingestion by preserving source names, optional source record
 identifiers, ingestion timestamps, and ingestion run status. This makes source
 coverage, duplicate handling, and data-quality review possible.
 
+The Energi Data Service dry-run ingestion module is a controlled validation
+helper only. It returns normalized records and summary counts in memory and does
+not write to `spot_prices`, `power_balance`, `ingestion_runs`, or any other
+schema table.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared

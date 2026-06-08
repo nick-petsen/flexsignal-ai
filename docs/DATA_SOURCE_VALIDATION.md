@@ -151,6 +151,20 @@ This helper is not ingestion, persistence, scheduling, forecasting, dispatch,
 activation, or control behavior. It does not expose an API and must remain a
 manual validation aid only.
 
+## Energi Data Service Dry-Run Ingestion Validation
+
+The backend includes a controlled dry-run module at
+`backend/app/ingestion/eds_dry_run.py` for validating `DayAheadPrices` and
+`ElectricityProdex5MinRealtime` normalization before any persistence workflow is
+implemented. It builds the validated Energi Data Service request URL, requires a
+DK1 or DK2 `PriceArea`, accepts an injectable fetch function, extracts records,
+normalizes supported records, and returns counts for raw, normalized, and
+rejected records.
+
+The dry-run module does not write to the database, run automatically, expose an
+API endpoint, schedule polling, forecast, dispatch, activate, or control energy
+assets. Current tests use mocked payloads only.
+
 ## Initial Source Selection for MVP
 
 - Spot prices: `DayAheadPrices` as primary, Elprisenligenu as secondary/backup.
