@@ -88,6 +88,13 @@ helper only. It returns normalized records and summary counts in memory and does
 not write to `spot_prices`, `power_balance`, `ingestion_runs`, or any other
 schema table.
 
+`backend/app/db/repositories/eds_records.py` provides pure repository-boundary
+helpers for mapping normalized Energi Data Service records into insert payload
+dictionaries for `spot_prices` and `power_balance`. These helpers validate
+required normalized fields and supported dataset/table targets, but they do not
+open database connections, execute SQL, schedule ingestion jobs, or modify
+FastAPI startup.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared
