@@ -165,6 +165,26 @@ SQL, write records, create ingestion jobs, run automatically, expose an API
 endpoint, schedule polling, forecast, dispatch, activate, or control energy
 assets.
 
+Manual read-only validation was performed for the current write-plan preview
+mapping with both `DK1` and `DK2`.
+
+| Dataset | PriceArea | Command | Result |
+| --- | --- | --- | --- |
+| `DayAheadPrices` | `DK1` | `python3 scripts/preview_eds_write_plan.py --dataset DayAheadPrices --price-area DK1 --limit 2` | HTTP 200; raw records 2; normalized records 2; write-plan entries 2; target table `spot_prices`; operations `upsert_preview`. |
+| `DayAheadPrices` | `DK2` | `python3 scripts/preview_eds_write_plan.py --dataset DayAheadPrices --price-area DK2 --limit 2` | HTTP 200; raw records 2; normalized records 2; write-plan entries 2; target table `spot_prices`; operations `upsert_preview`. |
+| `ElectricityProdex5MinRealtime` | `DK1` | `python3 scripts/preview_eds_write_plan.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 2` | HTTP 200; raw records 2; normalized records 2; write-plan entries 2; target table `power_balance`; operations `upsert_preview`. |
+| `ElectricityProdex5MinRealtime` | `DK2` | `python3 scripts/preview_eds_write_plan.py --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 2` | HTTP 200; raw records 2; normalized records 2; write-plan entries 2; target table `power_balance`; operations `upsert_preview`. |
+
+All four preview runs generated in-memory write-plan entries only. No SQL was
+generated, no database connection was opened, and no database writes were
+performed.
+
+Important note: `ElectricityProdex5MinRealtime` write-plan entries currently
+have `consumption_mw = null`. This is expected because the selected realtime
+production dataset does not provide a clear consumption field. Consumption must
+be sourced later from a separate validated dataset before surplus-risk scoring
+depends on consumption.
+
 ## Energi Data Service Dry-Run Ingestion Validation
 
 The backend includes a controlled dry-run module at
