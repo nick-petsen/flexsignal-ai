@@ -17,6 +17,14 @@ They may support historical backtesting and feature validation with candidate fi
 
 This source requires separate validation before ingestion.
 
+Candidate DMI endpoints can be manually validated with:
+
+```bash
+scripts/validate_data_sources.py --source dmi-url --url "<DMI_URL>"
+```
+
+No DMI endpoint is selected yet.
+
 ### 2. DMI Open Data - Forecast Data EDR
 
 DMI Open Data Forecast Data EDR is a candidate source for weather forecast data.
