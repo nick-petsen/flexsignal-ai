@@ -17,6 +17,8 @@ control, or operational asset connectivity.
   dictionaries, using caller-provided fake cursors or connections.
 - An explicit manual local smoke-test script exists at
   `scripts/local_db_smoke_test.py`.
+- The backend dev dependency set includes `psycopg[binary]` for local/manual
+  PostgreSQL validation only.
 - No application runtime database connection is implemented.
 - No FastAPI startup migration, startup write, ingestion job, or API endpoint
   writes to PostgreSQL.
@@ -40,19 +42,21 @@ developer from a shell, against a manually created local PostgreSQL database.
 2. Set `DATABASE_URL` manually in the shell for the current command or terminal
    session only.
 
-   Use a local PostgreSQL URL controlled by the developer. Do not commit the
-   value, add it to tracked config, add it to examples containing real
-   credentials, or store it in the repository.
+   Use a local PostgreSQL URL controlled by the developer. For psycopg v3, use
+   the explicit SQLAlchemy driver name:
 
    ```bash
-   export DATABASE_URL='<local-postgresql-url>'
+   export DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai"
    ```
+
+   Do not commit the value, add it to tracked config, add it to examples
+   containing real credentials, or store it in the repository.
 
 3. Run the Alembic migration manually from the `backend/` directory.
 
    ```bash
    cd backend
-   alembic upgrade head
+   DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head
    ```
 
    Migrations must never run automatically during FastAPI startup, tests, import
@@ -68,19 +72,23 @@ developer from a shell, against a manually created local PostgreSQL database.
    Dry-run is the default:
 
    ```bash
-   DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smoke_test.py
+   DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python3 scripts/local_db_smoke_test.py
    ```
 
-   To execute writes, pass the explicit confirmation flag:
+   Do not use `--confirm-local-db-write` until the manual Alembic migration has
+   succeeded against the same local database.
+
+   To execute writes after a successful manual migration, pass the explicit
+   confirmation flag:
 
    ```bash
-   DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smoke_test.py --confirm-local-db-write
+   DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python3 scripts/local_db_smoke_test.py --confirm-local-db-write
    ```
 
    The script refuses to run unless `DATABASE_URL` is set and its parsed host is
    `localhost` or `127.0.0.1`. The write path requires an already available
-   PostgreSQL DB-API driver such as `psycopg` or `psycopg2`; no backend
-   dependency is added for this manual script.
+   PostgreSQL DB-API driver; the backend dev dependency set provides psycopg v3
+   for this local/manual validation path.
 
 5. Review and document the result.
 
@@ -96,6 +104,7 @@ developer from a shell, against a manually created local PostgreSQL database.
 - No secrets should be committed.
 - No `DATABASE_URL` value should be stored in the repository.
 - No migrations or writes should run automatically during FastAPI startup.
+- FastAPI must not run migrations or perform database writes at startup.
 - No API endpoint should trigger local validation writes.
 - `scripts/local_db_smoke_test.py` must not be run automatically by tests,
   startup hooks, schedulers, or ingestion workflows.
@@ -114,3 +123,4 @@ For manual local database write code, all of the following must remain true:
 - Hardcoded sample records only.
 - Audit/log result documented.
 - No FastAPI startup integration.
+- Do not use `--confirm-local-db-write` until Alembic migration succeeds.
