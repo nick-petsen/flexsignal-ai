@@ -95,6 +95,16 @@ required normalized fields and supported dataset/table targets, but they do not
 open database connections, execute SQL, schedule ingestion jobs, or modify
 FastAPI startup.
 
+`backend/app/db/write_plan.py` provides a pure dry-run write-plan builder for
+normalized Energi Data Service records. It returns in-memory dictionaries with
+`table`, `operation`, `conflict_key`, and `payload` fields only. The operation is
+always `upsert_preview`. `DayAheadPrices` records target `spot_prices`, and
+`ElectricityProdex5MinRealtime` records target `power_balance`. Conflict keys
+preview the intended schema uniqueness: `source` plus `source_record_id` when a
+source record ID is available, otherwise `price_area`, `timestamp_utc`, and
+`source`. The write plan does not connect to PostgreSQL, execute SQL, perform
+writes, add ingestion jobs, or modify application startup.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared

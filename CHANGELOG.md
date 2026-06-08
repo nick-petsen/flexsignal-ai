@@ -2,6 +2,9 @@
 
 ## v0.1.0 - TODO
 
+- Added a pure dry-run Energi Data Service database write-plan builder for
+  `spot_prices` and `power_balance` preview entries without SQL generation or
+  database writes.
 - Added pure Energi Data Service record-to-database payload repository helpers
   for `spot_prices` and `power_balance` with mocked/unit tests and no database
   writes.
