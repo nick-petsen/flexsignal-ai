@@ -23,6 +23,9 @@ Result:
 
 Important note: the unfiltered sample returned `PriceArea = DE`. Future ingestion must filter to `DK1` and `DK2`.
 
+Unit note: `DayAheadPriceDKK` and `DayAheadPriceEUR` are treated as
+MWh-based internal spot price values for future schema mapping.
+
 ### Energi Data Service - `ElectricityProdex5MinRealtime`
 
 Command:
@@ -89,6 +92,9 @@ Result:
 - Record count: 24
 - Sample fields observed: `DKK_per_kWh`, `EUR_per_kWh`, `EXR`, `time_start`, `time_end`
 
+Unit note: Elprisenligenu exposes kWh-based spot price fields. Any future
+ingestion must explicitly convert them to MWh-based internal spot price values.
+
 ### Elprisenligenu - `DK2`
 
 Command:
@@ -103,6 +109,9 @@ Result:
 - Top-level JSON type: list
 - Record count: 24
 - Sample fields observed: `DKK_per_kWh`, `EUR_per_kWh`, `EXR`, `time_start`, `time_end`
+
+Unit note: Elprisenligenu exposes kWh-based spot price fields. Any future
+ingestion must explicitly convert them to MWh-based internal spot price values.
 
 ## Energi Data Service PriceArea Filter Validation
 
@@ -155,7 +164,7 @@ manual validation aid only.
 - Add `DK1`/`DK2` filtering before ingestion.
 - Use the manually validated Energi Data Service `PriceArea` filter syntax for `DayAheadPrices` and `ElectricityProdex5MinRealtime` ingestion.
 - Confirm timestamp normalization to UTC.
-- Confirm unit conversions between MW, MWh, EUR/MWh, and DKK/kWh.
+- Confirm unit conversions between MW, MWh, EUR/MWh, DKK/MWh, and kWh-based source spot price fields.
 - Confirm source licensing and attribution requirements.
 - Confirm polling/update frequency before scheduled ingestion.
 - Avoid treating Elprisenligenu as the primary source until stability and license are reviewed.

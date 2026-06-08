@@ -11,6 +11,7 @@ This document maps validated public API fields to the internal MVP schema before
 - Source dataset name must be stored with each record.
 - Source record identifiers are optional until stable source IDs are confirmed.
 - Unit conversions must be explicit and tested.
+- Internal spot price storage uses MWh-based market units.
 - No field may represent control signals, dispatch instructions, asset activation, or operational commands in v0.1.
 
 ## spot_prices
@@ -23,8 +24,8 @@ Map `DayAheadPrices` to `spot_prices`:
 | --- | --- | --- |
 | `PriceArea` | `price_area` | Filter to `DK1` and `DK2` only. |
 | `TimeUTC` | `timestamp_utc` | Store as UTC. |
-| `DayAheadPriceEUR` | `price_eur_per_mwh` | Confirm source unit before ingestion. |
-| `DayAheadPriceDKK` | `price_dkk_per_mwh` | Normalizer keeps the source market unit explicit. |
+| `DayAheadPriceEUR` | `price_eur_per_mwh` | Treat as EUR/MWh internal market-unit value. |
+| `DayAheadPriceDKK` | `price_dkk_per_mwh` | Treat as DKK/MWh internal market-unit value. |
 | source constant | `source` | Use `Energi Data Service:DayAheadPrices`. |
 | TODO | `source_record_id` | Optional until stable source IDs are confirmed. |
 | ingestion timestamp | `ingested_at_utc` | Capture when ingestion later writes the record. |
@@ -34,7 +35,7 @@ Notes:
 - Filter `PriceArea` to `DK1` and `DK2` only.
 - Unfiltered validation returned `PriceArea = DE`, so filtering is mandatory.
 - The tested `DayAheadPrices` normalizer keeps DKK/EUR prices in MWh units.
-- DKK/kWh conversion, if needed for UI, should be done later in a presentation layer or explicit derived field.
+- kWh conversion, if needed for UI, should be done later in a presentation layer or explicit derived field.
 
 ### Elprisenligenu
 
@@ -45,13 +46,14 @@ Map Elprisenligenu to `spot_prices` as a secondary or backup source:
 | CLI/input URL price area | `price_area` | Must be `DK1` or `DK2`. |
 | `time_start` | `timestamp_utc` | Normalize timezone before storing. |
 | `EUR_per_kWh * 1000` | `price_eur_per_mwh` | Explicit unit conversion required. |
-| `DKK_per_kWh` | `price_dkk_per_kwh` | No conversion required if source unit is confirmed. |
+| `DKK_per_kWh * 1000` | `price_dkk_per_mwh` | Explicit unit conversion required. |
 | source constant | `source` | Use `Elprisenligenu`. |
 | TODO | `source_record_id` | Optional until stable source IDs are confirmed. |
 
 Notes:
 
 - Treat as secondary or backup until license, stability, and data quality are reviewed.
+- Elprisenligenu fields are kWh-based and must be converted to internal MWh-based market units before any future ingestion.
 
 ## power_balance
 
