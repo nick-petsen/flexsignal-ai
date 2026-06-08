@@ -13,6 +13,15 @@ logic is implemented here.
 - `../../alembic.ini`: local Alembic configuration for manual migration commands.
 - `../../alembic/`: reproducible migration path for the baseline schema.
 - `__init__.py`: package marker for future database-related modules.
+- `write_plan.py`: pure dry-run Energi Data Service write-plan builder.
+- `sql_builder.py`: pure parameterized SQL builder for supported write-plan entries.
+- `executor.py`: manual execution boundary that submits supported write-plan SQL through
+  a caller-provided cursor only.
+
+`executor.py` intentionally does not create database connections, read `DATABASE_URL`,
+commit transactions, run migrations, schedule ingestion, or attach to FastAPI startup.
+It is a narrow adapter for tests and future manual tooling where the caller owns the
+database connection and transaction scope.
 
 ## Alembic Migrations
 
