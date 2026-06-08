@@ -22,10 +22,96 @@ control, or operational asset connectivity.
 - No application runtime database connection is implemented.
 - No FastAPI startup migration, startup write, ingestion job, or API endpoint
   writes to PostgreSQL.
+- Manual local PostgreSQL migration and smoke-test validation has been completed
+  against a developer-created local database only, with results documented below.
+
+## Manual Local Validation Results
+
+These results document a manual local validation run. No Azure database,
+production database, live Energi Data Service data, FastAPI startup integration,
+automatic ingestion job, control workflow, dispatch workflow, activation
+workflow, or operational functionality was used or added.
+
+### Local PostgreSQL Readiness
+
+- PostgreSQL 16.14 was installed locally via Homebrew.
+- `psql` and `createdb` were available.
+- The local database `flexsignal_ai` was created manually.
+
+### Alembic Migration
+
+Command:
+
+```bash
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python -m alembic -c alembic.ini upgrade head
+```
+
+Result:
+
+- Migration succeeded.
+- Alembic ran upgrade to `0001_initial_schema`.
+- `alembic_version` contained `0001_initial_schema`.
+
+Tables verified:
+
+- `alembic_version`
+- `audit_log`
+- `ingestion_runs`
+- `power_balance`
+- `spot_prices`
+- `surplus_risk_forecasts`
+- `weather_observations`
+
+### Manual Local DB Smoke-Test Dry-Run
+
+Command:
+
+```bash
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python ../scripts/local_db_smoke_test.py
+```
+
+Result:
+
+- Dry-run only.
+- Command count: `2`.
+- Tables: `power_balance`, `spot_prices`.
+- `committed`: `false`.
+- `rolled_back`: `false`.
+
+### Manual Local DB Smoke-Test Write
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python ../scripts/local_db_smoke_test.py --confirm-local-db-write
+```
+
+Result:
+
+- `committed`: `true`.
+- `rolled_back`: `false`.
+- `spot_prices` count increased from `0` to `1`.
+- `power_balance` count increased from `0` to `1`.
+
+### Idempotency And Upsert Validation
+
+Running the same smoke-test write a second time did not create duplicates:
+
+- `spot_prices` total remained `1`.
+- `spot_prices` distinct `source_record_id` remained `1`.
+- `power_balance` total remained `1`.
+- `power_balance` distinct `source_record_id` remained `1`.
+
+### URL Format Notes
+
+- Alembic uses the SQLAlchemy URL format:
+  `postgresql+psycopg://localhost/flexsignal_ai`.
+- The manual smoke-test script uses the DB-API URL format:
+  `postgresql://localhost/flexsignal_ai`.
 
 ## Manual Local Validation Flow
 
-This flow is for a future explicit local smoke test only. It should be run by a
+This flow is for explicit local smoke tests only. It should be run by a
 developer from a shell, against a manually created local PostgreSQL database.
 
 1. Create a local PostgreSQL database manually.
@@ -42,8 +128,8 @@ developer from a shell, against a manually created local PostgreSQL database.
 2. Set `DATABASE_URL` manually in the shell for the current command or terminal
    session only.
 
-   Use a local PostgreSQL URL controlled by the developer. For psycopg v3, use
-   the explicit SQLAlchemy driver name:
+   Use a local PostgreSQL URL controlled by the developer. For Alembic with
+   psycopg v3, use the explicit SQLAlchemy driver name:
 
    ```bash
    export DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai"
@@ -69,10 +155,10 @@ developer from a shell, against a manually created local PostgreSQL database.
    `ElectricityProdex5MinRealtime`-like record for `power_balance`. It does not
    use live Energi Data Service data or make HTTP requests.
 
-   Dry-run is the default:
+   Dry-run is the default. The smoke-test script uses DB-API URL format:
 
    ```bash
-   DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python3 scripts/local_db_smoke_test.py
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/local_db_smoke_test.py
    ```
 
    Do not use `--confirm-local-db-write` until the manual Alembic migration has
@@ -82,7 +168,7 @@ developer from a shell, against a manually created local PostgreSQL database.
    confirmation flag:
 
    ```bash
-   DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python3 scripts/local_db_smoke_test.py --confirm-local-db-write
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/local_db_smoke_test.py --confirm-local-db-write
    ```
 
    The script refuses to run unless `DATABASE_URL` is set and its parsed host is
