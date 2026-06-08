@@ -185,6 +185,32 @@ production dataset does not provide a clear consumption field. Consumption must
 be sourced later from a separate validated dataset before surplus-risk scoring
 depends on consumption.
 
+## Manual EDS Local DB Ingest Validation
+
+The manual `scripts/manual_eds_local_db_ingest.py` helper can be used by a
+developer to validate the end-to-end local write path for a tiny live Energi
+Data Service sample. It fetches one supported dataset and one DK1/DK2 price
+area, normalizes records, builds write-plan entries, builds parameterized SQL
+commands, and defaults to dry-run. It writes only to a local PostgreSQL database
+when `--confirm-local-db-write` is explicitly passed.
+
+Safety gates:
+
+- `DATABASE_URL` is required in dry-run and write mode.
+- `DATABASE_URL` must use DB-API format such as
+  `postgresql://localhost/flexsignal_ai`.
+- The parsed database host must be `localhost` or `127.0.0.1`.
+- Supported datasets are limited to `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`.
+- Supported price areas are limited to `DK1` and `DK2`.
+- The default limit is `2`; the hard maximum is `10`.
+
+The script prints a warning, final request URL, HTTP status, raw count,
+normalized count, SQL command count, target tables, committed status, and
+rolled-back status. It must not run automatically, read secrets from files,
+import FastAPI, expose an endpoint, schedule polling, forecast, dispatch,
+activate, or control energy assets.
+
 ## Energi Data Service Dry-Run Ingestion Validation
 
 The backend includes a controlled dry-run module at
