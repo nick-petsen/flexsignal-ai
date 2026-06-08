@@ -1,8 +1,9 @@
 # Database Schema
 
 FlexSignal AI `v0.1` uses PostgreSQL with TimescaleDB as the intended database
-foundation. The current schema is a documented baseline only; it is not connected
-to the FastAPI app and no migrations are run yet.
+foundation. The current schema is a documented baseline with a matching Alembic
+initial migration. It is not connected to the FastAPI app and migrations are not
+run automatically.
 
 `v0.1` remains read-only decision support. The database stores source data,
 forecast outputs, explanations, and audit events for human review. It does not
@@ -12,9 +13,15 @@ state, or closed-loop operational workflows.
 ## Schema Location
 
 - Baseline SQL: `backend/app/db/schema.sql`
+- Alembic configuration: `backend/alembic.ini`
+- Initial migration: `backend/alembic/versions/0001_initial_schema.py`
 - Backend database notes: `backend/app/db/README.md`
 
 Source-to-schema field mapping is documented in `docs/DATA_FIELD_MAPPING.md`.
+
+`schema.sql` is the human-readable baseline for review and planning. Alembic is
+the reproducible migration path for creating the same schema in a PostgreSQL
+database when migrations are run manually.
 
 ## Tables
 
@@ -101,6 +108,24 @@ TimescaleDB hypertables are intentionally left as TODO comments in `schema.sql`.
 No extension commands, hypertable commands, triggers, or stored procedures are
 included yet.
 
+## Manual Migrations
+
+Alembic commands should be run from the `backend/` directory. The migration
+environment reads `DATABASE_URL` for manual usage and does not require that
+environment variable during normal backend tests.
+
+```bash
+cd backend
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flexsignal_ai alembic upgrade head
+```
+
+To review generated SQL without connecting to a database:
+
+```bash
+cd backend
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flexsignal_ai alembic upgrade head --sql
+```
+
 ## Open Questions And TODOs
 
 - Confirm final source datasets and source-specific field mappings.
@@ -110,6 +135,4 @@ included yet.
 - Define ingestion status values once ingestion jobs are designed.
 - Decide whether forecast `recommended_action` needs a stricter controlled
   vocabulary while remaining human-review text only.
-- Add Alembic migrations after the application is ready for runtime database
-  ownership.
 - Define local PostgreSQL/TimescaleDB setup, retention, and backup assumptions.
