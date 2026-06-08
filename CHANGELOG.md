@@ -2,6 +2,11 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local PostgreSQL migration and smoke-test validation
+  results, including PostgreSQL 16.14 local readiness, Alembic upgrade to
+  `0001_initial_schema`, verified tables, dry-run output, confirmed local write
+  counts, idempotent upsert behavior, and the separate Alembic SQLAlchemy URL
+  and smoke-test DB-API URL formats.
 - Added psycopg v3 as a backend dev dependency for local/manual PostgreSQL
   Alembic and smoke-test validation, with docs using the explicit
   `postgresql+psycopg://localhost/flexsignal_ai` SQLAlchemy URL and preserving

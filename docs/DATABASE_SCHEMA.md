@@ -194,6 +194,8 @@ Manual local PostgreSQL validation is documented in
 - `scripts/local_db_smoke_test.py` exists as an explicit manual local-only smoke
   test for hardcoded DK1 sample records.
 - No application runtime database connection is implemented.
+- Manual local PostgreSQL migration and smoke-test validation has been completed
+  against a developer-created local PostgreSQL 16.14 database only.
 
 Alembic commands should be run from the `backend/` directory only by a developer
 using a manually configured local PostgreSQL database. The migration environment
@@ -218,6 +220,51 @@ smoke test is an explicit local command, requires `DATABASE_URL`, refuses
 non-local hosts, defaults to dry-run, requires `--confirm-local-db-write` for
 writes, uses hardcoded DK1 sample records only, prints audit-style summary
 output, and remains separate from FastAPI startup.
+
+### Recorded Local Validation Results
+
+Local PostgreSQL readiness was verified with PostgreSQL 16.14 installed via
+Homebrew, `psql` and `createdb` available, and a manually created
+`flexsignal_ai` local database.
+
+The manual Alembic command succeeded:
+
+```bash
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python -m alembic -c alembic.ini upgrade head
+```
+
+Alembic upgraded to `0001_initial_schema`, and `alembic_version` contained
+`0001_initial_schema`. The verified tables were `alembic_version`, `audit_log`,
+`ingestion_runs`, `power_balance`, `spot_prices`, `surplus_risk_forecasts`, and
+`weather_observations`.
+
+The manual local smoke-test dry-run command was recorded as:
+
+```bash
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" python ../scripts/local_db_smoke_test.py
+```
+
+It remained dry-run only, produced `2` commands for `power_balance` and
+`spot_prices`, and reported `committed: false` and `rolled_back: false`.
+
+The explicit manual local smoke-test write command was recorded as:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python ../scripts/local_db_smoke_test.py --confirm-local-db-write
+```
+
+It reported `committed: true` and `rolled_back: false`. `spot_prices` increased
+from `0` to `1`, and `power_balance` increased from `0` to `1`.
+
+Running the same smoke-test write a second time validated idempotency and upsert
+behavior: `spot_prices` total remained `1`, `spot_prices` distinct
+`source_record_id` remained `1`, `power_balance` total remained `1`, and
+`power_balance` distinct `source_record_id` remained `1`.
+
+Alembic uses SQLAlchemy URL format:
+`postgresql+psycopg://localhost/flexsignal_ai`. The manual smoke-test script
+uses DB-API URL format for the write path:
+`postgresql://localhost/flexsignal_ai`.
 
 There is no Azure database, production database, automatic ingestion job,
 committed secret, repository-stored `DATABASE_URL`, control workflow, dispatch
