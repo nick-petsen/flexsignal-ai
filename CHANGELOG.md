@@ -2,6 +2,9 @@
 
 ## v0.1.0 - TODO
 
+- Added a manual read-only Energi Data Service write-plan preview script for
+  `DayAheadPrices` and `ElectricityProdex5MinRealtime` DK1/DK2 records without
+  database connections, SQL generation, or writes.
 - Added a pure dry-run Energi Data Service database write-plan builder for
   `spot_prices` and `power_balance` preview entries without SQL generation or
   database writes.
