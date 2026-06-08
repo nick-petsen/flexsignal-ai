@@ -82,6 +82,8 @@ Treat Elprisenligenu as a secondary source until license, stability, and data qu
 
 DMI and other weather data sources may support forecasting through weather features.
 
+The weather source strategy is tracked in [docs/WEATHER_DATA_STRATEGY.md](docs/WEATHER_DATA_STRATEGY.md). DMI Open Data is the primary candidate, but no weather ingestion is implemented yet.
+
 Planned weather data may include:
 
 - Wind speed and direction
