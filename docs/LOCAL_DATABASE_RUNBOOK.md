@@ -1,9 +1,8 @@
 # Local Database Runbook
 
-This runbook documents a future manual local PostgreSQL validation flow for
-FlexSignal AI `v0.1`. It is documentation only. The application does not yet
-open a real database connection, run migrations automatically, or write data to
-PostgreSQL.
+This runbook documents the manual local PostgreSQL validation flow for
+FlexSignal AI `v0.1`. The application does not open a real database connection,
+run migrations automatically, or write data to PostgreSQL.
 
 `v0.1` remains read-only decision support. Local database validation must not add
 control signals, dispatch instructions, activation workflows, closed-loop
@@ -16,7 +15,9 @@ control, or operational asset connectivity.
 - A pure SQL builder exists in `backend/app/db/sql_builder.py`.
 - Mocked executor and transaction boundaries exist for generated SQL command
   dictionaries, using caller-provided fake cursors or connections.
-- No real database connection is implemented yet.
+- An explicit manual local smoke-test script exists at
+  `scripts/local_db_smoke_test.py`.
+- No application runtime database connection is implemented.
 - No FastAPI startup migration, startup write, ingestion job, or API endpoint
   writes to PostgreSQL.
 
@@ -57,17 +58,29 @@ developer from a shell, against a manually created local PostgreSQL database.
    Migrations must never run automatically during FastAPI startup, tests, import
    time, or API request handling.
 
-4. Run a future explicit manual persistence smoke test.
+4. Run the explicit manual persistence smoke test.
 
-   The smoke test does not exist yet. Before it is added, it must remain:
+   The smoke test uses two hardcoded DK1 normalized sample records only:
+   one `DayAheadPrices`-like record for `spot_prices` and one
+   `ElectricityProdex5MinRealtime`-like record for `power_balance`. It does not
+   use live Energi Data Service data or make HTTP requests.
 
-   - Local database only.
-   - Manual command only.
-   - Explicitly gated by `DATABASE_URL`.
-   - Limited to small DK1/DK2 sample batches.
-   - Auditable through documented output or logs.
-   - Covered by rollback/error behavior tests.
-   - Separate from FastAPI startup and API endpoints.
+   Dry-run is the default:
+
+   ```bash
+   DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smoke_test.py
+   ```
+
+   To execute writes, pass the explicit confirmation flag:
+
+   ```bash
+   DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smoke_test.py --confirm-local-db-write
+   ```
+
+   The script refuses to run unless `DATABASE_URL` is set and its parsed host is
+   `localhost` or `127.0.0.1`. The write path requires an already available
+   PostgreSQL DB-API driver such as `psycopg` or `psycopg2`; no backend
+   dependency is added for this manual script.
 
 5. Review and document the result.
 
@@ -84,19 +97,20 @@ developer from a shell, against a manually created local PostgreSQL database.
 - No `DATABASE_URL` value should be stored in the repository.
 - No migrations or writes should run automatically during FastAPI startup.
 - No API endpoint should trigger local validation writes.
+- `scripts/local_db_smoke_test.py` must not be run automatically by tests,
+  startup hooks, schedulers, or ingestion workflows.
 - No control, dispatch, activation, closed-loop, or operational functionality
   should be added.
 
-## Acceptance Checklist Before Real DB Write Code
+## Acceptance Checklist For Manual DB Write Code
 
-Before any real database write code is implemented, all of the following must be
-true and documented in the implementing change:
+For manual local database write code, all of the following must remain true:
 
 - Local DB only.
 - Manual command only.
 - Explicit `DATABASE_URL` required.
-- Small limit, DK1/DK2 only.
+- Host restricted to `localhost` or `127.0.0.1`.
+- Explicit `--confirm-local-db-write` flag required for writes.
+- Hardcoded sample records only.
 - Audit/log result documented.
-- Rollback/error behavior tested.
 - No FastAPI startup integration.
-
