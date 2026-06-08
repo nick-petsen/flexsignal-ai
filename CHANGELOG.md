@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Added a dry-run Energi Data Service persistence orchestration helper that
+  chains normalized records through write-plan and SQL preview generation, with
+  optional fake executor handoff and no database, HTTP, startup, or runtime
+  ingestion side effects.
 - Added a narrow Energi Data Service database write executor boundary that uses
   a caller-provided cursor, validates the full batch before execution, and does
   not create connections, commit transactions, schedule ingestion, or modify

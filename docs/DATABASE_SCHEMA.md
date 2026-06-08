@@ -134,6 +134,18 @@ or modify FastAPI startup. Connection management and transaction handling remain
 the responsibility of explicit manual tooling or future reviewed application
 code.
 
+`backend/app/ingestion/eds_persistence_dry_run.py` provides a pure orchestration
+helper that chains normalized Energi Data Service records through the write-plan
+builder and parameterized SQL builder. With no executor, it returns preview
+counts, target tables, write-plan entries, and SQL command dictionaries only.
+With an injected fake executor, it passes those generated SQL command
+dictionaries to the caller boundary and reports the submitted count. It supports
+only `DayAheadPrices` to `spot_prices` and
+`ElectricityProdex5MinRealtime` to `power_balance`, rejects malformed records
+with `ValueError`, and does not create connections, read `DATABASE_URL`, perform
+HTTP requests, require PostgreSQL, schedule ingestion jobs, or modify FastAPI
+startup.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared
