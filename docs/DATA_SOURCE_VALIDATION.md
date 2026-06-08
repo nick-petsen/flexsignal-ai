@@ -130,6 +130,18 @@ Any future ingestion for DK1/DK2 Energi Data Service datasets must use this
 `PriceArea` filtering. This validation does not add ingestion, persistence,
 forecasting, dispatch, activation, or control behavior.
 
+## Energi Data Service Normalized Preview
+
+The manual `scripts/preview_eds_normalized_records.py` helper can be used to
+preview how `DayAheadPrices` and `ElectricityProdex5MinRealtime` records
+normalize after applying the validated DK1/DK2 `PriceArea` filter. It performs a
+single read-only HTTP `GET`, prints the final request URL, status, raw count,
+normalized count, and compact normalized JSON lines.
+
+This helper is not ingestion, persistence, scheduling, forecasting, dispatch,
+activation, or control behavior. It does not expose an API and must remain a
+manual validation aid only.
+
 ## Initial Source Selection for MVP
 
 - Spot prices: `DayAheadPrices` as primary, Elprisenligenu as secondary/backup.
