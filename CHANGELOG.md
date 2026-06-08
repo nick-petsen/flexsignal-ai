@@ -2,6 +2,9 @@
 
 ## v0.1.0 - TODO
 
+- Added a pure parameterized SQL builder for Energi Data Service write-plan
+  preview entries targeting `spot_prices` and `power_balance`, without database
+  connections, execution, writes, ingestion jobs, or runtime startup changes.
 - Documented manual read-only Energi Data Service write-plan preview validation
   for `DayAheadPrices` and `ElectricityProdex5MinRealtime` DK1/DK2 records,
   including the expected null `consumption_mw` value for the selected realtime

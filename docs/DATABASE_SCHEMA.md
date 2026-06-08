@@ -113,6 +113,17 @@ maps to `spot_prices` and `ElectricityProdex5MinRealtime` maps to
 a clear consumption field. Consumption must be sourced from a separate validated
 dataset before surplus-risk scoring depends on consumption values.
 
+`backend/app/db/sql_builder.py` provides a pure parameterized PostgreSQL SQL
+builder for individual Energi Data Service write-plan preview entries. It
+supports `upsert_preview` SQL generation for `spot_prices` and `power_balance`
+only, returning SQL text, a params mapping, table name, and operation. When
+`source_record_id` is present, generated upserts use the `(source,
+source_record_id)` conflict target. When it is absent, generated upserts use the
+write-plan fallback conflict target `(price_area, timestamp_utc, source)`. The
+builder validates required payload fields and rejects unsupported tables or
+operations, but it does not connect to PostgreSQL, execute SQL, perform writes,
+require `DATABASE_URL`, schedule ingestion jobs, or modify application startup.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared
