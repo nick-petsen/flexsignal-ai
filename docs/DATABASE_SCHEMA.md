@@ -21,11 +21,13 @@ Source-to-schema field mapping is documented in `docs/DATA_FIELD_MAPPING.md`.
 ### `spot_prices`
 
 Stores DK1 and DK2 electricity spot prices by UTC market interval. The table
-keeps both EUR/MWh and DKK/kWh values so downstream reporting can use the same
-audited source records without recalculating every display value.
+keeps both EUR/MWh and DKK/MWh values as internal MWh-based market units so
+downstream reporting can use the same audited source records without
+recalculating canonical storage values. Sources using kWh units, such as
+Elprisenligenu, must be explicitly converted before ingestion.
 
 Key fields include `price_area`, `timestamp_utc`, `price_eur_per_mwh`,
-`price_dkk_per_kwh`, `source`, `source_record_id`, and `ingested_at_utc`.
+`price_dkk_per_mwh`, `source`, `source_record_id`, and `ingested_at_utc`.
 
 ### `power_balance`
 

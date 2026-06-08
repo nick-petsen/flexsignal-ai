@@ -14,7 +14,7 @@ CREATE TABLE spot_prices (
     price_area TEXT NOT NULL CHECK (price_area IN ('DK1', 'DK2')),
     timestamp_utc TIMESTAMPTZ NOT NULL,
     price_eur_per_mwh NUMERIC(12, 4) NOT NULL,
-    price_dkk_per_kwh NUMERIC(12, 6) NOT NULL,
+    price_dkk_per_mwh NUMERIC(12, 4) NOT NULL,
     source TEXT NOT NULL,
     source_record_id TEXT,
     ingested_at_utc TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -26,6 +26,8 @@ COMMENT ON TABLE spot_prices IS
     'Read-only decision-support storage for DK1/DK2 electricity spot prices.';
 COMMENT ON COLUMN spot_prices.price_area IS 'Danish bidding zone: DK1 or DK2.';
 COMMENT ON COLUMN spot_prices.timestamp_utc IS 'UTC timestamp for the observed market interval.';
+COMMENT ON COLUMN spot_prices.price_eur_per_mwh IS 'Spot price in EUR/MWh using internal MWh-based market units.';
+COMMENT ON COLUMN spot_prices.price_dkk_per_mwh IS 'Spot price in DKK/MWh using internal MWh-based market units.';
 
 CREATE INDEX spot_prices_timestamp_utc_idx
     ON spot_prices (timestamp_utc);
