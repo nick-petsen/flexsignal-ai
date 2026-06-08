@@ -41,27 +41,30 @@ Alembic is used to keep a reproducible migration history for the PostgreSQL sche
 The initial migration mirrors `schema.sql` and creates the `v0.1` baseline tables.
 
 Migrations are not run automatically by the FastAPI API, tests, or application startup.
-No real database connection is implemented yet. To run the baseline manually in
-the future, create a local PostgreSQL database yourself, set `DATABASE_URL` in
-the shell only, install the backend, and run Alembic from the `backend/`
-directory with a SQLAlchemy-compatible local PostgreSQL URL:
+FastAPI must not run migrations or perform database writes at startup. No real
+database connection is implemented for the application runtime. To run the
+baseline manually for local validation, create a local PostgreSQL database
+yourself, set `DATABASE_URL` in the shell only, install the backend with dev
+dependencies, and run Alembic from the `backend/` directory with the explicit
+psycopg v3 SQLAlchemy URL:
 
 ```bash
 cd backend
-DATABASE_URL='<local-postgresql-url>' alembic upgrade head
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head
 ```
 
 To generate SQL without connecting to a database:
 
 ```bash
 cd backend
-DATABASE_URL='<local-postgresql-url>' alembic upgrade head --sql
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head --sql
 ```
 
 Future manual persistence smoke tests must be explicit local commands only. They
 must require `DATABASE_URL`, use small DK1/DK2-only limits, document audit/log
 results, test rollback/error behavior, and stay completely separate from FastAPI
-startup and API endpoints.
+startup and API endpoints. Do not use `--confirm-local-db-write` until the
+manual Alembic migration succeeds against the same local database.
 
 Safety boundaries:
 
@@ -70,6 +73,7 @@ Safety boundaries:
 - No automatic ingestion jobs.
 - No committed secrets or repository-stored `DATABASE_URL`.
 - No database migrations or writes during FastAPI startup.
+- FastAPI startup must not run migrations or database writes.
 - No control, dispatch, activation, closed-loop, or operational functionality.
 
 ## TODO

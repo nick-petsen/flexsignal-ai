@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Added psycopg v3 as a backend dev dependency for local/manual PostgreSQL
+  Alembic and smoke-test validation, with docs using the explicit
+  `postgresql+psycopg://localhost/flexsignal_ai` SQLAlchemy URL and preserving
+  the no-startup-migrations/no-startup-writes boundary.
 - Added an explicit manual local PostgreSQL smoke-test script for hardcoded DK1
   sample records through the existing write-plan, SQL builder, and transaction
   boundaries, guarded by `DATABASE_URL`, local-host validation, dry-run default,
