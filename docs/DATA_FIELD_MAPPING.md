@@ -6,6 +6,8 @@ This document maps validated public API fields to the internal MVP schema before
 
 - All timestamps must be stored as UTC.
 - DK1/DK2 filtering is required before ingestion.
+- Energi Data Service `PriceArea` filtering has been manually validated for `DayAheadPrices` and `ElectricityProdex5MinRealtime`.
+- Ingestion must still filter to `DK1` and `DK2` only.
 - Source dataset name must be stored with each record.
 - Source record identifiers are optional until stable source IDs are confirmed.
 - Unit conversions must be explicit and tested.

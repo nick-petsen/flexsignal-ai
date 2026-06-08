@@ -14,6 +14,16 @@ python scripts/validate_data_sources.py --source energi-data-service --dataset E
 python scripts/validate_data_sources.py --source elprisenligenu --date 2026-06-07 --price-area DK1
 ```
 
+Energi Data Service datasets can also be manually validated with a `PriceArea`
+filter:
+
+```bash
+python3 scripts/validate_data_sources.py --source energi-data-service --dataset DayAheadPrices --price-area DK1 --limit 5
+python3 scripts/validate_data_sources.py --source energi-data-service --dataset DayAheadPrices --price-area DK2 --limit 5
+python3 scripts/validate_data_sources.py --source energi-data-service --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 5
+python3 scripts/validate_data_sources.py --source energi-data-service --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 5
+```
+
 ## DMI Validation
 
 DMI Open Data validation is manual and read-only. The validator only performs a

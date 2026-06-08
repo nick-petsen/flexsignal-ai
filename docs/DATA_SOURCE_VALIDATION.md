@@ -104,6 +104,32 @@ Result:
 - Record count: 24
 - Sample fields observed: `DKK_per_kWh`, `EUR_per_kWh`, `EXR`, `time_start`, `time_end`
 
+## Energi Data Service PriceArea Filter Validation
+
+Manual validation was performed for Energi Data Service `PriceArea` filtering
+with both `DK1` and `DK2`.
+
+Validated filter syntax:
+
+```text
+filter={"PriceArea":["DK1"]}
+filter={"PriceArea":["DK2"]}
+```
+
+The following manual validation commands returned HTTP 200, record count 5, and
+sample records with the expected `PriceArea`:
+
+| Dataset | PriceArea | Command | Result |
+| --- | --- | --- | --- |
+| `DayAheadPrices` | `DK1` | `python3 scripts/validate_data_sources.py --source energi-data-service --dataset DayAheadPrices --price-area DK1 --limit 5` | HTTP 200; record count 5; sample record `PriceArea` was `DK1`. |
+| `DayAheadPrices` | `DK2` | `python3 scripts/validate_data_sources.py --source energi-data-service --dataset DayAheadPrices --price-area DK2 --limit 5` | HTTP 200; record count 5; sample record `PriceArea` was `DK2`. |
+| `ElectricityProdex5MinRealtime` | `DK1` | `python3 scripts/validate_data_sources.py --source energi-data-service --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 5` | HTTP 200; record count 5; sample record `PriceArea` was `DK1`. |
+| `ElectricityProdex5MinRealtime` | `DK2` | `python3 scripts/validate_data_sources.py --source energi-data-service --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 5` | HTTP 200; record count 5; sample record `PriceArea` was `DK2`. |
+
+Any future ingestion for DK1/DK2 Energi Data Service datasets must use this
+`PriceArea` filtering. This validation does not add ingestion, persistence,
+forecasting, dispatch, activation, or control behavior.
+
 ## Initial Source Selection for MVP
 
 - Spot prices: `DayAheadPrices` as primary, Elprisenligenu as secondary/backup.
@@ -115,6 +141,7 @@ Result:
 ## Open Implementation Notes
 
 - Add `DK1`/`DK2` filtering before ingestion.
+- Use the manually validated Energi Data Service `PriceArea` filter syntax for `DayAheadPrices` and `ElectricityProdex5MinRealtime` ingestion.
 - Confirm timestamp normalization to UTC.
 - Confirm unit conversions between MW, MWh, EUR/MWh, and DKK/kWh.
 - Confirm source licensing and attribution requirements.
