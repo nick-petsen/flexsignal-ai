@@ -14,6 +14,8 @@ state, or closed-loop operational workflows.
 - Baseline SQL: `backend/app/db/schema.sql`
 - Backend database notes: `backend/app/db/README.md`
 
+Source-to-schema field mapping is documented in `docs/DATA_FIELD_MAPPING.md`.
+
 ## Tables
 
 ### `spot_prices`
