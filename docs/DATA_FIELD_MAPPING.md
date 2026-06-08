@@ -24,7 +24,7 @@ Map `DayAheadPrices` to `spot_prices`:
 | `PriceArea` | `price_area` | Filter to `DK1` and `DK2` only. |
 | `TimeUTC` | `timestamp_utc` | Store as UTC. |
 | `DayAheadPriceEUR` | `price_eur_per_mwh` | Confirm source unit before ingestion. |
-| `DayAheadPriceDKK / 1000` | `price_dkk_per_kwh` | Confirm whether `DayAheadPriceDKK` is DKK/MWh before final ingestion. |
+| `DayAheadPriceDKK` | `price_dkk_per_mwh` | Normalizer keeps the source market unit explicit. |
 | source constant | `source` | Use `Energi Data Service:DayAheadPrices`. |
 | TODO | `source_record_id` | Optional until stable source IDs are confirmed. |
 | ingestion timestamp | `ingested_at_utc` | Capture when ingestion later writes the record. |
@@ -33,7 +33,8 @@ Notes:
 
 - Filter `PriceArea` to `DK1` and `DK2` only.
 - Unfiltered validation returned `PriceArea = DE`, so filtering is mandatory.
-- Confirm whether `DayAheadPriceDKK` is DKK/MWh before final ingestion.
+- The tested `DayAheadPrices` normalizer keeps DKK/EUR prices in MWh units.
+- DKK/kWh conversion, if needed for UI, should be done later in a presentation layer or explicit derived field.
 
 ### Elprisenligenu
 
@@ -74,6 +75,7 @@ Map `ElectricityProdex5MinRealtime` to `power_balance`:
 Notes:
 
 - Consumption is not clearly present in this dataset, so `consumption_mw` remains nullable unless mapped later.
+- The tested `ElectricityProdex5MinRealtime` normalizer does not infer consumption.
 - Exchange sign convention must be documented before using it for risk scoring.
 
 ### Energi Data Service: ElectricityBalanceNonv
