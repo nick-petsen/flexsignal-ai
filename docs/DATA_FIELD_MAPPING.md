@@ -114,6 +114,7 @@ Notes:
 Weather source mapping remains unresolved and is tracked in [docs/WEATHER_DATA_STRATEGY.md](WEATHER_DATA_STRATEGY.md).
 
 - DMI or another weather API must be validated separately.
+- DMI observation field mapping depends on the validated endpoints documented in [docs/DMI_VALIDATION_RESULTS.md](DMI_VALIDATION_RESULTS.md).
 - Required candidate fields are wind speed, wind direction, temperature, and cloud cover.
 - Mapping remains TODO.
 
