@@ -17,11 +17,20 @@ logic is implemented here.
 - `sql_builder.py`: pure parameterized SQL builder for supported write-plan entries.
 - `executor.py`: manual execution boundary that submits supported write-plan SQL through
   a caller-provided cursor only.
+- `transaction.py`: mocked transaction boundary for generated SQL command dictionaries
+  using a caller-provided connection only.
 
 `executor.py` intentionally does not create database connections, read `DATABASE_URL`,
 commit transactions, run migrations, schedule ingestion, or attach to FastAPI startup.
 It is a narrow adapter for tests and future manual tooling where the caller owns the
 database connection and transaction scope.
+
+`transaction.py` intentionally does not create database connections, read
+`DATABASE_URL`, import database drivers, run migrations, schedule ingestion, or attach
+to FastAPI startup. It validates a non-empty batch of generated SQL command
+dictionaries before opening a cursor from the injected connection, executes each
+command via `cursor.execute(sql, params)`, commits only after the full batch succeeds,
+and rolls back if command execution fails.
 
 ## Alembic Migrations
 
