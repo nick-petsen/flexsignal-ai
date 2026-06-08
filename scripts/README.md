@@ -38,3 +38,21 @@ python scripts/validate_data_sources.py --source dmi-url --url "https://opendata
 ```
 
 DMI endpoints must be documented before any ingestion implementation is added.
+
+## Energi Data Service Normalized Preview
+
+`preview_eds_normalized_records.py` is a manual read-only preview tool for
+checking how supported Energi Data Service records normalize through the backend
+normalizer functions.
+
+This is manual read-only preview only. It performs one HTTP `GET` when a human
+runs it, prints normalized JSON lines, and does not persist data. It is not an
+ingestion job, does not expose an API, and must not be used for control,
+dispatch, or activation.
+
+```bash
+python3 scripts/preview_eds_normalized_records.py --dataset DayAheadPrices --price-area DK1 --limit 3
+python3 scripts/preview_eds_normalized_records.py --dataset DayAheadPrices --price-area DK2 --limit 3
+python3 scripts/preview_eds_normalized_records.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 3
+python3 scripts/preview_eds_normalized_records.py --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 3
+```
