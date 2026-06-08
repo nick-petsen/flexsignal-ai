@@ -134,6 +134,16 @@ or modify FastAPI startup. Connection management and transaction handling remain
 the responsibility of explicit manual tooling or future reviewed application
 code.
 
+`backend/app/db/transaction.py` provides a small mocked transaction boundary for
+already generated SQL command dictionaries. It accepts only an injected
+connection object, validates every command before opening a cursor, calls
+`cursor.execute(sql, params)` for each command, commits only after the full batch
+succeeds, and rolls back when command execution fails. It returns command and
+table counts for tests and dry-run plumbing only. It does not create database
+connections, read `DATABASE_URL`, import database drivers, require PostgreSQL,
+schedule ingestion jobs, execute HTTP requests, add API endpoints, or modify
+FastAPI startup.
+
 `backend/app/ingestion/eds_persistence_dry_run.py` provides a pure orchestration
 helper that chains normalized Energi Data Service records through the write-plan
 builder and parameterized SQL builder. With no executor, it returns preview

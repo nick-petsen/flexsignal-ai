@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Added a mocked database transaction boundary for generated SQL command
+  dictionaries with caller-injected fake connections, pre-execution validation,
+  commit-after-success, rollback-on-execute-failure, and no `DATABASE_URL`,
+  database driver, PostgreSQL, startup, or ingestion side effects.
 - Added a dry-run Energi Data Service persistence orchestration helper that
   chains normalized records through write-plan and SQL preview generation, with
   optional fake executor handoff and no database, HTTP, startup, or runtime
