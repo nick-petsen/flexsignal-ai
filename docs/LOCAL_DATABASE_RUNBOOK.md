@@ -17,6 +17,8 @@ control, or operational asset connectivity.
   dictionaries, using caller-provided fake cursors or connections.
 - An explicit manual local smoke-test script exists at
   `scripts/local_db_smoke_test.py`.
+- An explicit manual local EDS ingest validation script exists at
+  `scripts/manual_eds_local_db_ingest.py`.
 - The backend dev dependency set includes `psycopg[binary]` for local/manual
   PostgreSQL validation only.
 - No application runtime database connection is implemented.
@@ -176,7 +178,37 @@ developer from a shell, against a manually created local PostgreSQL database.
    PostgreSQL DB-API driver; the backend dev dependency set provides psycopg v3
    for this local/manual validation path.
 
-5. Review and document the result.
+5. Optionally run the explicit manual EDS local DB ingest validation script.
+
+   This script fetches a tiny live Energi Data Service sample for one supported
+   dataset and one DK1/DK2 price area, normalizes records, builds write-plan
+   entries, builds SQL commands, and defaults to dry-run. It supports only
+   `DayAheadPrices` and `ElectricityProdex5MinRealtime`, and only `DK1` and
+   `DK2`. The default limit is `2`; the hard maximum is `10`.
+
+   Dry-run is the default and still requires a local `DATABASE_URL` safety gate:
+
+   ```bash
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1
+   ```
+
+   Do not use `--confirm-local-db-write` until the manual Alembic migration has
+   succeeded against the same local database.
+
+   To execute writes after a successful manual migration, pass the explicit
+   confirmation flag:
+
+   ```bash
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1 --confirm-local-db-write
+   ```
+
+   The manual EDS ingest script uses DB-API URL format only:
+   `postgresql://localhost/flexsignal_ai`. Do not use the Alembic SQLAlchemy
+   URL format `postgresql+psycopg://...` with this script. The script refuses
+   non-local database hosts, does not read secrets from files, and does not run
+   automatically.
+
+6. Review and document the result.
 
    Record the command used, local-only target, row counts or preview counts,
    rollback/error behavior observed, and confirmation that no startup integration
@@ -194,12 +226,14 @@ developer from a shell, against a manually created local PostgreSQL database.
 - No API endpoint should trigger local validation writes.
 - `scripts/local_db_smoke_test.py` must not be run automatically by tests,
   startup hooks, schedulers, or ingestion workflows.
+- `scripts/manual_eds_local_db_ingest.py` must not be run automatically by
+  tests, startup hooks, schedulers, or ingestion workflows.
 - No control, dispatch, activation, closed-loop, or operational functionality
   should be added.
 
 ## Acceptance Checklist For Manual DB Write Code
 
-For manual local database write code, all of the following must remain true:
+For `scripts/local_db_smoke_test.py`, all of the following must remain true:
 
 - Local DB only.
 - Manual command only.
@@ -210,3 +244,20 @@ For manual local database write code, all of the following must remain true:
 - Audit/log result documented.
 - No FastAPI startup integration.
 - Do not use `--confirm-local-db-write` until Alembic migration succeeds.
+
+For `scripts/manual_eds_local_db_ingest.py`, these additional checks apply:
+
+- Dry-run is the default.
+- `--confirm-local-db-write` is required for writes.
+- `DATABASE_URL` is required for dry-run and write mode.
+- `DATABASE_URL` must use DB-API format:
+  `postgresql://localhost/flexsignal_ai`.
+- `DATABASE_URL` host must be `localhost` or `127.0.0.1`.
+- Supported datasets are limited to `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`.
+- Supported price areas are limited to `DK1` and `DK2`.
+- Limit defaults to `2` and must not exceed `10`.
+- The script must print the final request URL, HTTP status, raw count,
+  normalized count, SQL command count, target tables, committed status, and
+  rolled-back status.
+- No confirmed writes should be performed by automated tests.

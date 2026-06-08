@@ -103,3 +103,38 @@ DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smo
 
 The write path requires an already available PostgreSQL DB-API driver such as
 `psycopg` or `psycopg2`. No backend dependency is added for this manual script.
+
+## Manual EDS Local DB Ingest
+
+`manual_eds_local_db_ingest.py` is an explicit manual local-only validation
+script for fetching a tiny live Energi Data Service sample and passing it
+through the existing normalization, write-plan, SQL builder, and transaction
+helpers.
+
+The script is dry-run by default. It requires `DATABASE_URL`, refuses to run
+unless the parsed host is `localhost` or `127.0.0.1`, accepts only DB-API URL
+format such as `postgresql://localhost/flexsignal_ai`, and writes only when
+`--confirm-local-db-write` is passed. The default limit is `2` and the hard
+maximum is `10`.
+
+It supports only `DayAheadPrices` and `ElectricityProdex5MinRealtime`, filtered
+to `DK1` or `DK2`. It does not run automatically, read secrets from files,
+import FastAPI, create jobs, expose endpoints, forecast, dispatch, activate, or
+control energy assets.
+
+Dry-run:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1
+```
+
+Real local write, only after manually running migrations against the same local
+database:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1 --confirm-local-db-write
+```
+
+The script prints a warning, final request URL, HTTP status, raw count,
+normalized count, SQL command count, target tables, and committed/rolled-back
+status for each run.

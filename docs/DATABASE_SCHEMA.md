@@ -157,6 +157,17 @@ with `ValueError`, and does not create connections, read `DATABASE_URL`, perform
 HTTP requests, require PostgreSQL, schedule ingestion jobs, or modify FastAPI
 startup.
 
+`scripts/manual_eds_local_db_ingest.py` provides an explicit manual local-only
+validation path for a tiny live Energi Data Service sample. It requires
+`DATABASE_URL`, rejects non-local database hosts, accepts only DB-API URL format
+such as `postgresql://localhost/flexsignal_ai`, defaults to dry-run, and
+requires `--confirm-local-db-write` before executing generated SQL through the
+existing transaction boundary. It supports only `DayAheadPrices` and
+`ElectricityProdex5MinRealtime`, only `DK1` and `DK2`, defaults to limit `2`,
+and rejects limits above `10`. It does not run automatically, read secrets from
+files, import FastAPI, add endpoints, schedule ingestion, forecast, dispatch,
+activate, or control energy assets.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared
@@ -193,6 +204,9 @@ Manual local PostgreSQL validation is documented in
 - Mocked executor and transaction boundaries exist.
 - `scripts/local_db_smoke_test.py` exists as an explicit manual local-only smoke
   test for hardcoded DK1 sample records.
+- `scripts/manual_eds_local_db_ingest.py` exists as an explicit manual local-only
+  validation script for tiny live Energi Data Service samples with dry-run
+  default and local write confirmation gates.
 - No application runtime database connection is implemented.
 - Manual local PostgreSQL migration and smoke-test validation has been completed
   against a developer-created local PostgreSQL 16.14 database only.
@@ -265,6 +279,16 @@ Alembic uses SQLAlchemy URL format:
 `postgresql+psycopg://localhost/flexsignal_ai`. The manual smoke-test script
 uses DB-API URL format for the write path:
 `postgresql://localhost/flexsignal_ai`.
+
+The manual EDS local DB ingest script also uses DB-API URL format for its write
+path:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1
+```
+
+Passing `--confirm-local-db-write` is required before it can execute generated
+SQL against the local database.
 
 There is no Azure database, production database, automatic ingestion job,
 committed secret, repository-stored `DATABASE_URL`, control workflow, dispatch
