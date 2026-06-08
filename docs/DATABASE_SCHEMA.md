@@ -105,6 +105,14 @@ source record ID is available, otherwise `price_area`, `timestamp_utc`, and
 `source`. The write plan does not connect to PostgreSQL, execute SQL, perform
 writes, add ingestion jobs, or modify application startup.
 
+Manual read-only write-plan preview validation confirmed that `DayAheadPrices`
+maps to `spot_prices` and `ElectricityProdex5MinRealtime` maps to
+`power_balance` for both DK1 and DK2 sample records. The
+`ElectricityProdex5MinRealtime` preview payloads currently leave
+`consumption_mw` null because that realtime production dataset does not provide
+a clear consumption field. Consumption must be sourced from a separate validated
+dataset before surplus-risk scoring depends on consumption values.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared

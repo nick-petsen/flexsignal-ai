@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual read-only Energi Data Service write-plan preview validation
+  for `DayAheadPrices` and `ElectricityProdex5MinRealtime` DK1/DK2 records,
+  including the expected null `consumption_mw` value for the selected realtime
+  production dataset.
 - Added a manual read-only Energi Data Service write-plan preview script for
   `DayAheadPrices` and `ElectricityProdex5MinRealtime` DK1/DK2 records without
   database connections, SQL generation, or writes.
