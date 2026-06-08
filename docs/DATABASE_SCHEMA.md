@@ -124,6 +124,16 @@ builder validates required payload fields and rejects unsupported tables or
 operations, but it does not connect to PostgreSQL, execute SQL, perform writes,
 require `DATABASE_URL`, schedule ingestion jobs, or modify application startup.
 
+`backend/app/db/executor.py` provides a narrow manual execution boundary for
+supported Energi Data Service write-plan entries. It accepts a caller-provided
+DB-API-style cursor, validates and builds the full batch of parameterized SQL
+statements before submitting the first statement, then calls `cursor.execute`
+for each statement. It does not create database connections, read
+`DATABASE_URL`, commit transactions, run migrations, schedule ingestion jobs,
+or modify FastAPI startup. Connection management and transaction handling remain
+the responsibility of explicit manual tooling or future reviewed application
+code.
+
 It supports forecasting by separating raw market, system-balance, and weather
 inputs from forecast output rows. Forecast rows include model name, model version,
 confidence, forecast windows, and input data windows so outputs can be compared

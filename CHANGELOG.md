@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Added a narrow Energi Data Service database write executor boundary that uses
+  a caller-provided cursor, validates the full batch before execution, and does
+  not create connections, commit transactions, schedule ingestion, or modify
+  runtime startup.
 - Added a pure parameterized SQL builder for Energi Data Service write-plan
   preview entries targeting `spot_prices` and `power_balance`, without database
   connections, execution, writes, ingestion jobs, or runtime startup changes.
