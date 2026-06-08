@@ -2,6 +2,9 @@
 
 ## v0.1.0 - TODO
 
+- Documented the future manual local PostgreSQL validation runbook, including
+  local-only migration usage, explicit shell-only `DATABASE_URL`, safety
+  boundaries, and the acceptance checklist required before real DB write code.
 - Added a mocked database transaction boundary for generated SQL command
   dictionaries with caller-injected fake connections, pre-execution validation,
   commit-after-success, rollback-on-execute-failure, and no `DATABASE_URL`,

@@ -7,6 +7,9 @@ The current backend remains read-only decision support. No runtime database conn
 ingestion job, automatic migration runner, control workflow, dispatch workflow, or asset activation
 logic is implemented here.
 
+For the future manual local PostgreSQL validation flow, see
+`../../../docs/LOCAL_DATABASE_RUNBOOK.md`.
+
 ## Files
 
 - `schema.sql`: baseline table definitions, constraints, indexes, comments, and TimescaleDB TODOs.
@@ -38,24 +41,41 @@ Alembic is used to keep a reproducible migration history for the PostgreSQL sche
 The initial migration mirrors `schema.sql` and creates the `v0.1` baseline tables.
 
 Migrations are not run automatically by the FastAPI API, tests, or application startup.
-To run them manually against a local database, install the backend and run Alembic from
-the `backend/` directory with a SQLAlchemy-compatible PostgreSQL URL:
+No real database connection is implemented yet. To run the baseline manually in
+the future, create a local PostgreSQL database yourself, set `DATABASE_URL` in
+the shell only, install the backend, and run Alembic from the `backend/`
+directory with a SQLAlchemy-compatible local PostgreSQL URL:
 
 ```bash
 cd backend
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flexsignal_ai alembic upgrade head
+DATABASE_URL='<local-postgresql-url>' alembic upgrade head
 ```
 
 To generate SQL without connecting to a database:
 
 ```bash
 cd backend
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flexsignal_ai alembic upgrade head --sql
+DATABASE_URL='<local-postgresql-url>' alembic upgrade head --sql
 ```
+
+Future manual persistence smoke tests must be explicit local commands only. They
+must require `DATABASE_URL`, use small DK1/DK2-only limits, document audit/log
+results, test rollback/error behavior, and stay completely separate from FastAPI
+startup and API endpoints.
+
+Safety boundaries:
+
+- No Azure database.
+- No production database.
+- No automatic ingestion jobs.
+- No committed secrets or repository-stored `DATABASE_URL`.
+- No database migrations or writes during FastAPI startup.
+- No control, dispatch, activation, closed-loop, or operational functionality.
 
 ## TODO
 
-- Add local PostgreSQL/TimescaleDB setup instructions.
+- Add the future explicit local persistence smoke test after its acceptance
+  checklist is reviewed.
 - Confirm final dataset field mappings and units before applying the schema.
 - Decide TimescaleDB hypertable usage, chunk intervals, and retention policies.
 - Add migration and rollback testing before any environment uses the schema.

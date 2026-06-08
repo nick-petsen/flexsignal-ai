@@ -16,6 +16,7 @@ state, or closed-loop operational workflows.
 - Alembic configuration: `backend/alembic.ini`
 - Initial migration: `backend/alembic/versions/0001_initial_schema.py`
 - Backend database notes: `backend/app/db/README.md`
+- Future local validation runbook: `docs/LOCAL_DATABASE_RUNBOOK.md`
 
 Source-to-schema field mapping is documented in `docs/DATA_FIELD_MAPPING.md`.
 
@@ -181,23 +182,43 @@ TimescaleDB hypertables are intentionally left as TODO comments in `schema.sql`.
 No extension commands, hypertable commands, triggers, or stored procedures are
 included yet.
 
-## Manual Migrations
+## Manual Local Validation
 
-Alembic commands should be run from the `backend/` directory. The migration
-environment reads `DATABASE_URL` for manual usage and does not require that
-environment variable during normal backend tests.
+Manual local PostgreSQL validation is documented in
+`docs/LOCAL_DATABASE_RUNBOOK.md`. The current status is:
+
+- Schema baseline exists.
+- Alembic baseline exists.
+- SQL builder exists.
+- Mocked executor and transaction boundaries exist.
+- No real database connection is implemented yet.
+
+Alembic commands should be run from the `backend/` directory only by a developer
+using a manually configured local PostgreSQL database. The migration environment
+reads `DATABASE_URL` for manual usage and does not require that environment
+variable during normal backend tests.
 
 ```bash
 cd backend
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flexsignal_ai alembic upgrade head
+DATABASE_URL='<local-postgresql-url>' alembic upgrade head
 ```
 
 To review generated SQL without connecting to a database:
 
 ```bash
 cd backend
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flexsignal_ai alembic upgrade head --sql
+DATABASE_URL='<local-postgresql-url>' alembic upgrade head --sql
 ```
+
+Migrations and database writes must never run automatically during FastAPI
+startup, tests, import time, or API request handling. Future manual persistence
+smoke tests must be explicit local commands, require `DATABASE_URL`, use small
+DK1/DK2-only limits, document audit/log output, test rollback/error behavior,
+and remain separate from FastAPI startup.
+
+There is no Azure database, production database, automatic ingestion job,
+committed secret, repository-stored `DATABASE_URL`, control workflow, dispatch
+workflow, activation workflow, or operational database functionality in `v0.1`.
 
 ## Open Questions And TODOs
 
