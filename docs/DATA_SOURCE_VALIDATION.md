@@ -151,6 +151,20 @@ This helper is not ingestion, persistence, scheduling, forecasting, dispatch,
 activation, or control behavior. It does not expose an API and must remain a
 manual validation aid only.
 
+## Energi Data Service Write-Plan Preview
+
+The manual `scripts/preview_eds_write_plan.py` helper can be used to preview how
+`DayAheadPrices` and `ElectricityProdex5MinRealtime` records would map into
+database write-plan entries after applying the validated DK1/DK2 `PriceArea`
+filter. It performs a single read-only HTTP `GET`, prints the final request URL,
+HTTP status, raw count, normalized count, write-plan entry count, and compact
+write-plan JSON lines.
+
+This helper is manual preview only. It does not connect to a database, execute
+SQL, write records, create ingestion jobs, run automatically, expose an API
+endpoint, schedule polling, forecast, dispatch, activate, or control energy
+assets.
+
 ## Energi Data Service Dry-Run Ingestion Validation
 
 The backend includes a controlled dry-run module at

@@ -56,3 +56,22 @@ python3 scripts/preview_eds_normalized_records.py --dataset DayAheadPrices --pri
 python3 scripts/preview_eds_normalized_records.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 3
 python3 scripts/preview_eds_normalized_records.py --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 3
 ```
+
+## Energi Data Service Write-Plan Preview
+
+`preview_eds_write_plan.py` is a manual read-only preview tool for checking how
+supported Energi Data Service records would map into database write-plan
+entries. It performs one HTTP `GET` when a human runs it, prints the final
+request URL, HTTP status, record counts, write-plan entry count, and compact
+write-plan JSON lines.
+
+This is preview-only. It does not connect to a database, execute SQL, write
+records, create ingestion jobs, expose an API, forecast, dispatch, activate, or
+control energy assets.
+
+```bash
+python3 scripts/preview_eds_write_plan.py --dataset DayAheadPrices --price-area DK1 --limit 5
+python3 scripts/preview_eds_write_plan.py --dataset DayAheadPrices --price-area DK2 --limit 5
+python3 scripts/preview_eds_write_plan.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 5
+python3 scripts/preview_eds_write_plan.py --dataset ElectricityProdex5MinRealtime --price-area DK2 --limit 5
+```
