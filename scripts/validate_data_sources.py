@@ -70,7 +70,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--price-area",
         choices=("DK1", "DK2"),
-        help="Elprisenligenu price area. Required for --source elprisenligenu.",
+        help=(
+            "Price area. Optional for --source energi-data-service; "
+            "required for --source elprisenligenu."
+        ),
     )
     parser.add_argument(
         "--url",
@@ -108,7 +111,14 @@ def validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
 def build_url(args: argparse.Namespace) -> str:
     if args.source == "energi-data-service":
         dataset = urllib.parse.quote(args.dataset.strip(), safe="")
-        return f"https://api.energidataservice.dk/dataset/{dataset}?limit={args.limit}"
+        query_params = {"limit": str(args.limit)}
+        if args.price_area:
+            query_params["filter"] = json.dumps(
+                {"PriceArea": [args.price_area]},
+                separators=(",", ":"),
+            )
+        query = urllib.parse.urlencode(query_params)
+        return f"https://api.energidataservice.dk/dataset/{dataset}?{query}"
 
     if args.source == "dmi-url":
         return args.url
