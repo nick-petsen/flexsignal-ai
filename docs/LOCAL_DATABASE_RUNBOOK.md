@@ -19,6 +19,8 @@ control, or operational asset connectivity.
   `scripts/local_db_smoke_test.py`.
 - An explicit manual local EDS ingest validation script exists at
   `scripts/manual_eds_local_db_ingest.py`.
+- An explicit manual local read-preview script exists at
+  `scripts/manual_local_db_read_preview.py`.
 - The backend dev dependency set includes `psycopg[binary]` for local/manual
   PostgreSQL validation only.
 - No application runtime database connection is implemented.
@@ -261,7 +263,28 @@ developer from a shell, against a manually created local PostgreSQL database.
    non-local database hosts, does not read secrets from files, and does not run
    automatically.
 
-6. Review and document the result.
+6. Optionally run the explicit manual local DB read-preview script.
+
+   This script reads recent rows from an existing local PostgreSQL table using
+   the backend read-only query builders. It supports only `spot_prices` and
+   `power_balance`, only `DK1` and `DK2`, defaults to limit `10`, and rejects
+   limits above `100`.
+
+   The read-preview script uses DB-API URL format only:
+   `postgresql://localhost/flexsignal_ai`. Do not use the Alembic SQLAlchemy
+   URL format `postgresql+psycopg://...` with this script.
+
+   ```bash
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_local_db_read_preview.py --table spot_prices --price-area DK1
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_local_db_read_preview.py --table power_balance --price-area DK2 --limit 25
+   ```
+
+   It prints the target host, table, price area, row count, and compact JSON
+   lines for returned rows. It does not write to the database, fetch live Energi
+   Data Service data, create ingestion jobs, import FastAPI, expose endpoints,
+   forecast, dispatch, activate, or control energy assets.
+
+7. Review and document the result.
 
    Record the command used, local-only target, row counts or preview counts,
    rollback/error behavior observed, and confirmation that no startup integration
@@ -280,6 +303,8 @@ developer from a shell, against a manually created local PostgreSQL database.
 - `scripts/local_db_smoke_test.py` must not be run automatically by tests,
   startup hooks, schedulers, or ingestion workflows.
 - `scripts/manual_eds_local_db_ingest.py` must not be run automatically by
+  tests, startup hooks, schedulers, or ingestion workflows.
+- `scripts/manual_local_db_read_preview.py` must not be run automatically by
   tests, startup hooks, schedulers, or ingestion workflows.
 - No control, dispatch, activation, closed-loop, or operational functionality
   should be added.
@@ -314,3 +339,17 @@ For `scripts/manual_eds_local_db_ingest.py`, these additional checks apply:
   normalized count, SQL command count, target tables, committed status, and
   rolled-back status.
 - No confirmed writes should be performed by automated tests.
+
+For `scripts/manual_local_db_read_preview.py`, these additional checks apply:
+
+- Read-only `SELECT` execution only.
+- `DATABASE_URL` is required.
+- `DATABASE_URL` must use DB-API format:
+  `postgresql://localhost/flexsignal_ai`.
+- `DATABASE_URL` host must be `localhost` or `127.0.0.1`.
+- Supported tables are limited to `spot_prices` and `power_balance`.
+- Supported price areas are limited to `DK1` and `DK2`.
+- Limit defaults to `10` and must not exceed `100`.
+- The script must print target host, table, price area, row count, and compact
+  JSON lines for returned rows.
+- It must not fetch live Energi Data Service data or execute database writes.

@@ -104,6 +104,28 @@ DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/local_db_smo
 The write path requires an already available PostgreSQL DB-API driver such as
 `psycopg` or `psycopg2`. No backend dependency is added for this manual script.
 
+## Manual Local PostgreSQL Read Preview
+
+`manual_local_db_read_preview.py` is an explicit manual local-only read preview
+for existing PostgreSQL tables. It uses the existing backend read-only query
+builders and executes only a generated `SELECT` against a local database.
+
+The script requires `DATABASE_URL`, refuses to run unless the parsed host is
+`localhost` or `127.0.0.1`, and accepts only DB-API URL format such as
+`postgresql://localhost/flexsignal_ai`. It supports only `spot_prices` and
+`power_balance`, only `DK1` and `DK2`, defaults to limit `10`, and rejects
+limits above `100`.
+
+It prints the target host, table, price area, row count, and compact JSON lines
+for returned rows. It does not write to the database, fetch live Energi Data
+Service data, create ingestion jobs, import FastAPI, expose endpoints, forecast,
+dispatch, activate, or control energy assets.
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_local_db_read_preview.py --table spot_prices --price-area DK1
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_local_db_read_preview.py --table power_balance --price-area DK2 --limit 25
+```
+
 ## Manual EDS Local DB Ingest
 
 `manual_eds_local_db_ingest.py` is an explicit manual local-only validation
