@@ -69,3 +69,34 @@ connections, plant/device commands, or live control signals.
 
 The preview API is not autonomous and cannot trigger control actions. It returns
 the same read-only decision-support output shape as the pure rule engine.
+
+## Local API Smoke Test Results
+
+Manual local API smoke testing was documented for `POST /api/risk/preview` with
+the backend started manually:
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+A valid caller-provided JSON payload used `price_area` `DK1`,
+`timestamp_utc` `2026-06-09T21:45:00+02:00`, `price_dkk_per_mwh` `-10`,
+`production_mw` `1000`, `wind_onshore_mw` `500`, `wind_offshore_mw` `350`,
+`solar_mw` `50`, and `consumption_mw` `900`.
+
+Observed output:
+
+- `risk_level`: `high`
+- `risk_score`: `75`
+- `confidence_score`: `1.0`
+- `reason_codes` included `NEGATIVE_PRICE` and `HIGH_RENEWABLE_SHARE`
+- `model_version`: `rule-engine-v0`
+- `decision_support_only`: `true`
+
+An invalid input smoke test using `price_area` `SE3` returned a validation
+error. Only `DK1` and `DK2` are accepted.
+
+The smoke test used caller-provided JSON only. No database connection was used,
+no database writes were performed, no live Energi Data Service polling was
+performed, no LLM or ML model was used, and no automatic control, dispatch,
+activation, or operational functionality exists.
