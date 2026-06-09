@@ -2,6 +2,11 @@
 
 ## v0.1.0 - TODO
 
+- Added deterministic pure Python `rule-engine-v0` surplus-risk scoring for
+  DK1/DK2 read-only decision support, with validation, reason codes,
+  confidence scoring, exchange-flow sign ambiguity documented as unused in v0,
+  focused unit tests, and no database, API, frontend, ingestion, ML training,
+  LLM, dispatch, activation, or control functionality.
 - Documented manual local frontend-to-backend read-only smoke-test results:
   backend startup with `DATABASE_URL="postgresql://localhost/flexsignal_ai"
   python -m uvicorn app.main:app --reload`, frontend startup with

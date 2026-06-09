@@ -1,0 +1,64 @@
+# Model Card: rule-engine-v0
+
+## Overview
+
+`rule-engine-v0` is a deterministic, rule-based surplus-risk scorer for DK1 and
+DK2 electricity areas. It is not a machine-learning model and does not use LLM
+reasoning. The implementation is pure Python decision-support logic.
+
+## Intended Use
+
+The model estimates low, medium, or high surplus electricity production risk for
+human review. It is read-only decision support for `v0.1`; it must not be used
+as an autonomous decision-maker or critical operational system.
+
+## Inputs
+
+- `price_area`: `DK1` or `DK2`
+- `timestamp_utc`: required string
+- `price_dkk_per_mwh`: optional spot price
+- `production_mw`: optional total production
+- `consumption_mw`: optional consumption context
+- `wind_onshore_mw`, `wind_offshore_mw`, `solar_mw`: optional renewable
+  production fields
+- `exchange_net_mw`: optional exchange context
+
+## Method
+
+The score starts at `0` and is capped at `100`.
+
+- Negative prices add high risk.
+- Low positive prices add medium risk.
+- Moderately low prices add low risk.
+- Higher renewable share, calculated from wind and solar over total production,
+  increases risk.
+- Missing price, production, or renewable fields reduce confidence.
+
+Risk levels are:
+
+- `low`: 0-34
+- `medium`: 35-69
+- `high`: 70-100
+
+Confidence starts at `1.0`, is reduced for missing key data, has a floor of
+`0.2`, and is rounded to two decimals.
+
+## Limitations
+
+- This is a simple baseline for traceable decision support, not a validated
+  forecasting system.
+- Missing consumption data limits interpretation of actual surplus conditions;
+  `consumption_mw` is recorded as context but does not drive v0 scoring.
+- `exchange_net_mw` is validated but does not drive v0 scoring because exchange
+  sign conventions can be ambiguous across source systems and require explicit
+  validation before use.
+- The model does not account for weather forecasts, outages, grid constraints,
+  curtailment, balancing markets, or operational conditions.
+- Confidence scores are deterministic data-completeness indicators, not
+  statistically calibrated probabilities.
+
+## Human Oversight and Safety
+
+Outputs require human review. `rule-engine-v0` must not perform or trigger
+automatic control, dispatch, activation, closed-loop workflows, asset
+connections, plant/device commands, or live control signals.
