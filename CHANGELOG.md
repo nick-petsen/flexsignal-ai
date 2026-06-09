@@ -2,6 +2,13 @@
 
 ## v0.1.0 - TODO
 
+- Added a minimal Next.js + TypeScript frontend dashboard shell with
+  FlexSignal AI branding, the read-only/no-automatic-control scope badge, DK1
+  and DK2 selector state, placeholder/loading/error-ready cards for spot prices
+  and power balance, and a configurable future backend API base URL helper with
+  no frontend data fetches, polling, forecasting, dispatch, activation, control,
+  auth, database code, payments, Azure infrastructure, or backend ingestion
+  changes.
 - Documented manual local read-only FastAPI smoke-test results for `GET
   /health`, `GET /api/energy/spot-prices?price_area=DK1&limit=5`, and `GET
   /api/energy/power-balance?price_area=DK1&limit=5`, using local PostgreSQL

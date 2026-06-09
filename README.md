@@ -20,7 +20,7 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 - LLMs as the primary forecasting engine or sole decision-making component.
 - Production infrastructure deployment.
 - Runtime database integration or migrations.
-- Backend or frontend implementation code.
+- Production-ready frontend workflows.
 
 ## Technology Stack
 
@@ -65,6 +65,23 @@ Start the API locally:
 ```bash
 uvicorn app.main:app --reload
 ```
+
+## Frontend Local Development
+
+The frontend is a minimal Next.js dashboard shell for `v0.1` read-only decision
+support. It does not fetch data, poll live endpoints, forecast, dispatch,
+activate, or control energy assets.
+
+From the `frontend/` directory:
+
+```bash
+npm install
+npm run dev
+```
+
+The frontend keeps a backend API base URL helper for future read-only API
+integration. It defaults to `http://127.0.0.1:8000` and can be overridden with
+`NEXT_PUBLIC_API_BASE_URL`.
 
 ## Compliance Principles
 
