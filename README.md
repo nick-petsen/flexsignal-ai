@@ -112,6 +112,54 @@ Important boundary notes:
 - No automatic control, dispatch, activation, or operational functionality
   exists.
 
+### Local current risk API smoke test
+
+Manual local validation was documented with the backend started manually:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn app.main:app --reload
+```
+
+The smoke test called the current-risk endpoint for DK1:
+
+```text
+GET /api/risk/current?price_area=DK1
+```
+
+Observed local result:
+
+- `risk_level`: `medium`
+- `risk_score`: `35`
+- `confidence_score`: `1.0`
+- `reason_codes` included `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`
+- `model_version`: `rule-engine-v0`
+- `decision_support_only`: `true`
+- `metadata.source_tables_used` included `spot_prices` and `power_balance`
+- `metadata.spot_price_row_found`: `true`
+- `metadata.power_balance_row_found`: `true`
+
+An invalid input smoke test called:
+
+```text
+GET /api/risk/current?price_area=SE3
+```
+
+The observed result was a validation error. Only `DK1` and `DK2` are accepted.
+
+Important boundary notes:
+
+- The endpoint read from local PostgreSQL only.
+- The endpoint used the existing read-only query path.
+- No database writes were performed.
+- No live Energi Data Service polling was performed.
+- No startup migrations were run.
+- No Azure resources were used.
+- No production database was used.
+- No LLM or ML model was used.
+- No automatic control, dispatch, activation, or operational functionality
+  exists.
+
 ## Frontend Local Development
 
 The frontend is a minimal Next.js dashboard for `v0.1` read-only decision

@@ -120,3 +120,34 @@ The smoke test used caller-provided JSON only. No database connection was used,
 no database writes were performed, no live Energi Data Service polling was
 performed, no LLM or ML model was used, and no automatic control, dispatch,
 activation, or operational functionality exists.
+
+Manual local API smoke testing was also documented for
+`GET /api/risk/current?price_area=DK1` with the backend started manually:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn app.main:app --reload
+```
+
+Observed output:
+
+- `risk_level`: `medium`
+- `risk_score`: `35`
+- `confidence_score`: `1.0`
+- `reason_codes` included `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`
+- `model_version`: `rule-engine-v0`
+- `decision_support_only`: `true`
+- `metadata.source_tables_used` included `spot_prices` and `power_balance`
+- `metadata.spot_price_row_found`: `true`
+- `metadata.power_balance_row_found`: `true`
+
+An invalid input smoke test using
+`GET /api/risk/current?price_area=SE3` returned a validation error. Only `DK1`
+and `DK2` are accepted.
+
+The current-risk smoke test read from local PostgreSQL only through the existing
+read-only query path. No database writes were performed, no live Energi Data
+Service polling was performed, no startup migrations were run, no Azure
+resources were used, no production database was used, no LLM or ML model was
+used, and no automatic control, dispatch, activation, or operational
+functionality exists.
