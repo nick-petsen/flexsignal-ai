@@ -2,6 +2,10 @@
 
 ## v0.1.0 - TODO
 
+- Added local-development-only CORS middleware for the read-only FastAPI API,
+  allowing `http://localhost:3000` and `http://127.0.0.1:3000` with `GET` and
+  `OPTIONS` only, no wildcard origins, no credentials, no startup migrations,
+  no database writes, no live API polling, and no new write endpoints.
 - Added manual read-only frontend integration for the existing backend energy
   API endpoints, including typed `limit=5` spot price and power balance fetch
   helpers, DK1/DK2 selection, manual load buttons, loading and backend

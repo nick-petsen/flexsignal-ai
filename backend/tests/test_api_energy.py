@@ -159,6 +159,18 @@ def test_endpoint_submits_select_only_query(monkeypatch: Any) -> None:
         )
 
 
+def test_app_exposes_no_write_methods() -> None:
+    write_methods = {"POST", "PUT", "PATCH", "DELETE"}
+
+    exposed_write_routes = [
+        (route.path, sorted(route.methods & write_methods))
+        for route in app.routes
+        if hasattr(route, "methods") and route.methods & write_methods
+    ]
+
+    assert exposed_write_routes == []
+
+
 def test_read_helper_rejects_write_queries() -> None:
     response_error = None
     try:
