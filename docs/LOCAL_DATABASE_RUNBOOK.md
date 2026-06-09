@@ -159,6 +159,56 @@ Observed rows included:
 - `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:25:00`.
 - `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:20:00`.
 
+### Manual Local Read-Only API Smoke Test
+
+The local FastAPI server was started manually against local PostgreSQL only:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn app.main:app --reload
+```
+
+Health check:
+
+```text
+GET /health
+```
+
+Result:
+
+```json
+{"status":"ok","service":"flexsignal-ai-api","version":"0.1.0"}
+```
+
+Read-only spot prices endpoint:
+
+```text
+GET /api/energy/spot-prices?price_area=DK1&limit=5
+```
+
+Result:
+
+- Table: `spot_prices`.
+- Price area: `DK1`.
+- Row count: `3`.
+
+Read-only power balance endpoint:
+
+```text
+GET /api/energy/power-balance?price_area=DK1&limit=5
+```
+
+Result:
+
+- Table: `power_balance`.
+- Price area: `DK1`.
+- Row count: `3`.
+
+This was read-only API validation only. No database writes were performed, no
+live Energi Data Service polling was performed, no startup migrations were run,
+no ingestion jobs were added, no Azure resources were used, no production
+database was used, and no control, dispatch, activation, or operational
+functionality was added.
+
 ### URL Format Notes
 
 - Alembic uses the SQLAlchemy URL format:

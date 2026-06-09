@@ -360,6 +360,31 @@ Observed rows included
 `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:25:00` and
 `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:20:00`.
 
+Manual local read-only FastAPI smoke validation was recorded against local
+PostgreSQL only. The server was started manually with:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn app.main:app --reload
+```
+
+`GET /health` returned:
+
+```json
+{"status":"ok","service":"flexsignal-ai-api","version":"0.1.0"}
+```
+
+`GET /api/energy/spot-prices?price_area=DK1&limit=5` returned
+`table: spot_prices`, `price_area: DK1`, and `row_count: 3`.
+
+`GET /api/energy/power-balance?price_area=DK1&limit=5` returned
+`table: power_balance`, `price_area: DK1`, and `row_count: 3`.
+
+This was read-only API validation only. No database writes were performed, no
+live Energi Data Service polling was performed, no startup migrations were run,
+no ingestion jobs were added, no Azure resources were used, no production
+database was used, and no control, dispatch, activation, or operational
+functionality was added.
+
 There is no Azure database, production database, automatic ingestion job,
 automatic write path, FastAPI startup database integration, committed secret,
 repository-stored `DATABASE_URL`, control workflow, dispatch workflow,
