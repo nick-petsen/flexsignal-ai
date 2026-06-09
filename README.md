@@ -68,9 +68,12 @@ uvicorn app.main:app --reload
 
 ## Frontend Local Development
 
-The frontend is a minimal Next.js dashboard shell for `v0.1` read-only decision
-support. It does not fetch data, poll live endpoints, forecast, dispatch,
-activate, or control energy assets.
+The frontend is a minimal Next.js dashboard for `v0.1` read-only decision
+support. It includes a DK1/DK2 selector and manual buttons for loading recent
+spot prices and power balance rows from the existing backend read-only energy
+API endpoints. It does not fetch automatically on page load, poll live
+endpoints, call Energi Data Service directly, forecast, dispatch, activate, or
+control energy assets.
 
 From the `frontend/` directory:
 
@@ -80,9 +83,17 @@ npm run build
 npm run dev
 ```
 
-The frontend keeps a backend API base URL helper for future read-only API
-integration. It defaults to `http://127.0.0.1:8000` and can be overridden with
+The frontend uses a backend API base URL helper for manual read-only API
+requests. It defaults to `http://127.0.0.1:8000` and can be overridden with
 `NEXT_PUBLIC_API_BASE_URL`.
+
+Manual frontend requests use:
+
+- `GET /api/energy/spot-prices?price_area=DK1|DK2&limit=5`
+- `GET /api/energy/power-balance?price_area=DK1|DK2&limit=5`
+
+The read-only disclaimer remains visible in the dashboard:
+`Read-only decision support — no automatic control`.
 
 ### Local frontend dashboard shell smoke test
 
@@ -105,14 +116,19 @@ The browser smoke-test opened `http://127.0.0.1:3000` and confirmed:
 - DK1/DK2 selector visible.
 - Spot prices card visible.
 - Power balance card visible.
-- Placeholder, loading-ready, and error-ready sections visible.
+- Manual Load spot prices button visible.
+- Manual Load power balance button visible.
+- Idle, loading, error, row count, and compact result table states available.
 - Backend API base URL helper visible as `http://127.0.0.1:8000`.
+- Browser copy states that the frontend does not call Energi Data Service
+  directly.
 - No error screen.
 
-The frontend shell made no backend API requests, direct Energi Data Service
-calls, polling requests, database writes, auth calls, Azure resource changes,
-forecasting/model calls, or control, dispatch, activation, or operational
-functionality.
+The frontend makes no automatic page-load API requests, direct Energi Data
+Service calls, polling requests, database writes, auth calls, Azure resource
+changes, forecasting/model calls, or control, dispatch, activation, or
+operational functionality. Backend API requests are made only when a user
+presses one of the manual load buttons.
 
 Known local development note: opening the Next.js dev server through
 `127.0.0.1` showed a development-only cross-origin warning for dev resources.

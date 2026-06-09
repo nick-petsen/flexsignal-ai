@@ -2,6 +2,15 @@
 
 ## v0.1.0 - TODO
 
+- Added manual read-only frontend integration for the existing backend energy
+  API endpoints, including typed `limit=5` spot price and power balance fetch
+  helpers, DK1/DK2 selection, manual load buttons, loading and backend
+  unavailable error states, row counts, compact result tables, and visible copy
+  confirming the browser uses only the backend API base URL helper and does not
+  call Energi Data Service directly. No automatic page-load fetches, polling,
+  charts, auth, Azure infrastructure, secrets, database writes,
+  forecasting/model logic, dispatch, activation, control, backend code, or
+  operational functionality were added.
 - Documented manual local frontend dashboard shell smoke-test results: local
   startup via `npm install`, `npm run build`, and `npm run dev`; successful
   `next build` with TypeScript passing and static `/` route generation; browser
