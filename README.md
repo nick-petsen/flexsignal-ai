@@ -76,12 +76,48 @@ From the `frontend/` directory:
 
 ```bash
 npm install
+npm run build
 npm run dev
 ```
 
 The frontend keeps a backend API base URL helper for future read-only API
 integration. It defaults to `http://127.0.0.1:8000` and can be overridden with
 `NEXT_PUBLIC_API_BASE_URL`.
+
+### Local frontend dashboard shell smoke test
+
+Manual local frontend validation was performed by starting the dashboard shell
+from the `frontend/` directory:
+
+```bash
+npm install
+npm run build
+npm run dev
+```
+
+`next build` completed successfully, TypeScript passed, and the static `/`
+route was generated.
+
+The browser smoke-test opened `http://127.0.0.1:3000` and confirmed:
+
+- FlexSignal AI title visible.
+- Read-only decision support -- no automatic control badge visible.
+- DK1/DK2 selector visible.
+- Spot prices card visible.
+- Power balance card visible.
+- Placeholder, loading-ready, and error-ready sections visible.
+- Backend API base URL helper visible as `http://127.0.0.1:8000`.
+- No error screen.
+
+The frontend shell made no backend API requests, direct Energi Data Service
+calls, polling requests, database writes, auth calls, Azure resource changes,
+forecasting/model calls, or control, dispatch, activation, or operational
+functionality.
+
+Known local development note: opening the Next.js dev server through
+`127.0.0.1` showed a development-only cross-origin warning for dev resources.
+Use `http://localhost:3000` during local development unless `allowedDevOrigins`
+is configured later. This warning did not block the page render.
 
 ## Compliance Principles
 

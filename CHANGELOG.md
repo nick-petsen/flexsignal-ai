@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local frontend dashboard shell smoke-test results: local
+  startup via `npm install`, `npm run build`, and `npm run dev`; successful
+  `next build` with TypeScript passing and static `/` route generation; browser
+  validation at `http://127.0.0.1:3000` showing the FlexSignal AI title,
+  read-only/no-automatic-control badge, DK1/DK2 selector, spot prices and power
+  balance cards, placeholder/loading-ready/error-ready sections, backend API
+  base URL helper `http://127.0.0.1:8000`, and no error screen. Confirmed the
+  shell made no backend API requests, direct Energi Data Service calls, polling,
+  database writes, auth, Azure resources, forecasting/model logic, control,
+  dispatch, activation, or operational functionality, and noted the
+  development-only `127.0.0.1` cross-origin warning with `localhost:3000` as
+  the local development URL unless `allowedDevOrigins` is configured later.
 - Added a minimal Next.js + TypeScript frontend dashboard shell with
   FlexSignal AI branding, the read-only/no-automatic-control scope badge, DK1
   and DK2 selector state, placeholder/loading/error-ready cards for spot prices
