@@ -2,6 +2,12 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local read-only FastAPI smoke-test results for `GET
+  /health`, `GET /api/energy/spot-prices?price_area=DK1&limit=5`, and `GET
+  /api/energy/power-balance?price_area=DK1&limit=5`, using local PostgreSQL
+  only, with no database writes, live EDS polling, startup migrations, ingestion
+  jobs, Azure resources, production database, forecasting, control, dispatch,
+  activation, or operational functionality.
 - Added read-only FastAPI energy endpoints for recent local `spot_prices` and
   `power_balance` rows, using existing SELECT query builders, lazy local-only
   `DATABASE_URL` validation, DK1/DK2 filtering, default limit `100`, hard
