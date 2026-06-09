@@ -18,6 +18,7 @@ For the future manual local PostgreSQL validation flow, see
 - `__init__.py`: package marker for future database-related modules.
 - `write_plan.py`: pure dry-run Energi Data Service write-plan builder.
 - `sql_builder.py`: pure parameterized SQL builder for supported write-plan entries.
+- `read_queries.py`: pure parameterized SELECT query builders for supported local tables.
 - `executor.py`: manual execution boundary that submits supported write-plan SQL through
   a caller-provided cursor only.
 - `transaction.py`: mocked transaction boundary for generated SQL command dictionaries
@@ -34,6 +35,14 @@ to FastAPI startup. It validates a non-empty batch of generated SQL command
 dictionaries before opening a cursor from the injected connection, executes each
 command via `cursor.execute(sql, params)`, commits only after the full batch succeeds,
 and rolls back if command execution fails.
+
+`read_queries.py` intentionally does not create database connections, execute SQL,
+read `DATABASE_URL`, import database drivers, import SQLAlchemy engines/sessions,
+run migrations, schedule ingestion, or attach to FastAPI startup. It only builds
+parameterized `SELECT` command dictionaries for existing `spot_prices` and
+`power_balance` rows in supported DK1/DK2 price areas. Recent-row queries and
+UTC time-window queries use a default limit of `100` and reject limits above
+`1000`.
 
 ## Alembic Migrations
 
@@ -74,6 +83,7 @@ Safety boundaries:
 - No committed secrets or repository-stored `DATABASE_URL`.
 - No database migrations or writes during FastAPI startup.
 - FastAPI startup must not run migrations or database writes.
+- Read query builders are SELECT-only and must remain separate from execution.
 - No control, dispatch, activation, closed-loop, or operational functionality.
 
 ## TODO
