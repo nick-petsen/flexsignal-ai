@@ -2,6 +2,13 @@
 
 ## v0.1.0 - TODO
 
+- Added read-only `POST /api/risk/preview` FastAPI endpoint that validates
+  caller-provided DK1/DK2 JSON payloads with Pydantic and delegates only to the
+  existing pure `rule-engine-v0` surplus-risk scorer, returning the exact model
+  output shape with `decision_support_only=true`, mocked API tests, no database
+  dependency, no SQL execution, no live HTTP calls, no ingestion, no frontend,
+  no Azure infrastructure, no LLM use, and no control, dispatch, activation, or
+  operational behavior.
 - Added deterministic pure Python `rule-engine-v0` surplus-risk scoring for
   DK1/DK2 read-only decision support, with validation, reason codes,
   confidence scoring, exchange-flow sign ambiguity documented as unused in v0,

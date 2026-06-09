@@ -159,16 +159,32 @@ def test_endpoint_submits_select_only_query(monkeypatch: Any) -> None:
         )
 
 
-def test_app_exposes_no_write_methods() -> None:
-    write_methods = {"POST", "PUT", "PATCH", "DELETE"}
+def test_app_exposes_no_mutating_write_methods() -> None:
+    mutating_methods = {"PUT", "PATCH", "DELETE"}
 
-    exposed_write_routes = [
-        (route.path, sorted(route.methods & write_methods))
+    exposed_mutating_routes = [
+        (route.path, sorted(route.methods & mutating_methods))
         for route in app.routes
-        if hasattr(route, "methods") and route.methods & write_methods
+        if hasattr(route, "methods") and route.methods & mutating_methods
+    ]
+    preview_routes = [
+        route
+        for route in app.routes
+        if getattr(route, "path", None) == "/api/risk/preview"
+    ]
+    unexpected_post_routes = [
+        route.path
+        for route in app.routes
+        if (
+            hasattr(route, "methods")
+            and "POST" in route.methods
+            and route.path != "/api/risk/preview"
+        )
     ]
 
-    assert exposed_write_routes == []
+    assert exposed_mutating_routes == []
+    assert unexpected_post_routes == []
+    assert len(preview_routes) == 1
 
 
 def test_read_helper_rejects_write_queries() -> None:
