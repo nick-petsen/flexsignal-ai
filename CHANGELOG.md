@@ -2,6 +2,12 @@
 
 ## v0.1.0 - TODO
 
+- Added pure Python `compose_surplus_risk_input` mapping for existing
+  `spot_prices` and `power_balance` row dictionaries into `rule-engine-v0`
+  input, with DK1/DK2 and timestamp validation, focused unit tests, model-card
+  documentation, no database connection, no SQL execution, no API/frontend/
+  ingestion/Azure changes, no ML/LLM logic, and no control, dispatch,
+  activation, or operational behavior.
 - Documented manual local risk preview API smoke-test results for `POST
   /api/risk/preview`: backend startup with
   `python -m uvicorn app.main:app --reload`, valid caller-provided DK1 JSON

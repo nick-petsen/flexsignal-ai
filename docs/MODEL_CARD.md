@@ -47,6 +47,14 @@ Risk levels are:
 Confidence starts at `1.0`, is reduced for missing key data, has a floor of
 `0.2`, and is rounded to two decimals.
 
+## Risk Input Composer
+
+`compose_surplus_risk_input` is a deterministic mapper from existing
+`spot_prices` and `power_balance` row dictionaries into the `rule-engine-v0`
+input shape. It does not score risk by itself, connect to a database, execute
+SQL, call live APIs, perform ML or LLM logic, or perform control, dispatch, or
+activation.
+
 ## Limitations
 
 - This is a simple baseline for traceable decision support, not a validated
