@@ -135,6 +135,51 @@ Known local development note: opening the Next.js dev server through
 Use `http://localhost:3000` during local development unless `allowedDevOrigins`
 is configured later. This warning did not block the page render.
 
+### Local frontend-to-backend read-only smoke test
+
+Manual local frontend-to-backend validation was performed with the backend
+started manually from the `backend/` directory:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn app.main:app --reload
+```
+
+The frontend was started manually from the repository root:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The browser opened `http://localhost:3000`. The manual read-only UI actions
+were:
+
+- Selected DK1.
+- Clicked Load spot prices.
+- Clicked Load power balance.
+
+Observed local result:
+
+- Spot prices displayed 3 rows for DK1.
+- Power balance displayed 3 rows for DK1.
+- No Failed to fetch error appeared.
+- Backend logs showed HTTP 200 for both read-only API calls.
+- The local-development CORS fix worked.
+
+Important boundary notes:
+
+- The frontend only called the backend API helper.
+- No direct Energi Data Service calls were made from the frontend.
+- No polling was added or observed.
+- No database writes were added or performed.
+- No live EDS polling was added or performed.
+- No startup migrations were added or run.
+- No Azure resources were added or used.
+- No production database was used.
+- No forecasting/model logic was added.
+- No control, dispatch, activation, or operational functionality was added.
+
 ## Compliance Principles
 
 - Read-only decision support in `v0.1`.

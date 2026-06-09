@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local frontend-to-backend read-only smoke-test results:
+  backend startup with `DATABASE_URL="postgresql://localhost/flexsignal_ai"
+  python -m uvicorn app.main:app --reload`, frontend startup with
+  `cd frontend`, `npm install`, and `npm run dev`, browser validation at
+  `http://localhost:3000`, DK1 selection, manual Load spot prices and Load power
+  balance actions, 3 displayed DK1 rows for both spot prices and power balance,
+  no Failed to fetch error, HTTP 200 backend logs for both read-only API calls,
+  and confirmed local-development CORS behavior. Confirmed the frontend only
+  used the backend API helper, with no direct Energi Data Service frontend
+  calls, polling, database writes, live EDS polling, startup migrations, Azure
+  resources, production database, forecasting/model logic, control, dispatch,
+  activation, or operational functionality.
 - Added local-development-only CORS middleware for the read-only FastAPI API,
   allowing `http://localhost:3000` and `http://127.0.0.1:3000` with `GET` and
   `OPTIONS` only, no wildcard origins, no credentials, no startup migrations,
