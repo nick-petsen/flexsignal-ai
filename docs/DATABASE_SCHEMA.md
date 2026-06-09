@@ -125,6 +125,17 @@ builder validates required payload fields and rejects unsupported tables or
 operations, but it does not connect to PostgreSQL, execute SQL, perform writes,
 require `DATABASE_URL`, schedule ingestion jobs, or modify application startup.
 
+`backend/app/db/read_queries.py` provides pure parameterized PostgreSQL `SELECT`
+query builders for existing local `spot_prices` and `power_balance` tables. It
+supports recent-row queries by `price_area` and UTC time-window queries by
+`price_area` for DK1 and DK2 only. Each builder returns a dictionary containing
+`sql`, `params`, `table`, and `operation`, where `operation` is always `select`.
+Limits default to `100`, must be positive integers, and are capped at `1000`.
+The read-query boundary does not connect to PostgreSQL, execute SQL, read
+`DATABASE_URL`, import FastAPI, import database drivers, import SQLAlchemy
+engines or sessions, add endpoints, schedule ingestion, forecast, dispatch,
+activate, or control assets.
+
 `backend/app/db/executor.py` provides a narrow manual execution boundary for
 supported Energi Data Service write-plan entries. It accepts a caller-provided
 DB-API-style cursor, validates and builds the full batch of parameterized SQL
@@ -201,6 +212,7 @@ Manual local PostgreSQL validation is documented in
 - Schema baseline exists.
 - Alembic baseline exists.
 - SQL builder exists.
+- Read-only SELECT query builders exist for `spot_prices` and `power_balance`.
 - Mocked executor and transaction boundaries exist.
 - `scripts/local_db_smoke_test.py` exists as an explicit manual local-only smoke
   test for hardcoded DK1 sample records.

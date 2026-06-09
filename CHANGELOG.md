@@ -2,6 +2,11 @@
 
 ## v0.1.0 - TODO
 
+- Added pure read-only parameterized SELECT query builders for recent and
+  time-window `spot_prices` and `power_balance` reads by DK1/DK2 `price_area`,
+  with default limit `100`, hard maximum `1000`, no database connection, no SQL
+  execution, no FastAPI endpoint, no ingestion job, and no operational control
+  functionality.
 - Documented confirmed manual live Energi Data Service to local PostgreSQL write
   validation results for `DayAheadPrices` DK1 to `spot_prices` and
   `ElectricityProdex5MinRealtime` DK1 to `power_balance`, both with `--limit 2`,
