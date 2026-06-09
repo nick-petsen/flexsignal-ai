@@ -211,6 +211,27 @@ rolled-back status. It must not run automatically, read secrets from files,
 import FastAPI, expose an endpoint, schedule polling, forecast, dispatch,
 activate, or control energy assets.
 
+### Confirmed Manual Local Write Results
+
+Manual live Energi Data Service to local PostgreSQL write validation was
+confirmed for `DK1` only with `--limit 2`. These writes required explicit
+`--confirm-local-db-write` and used local PostgreSQL only. No Azure database,
+production database, FastAPI startup integration, scheduled ingestion job,
+automatic write path, API endpoint, control workflow, dispatch workflow,
+activation workflow, or operational functionality was used or added.
+
+| Dataset | PriceArea | Command | Result |
+| --- | --- | --- | --- |
+| `DayAheadPrices` | `DK1` | `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1 --limit 2 --confirm-local-db-write` | HTTP 200; raw records 2; normalized records 2; SQL commands 2; table `spot_prices`; `committed: true`; `rolled_back: false`; `spot_prices` count increased from 1 to 3. |
+| `ElectricityProdex5MinRealtime` | `DK1` | `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_local_db_ingest.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 2 --confirm-local-db-write` | HTTP 200; raw records 2; normalized records 2; SQL commands 2; table `power_balance`; `committed: true`; `rolled_back: false`; `power_balance` count increased from 1 to 3. |
+
+Observed rows included:
+
+- `DayAheadPrices:DK1:2026-06-09T21:45:00`.
+- `DayAheadPrices:DK1:2026-06-09T21:30:00`.
+- `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:25:00`.
+- `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:20:00`.
+
 ## Energi Data Service Dry-Run Ingestion Validation
 
 The backend includes a controlled dry-run module at
