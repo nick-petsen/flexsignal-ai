@@ -12,6 +12,10 @@ The model estimates low, medium, or high surplus electricity production risk for
 human review. It is read-only decision support for `v0.1`; it must not be used
 as an autonomous decision-maker or critical operational system.
 
+`POST /api/risk/preview` wraps `rule-engine-v0` for caller-provided JSON data
+only. The preview API does not fetch live data, read from a database, write to a
+database, or connect to assets or operational systems in this step.
+
 ## Inputs
 
 - `price_area`: `DK1` or `DK2`
@@ -62,3 +66,6 @@ Confidence starts at `1.0`, is reduced for missing key data, has a floor of
 Outputs require human review. `rule-engine-v0` must not perform or trigger
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, or live control signals.
+
+The preview API is not autonomous and cannot trigger control actions. It returns
+the same read-only decision-support output shape as the pure rule engine.

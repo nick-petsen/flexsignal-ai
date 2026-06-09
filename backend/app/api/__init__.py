@@ -1,1 +1,1 @@
-"""FastAPI routers for FlexSignal AI."""
+"""FastAPI routers for FlexSignal AI read-only decision support."""
