@@ -2,6 +2,15 @@
 
 ## v0.1.0 - TODO
 
+- Added read-only `GET /api/risk/current?price_area=DK1|DK2` surplus-risk API
+  endpoint that lazily requires `DATABASE_URL` only when called, reads the
+  latest existing local `spot_prices` and `power_balance` rows through existing
+  SELECT-only query paths, composes input with `compose_surplus_risk_input`,
+  scores with `rule-engine-v0`, returns source-table metadata, and includes
+  mocked tests for DK1/DK2 validation, missing `DATABASE_URL`, empty rows,
+  SELECT-only SQL, no live HTTP calls, unchanged preview behavior, and no
+  control, dispatch, activation, ingestion, frontend, Azure, auth, ML, LLM, or
+  database-write behavior.
 - Added pure Python `compose_surplus_risk_input` mapping for existing
   `spot_prices` and `power_balance` row dictionaries into `rule-engine-v0`
   input, with DK1/DK2 and timestamp validation, focused unit tests, model-card

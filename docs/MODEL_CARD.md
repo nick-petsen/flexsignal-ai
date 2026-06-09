@@ -16,6 +16,14 @@ as an autonomous decision-maker or critical operational system.
 only. The preview API does not fetch live data, read from a database, write to a
 database, or connect to assets or operational systems in this step.
 
+`GET /api/risk/current?price_area=DK1|DK2` wraps the same rule engine for the
+latest existing local database rows. It lazily requires `DATABASE_URL` only when
+the endpoint is called, reads the most recent `spot_prices` and `power_balance`
+rows for the requested price area through existing read-only query paths,
+returns source-table metadata, and does not write to the database, fetch live
+Energi Data Service data, schedule ingestion, or connect to operational
+systems.
+
 ## Inputs
 
 - `price_area`: `DK1` or `DK2`
@@ -77,6 +85,10 @@ connections, plant/device commands, or live control signals.
 
 The preview API is not autonomous and cannot trigger control actions. It returns
 the same read-only decision-support output shape as the pure rule engine.
+
+The current-risk API is also not autonomous. It reads existing local data only
+and returns read-only decision support plus metadata indicating whether the
+latest `spot_prices` and `power_balance` rows were found.
 
 ## Local API Smoke Test Results
 

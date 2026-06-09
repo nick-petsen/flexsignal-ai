@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
 from math import isfinite
-from typing import Literal, Union
+from typing import Any, Literal, Union
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -13,6 +15,12 @@ from pydantic import (
     field_validator,
 )
 
+from app.api.energy import execute_read_query
+from app.db.read_queries import (
+    build_recent_power_balance_query,
+    build_recent_spot_prices_query,
+)
+from app.risk.input_composer import compose_surplus_risk_input
 from app.risk.rule_engine import calculate_surplus_risk
 
 
@@ -72,6 +80,91 @@ class RiskPreviewResponse(BaseModel):
     decision_support_only: bool
 
 
+class RiskCurrentMetadata(BaseModel):
+    source_tables_used: list[str]
+    spot_price_row_found: bool
+    power_balance_row_found: bool
+
+
+class RiskCurrentResponse(RiskPreviewResponse):
+    metadata: RiskCurrentMetadata
+
+
 @router.post("/preview", response_model=RiskPreviewResponse)
 def preview_surplus_risk(payload: RiskPreviewRequest) -> dict[str, object]:
     return calculate_surplus_risk(payload.to_engine_input())
+
+
+@router.get("/current", response_model=RiskCurrentResponse)
+def get_current_surplus_risk(price_area: PriceArea) -> dict[str, object]:
+    spot_price_query = build_recent_spot_prices_query(price_area=price_area, limit=1)
+    power_balance_query = build_recent_power_balance_query(
+        price_area=price_area,
+        limit=1,
+    )
+
+    spot_price_rows = execute_read_query(spot_price_query)
+    power_balance_rows = execute_read_query(power_balance_query)
+
+    spot_price_row = _first_row_or_none(spot_price_rows)
+    power_balance_row = _first_row_or_none(power_balance_rows)
+
+    if spot_price_row is None and power_balance_row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "No spot_prices or power_balance rows found for requested price_area"
+            ),
+        )
+
+    try:
+        risk_input = compose_surplus_risk_input(
+            price_area=price_area,
+            spot_price_row=spot_price_row,
+            power_balance_row=power_balance_row,
+        )
+        risk_result = calculate_surplus_risk(_normalize_rule_engine_input(risk_input))
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Current risk source data could not be scored",
+        ) from exc
+
+    return {
+        **risk_result,
+        "metadata": {
+            "source_tables_used": [
+                query["table"]
+                for row, query in (
+                    (spot_price_row, spot_price_query),
+                    (power_balance_row, power_balance_query),
+                )
+                if row is not None
+            ],
+            "spot_price_row_found": spot_price_row is not None,
+            "power_balance_row_found": power_balance_row is not None,
+        },
+    }
+
+
+def _first_row_or_none(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not rows:
+        return None
+    return rows[0]
+
+
+def _normalize_rule_engine_input(input_data: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(input_data)
+
+    timestamp_utc = normalized.get("timestamp_utc")
+    if isinstance(timestamp_utc, datetime):
+        normalized["timestamp_utc"] = timestamp_utc.isoformat()
+    elif isinstance(timestamp_utc, date):
+        normalized["timestamp_utc"] = timestamp_utc.isoformat()
+
+    for field in NUMERIC_FIELDS:
+        value = normalized.get(field)
+        if isinstance(value, Decimal):
+            normalized[field] = float(value)
+
+    return normalized
