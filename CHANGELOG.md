@@ -2,6 +2,22 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local current risk API smoke-test results for `GET
+  /api/risk/current?price_area=DK1`: backend startup with
+  `DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn
+  app.main:app --reload`, observed `risk_level=medium`, `risk_score=35`,
+  `confidence_score=1.0`, `reason_codes` including `NORMAL_PRICE`,
+  `HIGH_RENEWABLE_SHARE`, and `EXCHANGE_NET_NOT_USED_V0`,
+  `model_version=rule-engine-v0`, `decision_support_only=true`,
+  `metadata.source_tables_used` including `spot_prices` and `power_balance`,
+  and both `metadata.spot_price_row_found` and
+  `metadata.power_balance_row_found` as `true`. Documented invalid
+  `price_area=SE3` validation behavior and confirmed only DK1 and DK2 are
+  accepted, with local PostgreSQL reads only through the existing read-only
+  query path, no database writes, no live Energi Data Service polling, no
+  startup migrations, no Azure resources, no production database, no LLM or ML
+  model, and no automatic control, dispatch, activation, or operational
+  functionality.
 - Added read-only `GET /api/risk/current?price_area=DK1|DK2` surplus-risk API
   endpoint that lazily requires `DATABASE_URL` only when called, reads the
   latest existing local `spot_prices` and `power_balance` rows through existing
