@@ -2,6 +2,13 @@
 
 ## v0.1.0 - TODO
 
+- Added a manual local PostgreSQL read-preview script for existing
+  `spot_prices` and `power_balance` tables using the existing read-only query
+  builders, required local DB-API `DATABASE_URL`, local-host validation,
+  DK1/DK2 filtering, default limit `10`, hard maximum `100`, compact JSON-line
+  row output, and no writes, live EDS fetches, ingestion jobs, FastAPI imports,
+  endpoints, forecasting, control, dispatch, activation, or operational
+  functionality.
 - Added pure read-only parameterized SELECT query builders for recent and
   time-window `spot_prices` and `power_balance` reads by DK1/DK2 `price_area`,
   with default limit `100`, hard maximum `1000`, no database connection, no SQL

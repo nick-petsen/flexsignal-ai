@@ -136,6 +136,16 @@ The read-query boundary does not connect to PostgreSQL, execute SQL, read
 engines or sessions, add endpoints, schedule ingestion, forecast, dispatch,
 activate, or control assets.
 
+`scripts/manual_local_db_read_preview.py` provides an explicit manual local-only
+read preview for recent rows from existing `spot_prices` and `power_balance`
+tables. It requires `DATABASE_URL`, rejects non-local database hosts, accepts
+only DB-API URL format such as `postgresql://localhost/flexsignal_ai`, supports
+only `DK1` and `DK2`, defaults to limit `10`, and rejects limits above `100`.
+It uses the existing read-query builders and validates the generated command as
+`SELECT` before execution. It does not write to the database, fetch live Energi
+Data Service data, import FastAPI, add endpoints, schedule ingestion, forecast,
+dispatch, activate, or control energy assets.
+
 `backend/app/db/executor.py` provides a narrow manual execution boundary for
 supported Energi Data Service write-plan entries. It accepts a caller-provided
 DB-API-style cursor, validates and builds the full batch of parameterized SQL
@@ -213,6 +223,9 @@ Manual local PostgreSQL validation is documented in
 - Alembic baseline exists.
 - SQL builder exists.
 - Read-only SELECT query builders exist for `spot_prices` and `power_balance`.
+- `scripts/manual_local_db_read_preview.py` exists as an explicit manual
+  local-only read preview for recent rows from existing `spot_prices` and
+  `power_balance` tables.
 - Mocked executor and transaction boundaries exist.
 - `scripts/local_db_smoke_test.py` exists as an explicit manual local-only smoke
   test for hardcoded DK1 sample records.
