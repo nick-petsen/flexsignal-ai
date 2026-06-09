@@ -2,8 +2,8 @@
 
 FlexSignal AI `v0.1` uses PostgreSQL with TimescaleDB as the intended database
 foundation. The current schema is a documented baseline with a matching Alembic
-initial migration. It is not connected to the FastAPI app and migrations are not
-run automatically.
+initial migration. FastAPI exposes read-only local endpoints for existing
+`spot_prices` and `power_balance` rows. Migrations are not run automatically.
 
 `v0.1` remains read-only decision support. The database stores source data,
 forecast outputs, explanations, and audit events for human review. It does not
@@ -136,6 +136,21 @@ The read-query boundary does not connect to PostgreSQL, execute SQL, read
 engines or sessions, add endpoints, schedule ingestion, forecast, dispatch,
 activate, or control assets.
 
+`backend/app/api/energy.py` exposes recent local rows through read-only FastAPI
+endpoints:
+
+- `GET /api/energy/spot-prices?price_area=DK1|DK2&limit=100`
+- `GET /api/energy/power-balance?price_area=DK1|DK2&limit=100`
+
+Each response contains `table`, `price_area`, `row_count`, and `rows`. The
+endpoints use the existing read-query builders, require `DATABASE_URL` only when
+called, reject non-local database hosts, accept DB-API PostgreSQL URLs such as
+`postgresql://localhost/flexsignal_ai`, support only DK1 and DK2, default to
+limit `100`, and reject limits above `1000`. The API execution helper validates
+the generated SQL as `SELECT` before using the DB-API driver. It does not run
+migrations, write to the database, fetch live Energi Data Service data, add
+ingestion jobs, forecast, dispatch, activate, or control energy assets.
+
 `scripts/manual_local_db_read_preview.py` provides an explicit manual local-only
 read preview for recent rows from existing `spot_prices` and `power_balance`
 tables. It requires `DATABASE_URL`, rejects non-local database hosts, accepts
@@ -232,7 +247,8 @@ Manual local PostgreSQL validation is documented in
 - `scripts/manual_eds_local_db_ingest.py` exists as an explicit manual local-only
   validation script for tiny live Energi Data Service samples with dry-run
   default and local write confirmation gates.
-- No application runtime database connection is implemented.
+- Read-only local FastAPI endpoints exist for recent `spot_prices` and
+  `power_balance` rows.
 - Manual local PostgreSQL migration and smoke-test validation has been completed
   against a developer-created local PostgreSQL 16.14 database only.
 
@@ -254,11 +270,12 @@ DATABASE_URL='<local-postgresql-url>' alembic upgrade head --sql
 ```
 
 Migrations and database writes must never run automatically during FastAPI
-startup, tests, import time, or API request handling. The manual persistence
-smoke test is an explicit local command, requires `DATABASE_URL`, refuses
-non-local hosts, defaults to dry-run, requires `--confirm-local-db-write` for
-writes, uses hardcoded DK1 sample records only, prints audit-style summary
-output, and remains separate from FastAPI startup.
+startup, tests, import time, or API request handling. Read-only API requests may
+use `DATABASE_URL` only when called and only for local PostgreSQL hosts. The
+manual persistence smoke test is an explicit local command, requires
+`DATABASE_URL`, refuses non-local hosts, defaults to dry-run, requires
+`--confirm-local-db-write` for writes, uses hardcoded DK1 sample records only,
+prints audit-style summary output, and remains separate from FastAPI startup.
 
 ### Recorded Local Validation Results
 

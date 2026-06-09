@@ -2,6 +2,12 @@
 
 ## v0.1.0 - TODO
 
+- Added read-only FastAPI energy endpoints for recent local `spot_prices` and
+  `power_balance` rows, using existing SELECT query builders, lazy local-only
+  `DATABASE_URL` validation, DK1/DK2 filtering, default limit `100`, hard
+  maximum `1000`, mocked tests without PostgreSQL, and no writes, live EDS
+  fetches, ingestion jobs, startup migrations, frontend, forecasting, control,
+  dispatch, activation, or operational functionality.
 - Added a manual local PostgreSQL read-preview script for existing
   `spot_prices` and `power_balance` tables using the existing read-only query
   builders, required local DB-API `DATABASE_URL`, local-host validation,

@@ -3,9 +3,10 @@
 `schema.sql` is the initial PostgreSQL-compatible schema baseline for FlexSignal AI `v0.1`.
 It is the human-readable reference for the current database shape.
 
-The current backend remains read-only decision support. No runtime database connection,
-ingestion job, automatic migration runner, control workflow, dispatch workflow, or asset activation
-logic is implemented here.
+The current backend remains read-only decision support. FastAPI exposes
+read-only local database endpoints for existing rows only. No ingestion job,
+automatic migration runner, database write, control workflow, dispatch
+workflow, or asset activation logic is implemented here.
 
 For the future manual local PostgreSQL validation flow, see
 `../../../docs/LOCAL_DATABASE_RUNBOOK.md`.
@@ -43,6 +44,20 @@ parameterized `SELECT` command dictionaries for existing `spot_prices` and
 `power_balance` rows in supported DK1/DK2 price areas. Recent-row queries and
 UTC time-window queries use a default limit of `100` and reject limits above
 `1000`.
+
+`../api/energy.py` exposes the read-query builders through read-only FastAPI
+endpoints for existing local data:
+
+- `GET /api/energy/spot-prices?price_area=DK1|DK2&limit=100`
+- `GET /api/energy/power-balance?price_area=DK1|DK2&limit=100`
+
+The endpoints require `DATABASE_URL` only when called, not during import or
+startup. They reject non-local database hosts, use DB-API PostgreSQL URLs such
+as `postgresql://localhost/flexsignal_ai`, accept only DK1/DK2, default to
+limit `100`, and enforce a hard maximum of `1000`. They validate generated
+commands as `SELECT` before execution and do not run migrations, perform
+database writes, fetch live Energi Data Service data, schedule ingestion,
+forecast, dispatch, activate, or control assets.
 
 ## Alembic Migrations
 
@@ -82,6 +97,7 @@ Safety boundaries:
 - No automatic ingestion jobs.
 - No committed secrets or repository-stored `DATABASE_URL`.
 - No database migrations or writes during FastAPI startup.
+- No database writes during read-only API request handling.
 - FastAPI startup must not run migrations or database writes.
 - Read query builders are SELECT-only and must remain separate from execution.
 - No control, dispatch, activation, closed-loop, or operational functionality.
