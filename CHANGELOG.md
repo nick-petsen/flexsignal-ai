@@ -2,6 +2,12 @@
 
 ## v0.1.0 - TODO
 
+- Documented confirmed manual live Energi Data Service to local PostgreSQL write
+  validation results for `DayAheadPrices` DK1 to `spot_prices` and
+  `ElectricityProdex5MinRealtime` DK1 to `power_balance`, both with `--limit 2`,
+  explicit `--confirm-local-db-write`, local PostgreSQL only, and no Azure,
+  production, startup, scheduled ingestion, automatic write, API endpoint,
+  forecasting, control, dispatch, activation, or operational functionality.
 - Added a manual local-only EDS-to-PostgreSQL ingest validation script for tiny
   live `DayAheadPrices` and `ElectricityProdex5MinRealtime` DK1/DK2 samples,
   with dry-run default, required local DB-API `DATABASE_URL`, local-host

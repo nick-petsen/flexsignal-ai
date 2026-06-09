@@ -290,9 +290,38 @@ DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_ed
 Passing `--confirm-local-db-write` is required before it can execute generated
 SQL against the local database.
 
+Confirmed manual live Energi Data Service writes were recorded for `DK1` only,
+using `--limit 2` and explicit `--confirm-local-db-write`.
+
+For `DayAheadPrices`, the command was:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1 --limit 2 --confirm-local-db-write
+```
+
+It returned HTTP status `200`, raw record count `2`, normalized record count
+`2`, SQL command count `2`, target table `spot_prices`, `committed: true`, and
+`rolled_back: false`. The `spot_prices` count increased from `1` to `3`.
+Observed rows included `DayAheadPrices:DK1:2026-06-09T21:45:00` and
+`DayAheadPrices:DK1:2026-06-09T21:30:00`.
+
+For `ElectricityProdex5MinRealtime`, the command was:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_local_db_ingest.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 2 --confirm-local-db-write
+```
+
+It returned HTTP status `200`, raw record count `2`, normalized record count
+`2`, SQL command count `2`, target table `power_balance`, `committed: true`,
+and `rolled_back: false`. The `power_balance` count increased from `1` to `3`.
+Observed rows included
+`ElectricityProdex5MinRealtime:DK1:2026-06-08T23:25:00` and
+`ElectricityProdex5MinRealtime:DK1:2026-06-08T23:20:00`.
+
 There is no Azure database, production database, automatic ingestion job,
-committed secret, repository-stored `DATABASE_URL`, control workflow, dispatch
-workflow, activation workflow, or operational database functionality in `v0.1`.
+automatic write path, FastAPI startup database integration, committed secret,
+repository-stored `DATABASE_URL`, control workflow, dispatch workflow,
+activation workflow, or operational database functionality in `v0.1`.
 
 ## Open Questions And TODOs
 

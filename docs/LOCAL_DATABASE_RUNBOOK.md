@@ -29,10 +29,10 @@ control, or operational asset connectivity.
 
 ## Manual Local Validation Results
 
-These results document a manual local validation run. No Azure database,
-production database, live Energi Data Service data, FastAPI startup integration,
-automatic ingestion job, control workflow, dispatch workflow, activation
-workflow, or operational functionality was used or added.
+These results document manual local validation runs. No Azure database,
+production database, FastAPI startup integration, automatic ingestion job,
+control workflow, dispatch workflow, activation workflow, or operational
+functionality was used or added.
 
 ### Local PostgreSQL Readiness
 
@@ -103,6 +103,59 @@ Running the same smoke-test write a second time did not create duplicates:
 - `spot_prices` distinct `source_record_id` remained `1`.
 - `power_balance` total remained `1`.
 - `power_balance` distinct `source_record_id` remained `1`.
+
+### Manual Live EDS Local DB Write Validation
+
+The following confirmed writes were run manually against local PostgreSQL only.
+No Azure database or production database was used. No FastAPI startup
+integration, scheduled ingestion job, automatic write path, control workflow,
+dispatch workflow, activation workflow, or operational functionality was added.
+Both commands used `--limit 2`, `DK1`, and the explicit
+`--confirm-local-db-write` confirmation flag.
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_local_db_ingest.py --dataset DayAheadPrices --price-area DK1 --limit 2 --confirm-local-db-write
+```
+
+Result:
+
+- HTTP status: `200`.
+- Raw record count: `2`.
+- Normalized record count: `2`.
+- SQL command count: `2`.
+- Table: `spot_prices`.
+- `committed`: `true`.
+- `rolled_back`: `false`.
+- `spot_prices` count increased from `1` to `3`.
+
+Observed rows included:
+
+- `DayAheadPrices:DK1:2026-06-09T21:45:00`.
+- `DayAheadPrices:DK1:2026-06-09T21:30:00`.
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_local_db_ingest.py --dataset ElectricityProdex5MinRealtime --price-area DK1 --limit 2 --confirm-local-db-write
+```
+
+Result:
+
+- HTTP status: `200`.
+- Raw record count: `2`.
+- Normalized record count: `2`.
+- SQL command count: `2`.
+- Table: `power_balance`.
+- `committed`: `true`.
+- `rolled_back`: `false`.
+- `power_balance` count increased from `1` to `3`.
+
+Observed rows included:
+
+- `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:25:00`.
+- `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:20:00`.
 
 ### URL Format Notes
 
