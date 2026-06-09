@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local risk preview API smoke-test results for `POST
+  /api/risk/preview`: backend startup with
+  `python -m uvicorn app.main:app --reload`, valid caller-provided DK1 JSON
+  payload at `2026-06-09T21:45:00+02:00` with negative price and high renewable
+  share inputs, observed `risk_level=high`, `risk_score=75`,
+  `confidence_score=1.0`, `reason_codes` including `NEGATIVE_PRICE` and
+  `HIGH_RENEWABLE_SHARE`, `model_version=rule-engine-v0`, and
+  `decision_support_only=true`. Documented invalid `price_area=SE3` validation
+  behavior and confirmed only DK1 and DK2 are accepted, with caller-provided
+  JSON only, no database connection, no database writes, no live Energi Data
+  Service polling, no LLM or ML model, and no automatic control, dispatch,
+  activation, or operational functionality.
 - Added read-only `POST /api/risk/preview` FastAPI endpoint that validates
   caller-provided DK1/DK2 JSON payloads with Pydantic and delegates only to the
   existing pure `rule-engine-v0` surplus-risk scorer, returning the exact model

@@ -66,6 +66,52 @@ Start the API locally:
 uvicorn app.main:app --reload
 ```
 
+### Local risk preview API smoke test
+
+Manual local validation was documented with the backend started manually:
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+The valid smoke test posted caller-provided JSON only to
+`POST /api/risk/preview`:
+
+```json
+{
+  "price_area": "DK1",
+  "timestamp_utc": "2026-06-09T21:45:00+02:00",
+  "price_dkk_per_mwh": -10,
+  "production_mw": 1000,
+  "wind_onshore_mw": 500,
+  "wind_offshore_mw": 350,
+  "solar_mw": 50,
+  "consumption_mw": 900
+}
+```
+
+Observed local result:
+
+- `risk_level`: `high`
+- `risk_score`: `75`
+- `confidence_score`: `1.0`
+- `reason_codes` included `NEGATIVE_PRICE` and `HIGH_RENEWABLE_SHARE`
+- `model_version`: `rule-engine-v0`
+- `decision_support_only`: `true`
+
+An invalid input smoke test using `price_area` `SE3` returned a validation
+error. Only `DK1` and `DK2` are accepted.
+
+Important boundary notes:
+
+- The risk preview endpoint used caller-provided JSON only.
+- No database connection was used.
+- No database writes were performed.
+- No live Energi Data Service polling was performed.
+- No LLM or ML model was used.
+- No automatic control, dispatch, activation, or operational functionality
+  exists.
+
 ## Frontend Local Development
 
 The frontend is a minimal Next.js dashboard for `v0.1` read-only decision
