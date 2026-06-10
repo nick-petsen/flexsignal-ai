@@ -72,10 +72,10 @@ This is still a local technical validation helper, not full model validation,
 not statistical calibration, and not evidence of production performance. It
 does not fetch, clean, label, or audit a complete historical dataset.
 
-### Observed Local DK1 Result
+### Observed Local DK1 Result After Nearest-Timestamp Pairing
 
-The first local read-only DB backtest was run against actual locally stored
-EDS-derived rows for DK1.
+The local read-only DB backtest was rerun against actual locally stored
+EDS-derived rows for DK1 after `nearest_timestamp_v0_1` pairing was merged.
 
 Local table counts before the backtest:
 
@@ -116,13 +116,13 @@ Observed output:
 
 Interpretation:
 
-- This is the first local read-only DB backtest against actual locally stored
-  EDS-derived rows.
-- The result indicates mostly low/medium risk on the tiny local DK1 sample.
-- This is not full model validation because the dataset is only 3 composed
-  rows.
-- Row pairing now uses nearest-timestamp behavior, but it is still simple and
-  must not be treated as full time-series validation.
+- `nearest_timestamp_v0_1` pairing is active.
+- On the tiny local DK1 sample, the risk distribution remained unchanged
+  compared with the previous simple pairing run.
+- This is expected because the local dataset only contains 3 composed rows.
+- This is still technical validation, not full model validation.
+- A larger historical dataset is required before drawing performance
+  conclusions.
 
 Safety notes:
 
