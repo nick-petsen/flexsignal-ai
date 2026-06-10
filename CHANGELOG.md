@@ -2,6 +2,19 @@
 
 ## v0.1.0 - TODO
 
+- Added `POST /api/forecast/preview`, a read-only FastAPI wrapper around
+  `forecast-window-v0` for caller-provided DK1/DK2 rows only. The endpoint
+  returns deterministic `0-24h`, `24-48h`, and `48-72h` summaries from
+  `build_forecast_window_forecast(...)`, validates supported price areas and
+  timezone-aware request timestamps, allows empty caller-provided row lists to
+  return three `unknown` windows, and preserves decision-support-only safety
+  wording. Added API tests for valid previews, empty rows, invalid price areas,
+  timezone-naive timestamps, absence of DB/API/network/job behavior, existing
+  risk endpoint compatibility, and safety wording. Documented that the endpoint
+  does not fetch EDS or DMI/weather data, read or write a database, persist
+  payloads, start jobs, train ML, use LLMs, add frontend code, add auth, add
+  Azure infrastructure, or perform automatic control, dispatch, activation, or
+  operational workflows.
 - Documented observed results from the synthetic local
   `scripts/forecast_window_preview.py` commands only:
   `python3 scripts/forecast_window_preview.py --pretty`,

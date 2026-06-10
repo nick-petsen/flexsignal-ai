@@ -35,6 +35,8 @@ Current read-only foundation:
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
 - `forecast-window-v0` exists as deterministic pure Python aggregation over
   caller-provided rows for `0-24h`, `24-48h`, and `48-72h` windows.
+- `POST /api/forecast/preview` exposes that aggregation for caller-provided
+  rows only.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
@@ -47,9 +49,9 @@ Still preview / not production:
 - No full historical backtest has been run.
 - No outcome labels are available.
 - No production 24-72 hour forecast has been validated.
-- `forecast-window-v0` is not ML, not DMI/weather based yet, does not fetch
-  data, does not write data, does not expose an API, and is not production
-  forecast validation.
+- `forecast-window-v0` and `POST /api/forecast/preview` are not ML, not LLM
+  based, not DMI/weather based yet, do not fetch EDS or DMI data, do not read
+  or write a database, and are not production forecast validation.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
 - No PDF/report export exists yet.
@@ -59,8 +61,19 @@ Still preview / not production:
 
 Recommended next MVP step: keep the deterministic forecast-window foundation
 read-only while adding explicit validation and caller-provided/local data
-composition before any API or UI surface. Do not use an LLM as the forecast
-engine, and do not add control, dispatch, or activation behavior.
+composition before any UI surface. Do not use an LLM as the forecast engine,
+and do not add control, dispatch, or activation behavior.
+
+## Forecast Preview API Boundary
+
+`POST /api/forecast/preview` accepts caller-provided DK1/DK2 rows and returns
+the deterministic `forecast-window-v0` `0-24h`, `24-48h`, and `48-72h`
+summaries. It is read-only decision support only.
+
+The endpoint does not fetch Energi Data Service data, call DMI/weather APIs,
+read or write a database, persist rows, start jobs, train ML models, use LLMs,
+or perform automatic control, dispatch, activation, closed-loop workflows,
+asset connections, plant/device commands, or live control signals.
 
 ## Planned Historical Local Sample Backtest Validation
 
@@ -431,7 +444,8 @@ Interpretation:
 - It is not DMI/weather based yet.
 - It does not fetch data.
 - It does not read or write a database.
-- It does not expose an API yet.
+- `POST /api/forecast/preview` exposes the same caller-provided aggregation
+  boundary for JSON requests only.
 - It is not production forecast validation.
 
 Safety notes:
