@@ -211,6 +211,47 @@ Use `--continue-on-error` only when a failed child command should not stop
 remaining planned manual validation commands. The wrapper prints a compact JSON
 summary with planned, succeeded, and failed child command counts.
 
+### Historical Batch Wrapper Dry-Run Result
+
+The following wrapper dry-run validated command orchestration and normalization
+path behavior for all supported DK1/DK2 dataset combinations only. It did not
+write to the database.
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --continue-on-error
+```
+
+Wrapper result:
+
+- `dry_run`: `true`
+- `confirmed_local_write`: `false`
+- `local_only`: `true`
+- `decision_support_only`: `true`
+- `limit`: `10`
+- `price_areas`: `DK1`, `DK2`
+- `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`
+- `commands_planned`: `4`
+- `commands_succeeded`: `4`
+- `commands_failed`: `0`
+- `child_exit_codes`: `[0, 0, 0, 0]`
+
+Child dry-run observations:
+
+| Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| `DayAheadPrices` | `DK1` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
+| `DayAheadPrices` | `DK2` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+
+Confirmed writes still require explicit `--confirm-local-db-write`. The
+wrapper currently uses `limit 10` and a hard maximum of `10` to match the
+child-script safety gates. This remains local PostgreSQL dry-run validation
+only: no committed writes, production database, Azure resources, scheduler,
+backend startup ingestion, frontend-triggered ingestion, automatic polling
+loop, ML training, LLM use, or automatic control, dispatch, activation, or
+operational functionality.
+
 ## Risk Backtest Synthetic Preview
 
 `risk_backtest_preview.py` is a manual synthetic local preview for the existing

@@ -160,6 +160,60 @@ Observed rows included:
 - `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:25:00`.
 - `ElectricityProdex5MinRealtime:DK1:2026-06-08T23:20:00`.
 
+### Manual EDS Historical Batch Wrapper Dry-Run
+
+This dry-run result documents the manual batch wrapper only. It validates
+command orchestration and the supported normalization path for all supported
+DK1/DK2 dataset combinations. It did not write to the database.
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --continue-on-error
+```
+
+Wrapper result:
+
+- `dry_run`: `true`.
+- `confirmed_local_write`: `false`.
+- `local_only`: `true`.
+- `decision_support_only`: `true`.
+- `limit`: `10`.
+- `price_areas`: `DK1`, `DK2`.
+- `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`.
+- `commands_planned`: `4`.
+- `commands_succeeded`: `4`.
+- `commands_failed`: `0`.
+- `child_exit_codes`: `[0, 0, 0, 0]`.
+
+Child dry-run observations:
+
+| Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| `DayAheadPrices` | `DK1` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
+| `DayAheadPrices` | `DK2` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+
+Confirmed writes still require explicit `--confirm-local-db-write`. The
+wrapper currently uses `limit 10` and a hard maximum of `10` to match the
+child-script safety gates.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Dry-run only.
+- No committed writes.
+- No production database.
+- No Azure resources.
+- No scheduler.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
+
 ### Manual Local Read-Only API Smoke Test
 
 The local FastAPI server was started manually against local PostgreSQL only:
