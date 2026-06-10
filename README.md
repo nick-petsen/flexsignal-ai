@@ -112,6 +112,52 @@ Important boundary notes:
 - No automatic control, dispatch, activation, or operational functionality
   exists.
 
+### Local DK2 EDS ingestion validation
+
+Manual local DK2 ingestion validation used tiny Energi Data Service samples
+only.
+
+Dry-run validation observed:
+
+- `DayAheadPrices` DK2 returned HTTP `200`.
+- `DayAheadPrices` raw record count was `2`.
+- `DayAheadPrices` normalized record count was `2`.
+- `DayAheadPrices` SQL command count was `2`.
+- `DayAheadPrices` committed was `false`.
+- `ElectricityProdex5MinRealtime` DK2 returned HTTP `200`.
+- `ElectricityProdex5MinRealtime` raw record count was `2`.
+- `ElectricityProdex5MinRealtime` normalized record count was `2`.
+- `ElectricityProdex5MinRealtime` SQL command count was `2`.
+- `ElectricityProdex5MinRealtime` committed was `false`.
+
+Confirmed local write validation observed:
+
+- `DayAheadPrices` DK2 committed was `true`.
+- `ElectricityProdex5MinRealtime` DK2 committed was `true`.
+- The writes were local PostgreSQL only.
+- The writes were manual confirmed local writes only.
+
+Local row counts after DK2 ingest:
+
+- `spot_prices` DK1: `3`
+- `spot_prices` DK2: `2`
+- `power_balance` DK1: `3`
+- `power_balance` DK2: `2`
+
+Important boundary notes:
+
+- Local PostgreSQL only.
+- Manual validation only.
+- No production database was used.
+- No Azure resources were used.
+- No startup migrations were run.
+- No automated ingestion job was added.
+- No live polling loop was added.
+- No ML training was performed.
+- No LLM was used.
+- No automatic control, dispatch, activation, or operational functionality
+  exists.
+
 ### Local current risk API smoke test
 
 Manual local validation was documented with the backend started manually:
@@ -139,6 +185,27 @@ Observed local result:
 - `metadata.spot_price_row_found`: `true`
 - `metadata.power_balance_row_found`: `true`
 
+The smoke test also called the current-risk endpoint for DK2:
+
+```text
+GET /api/risk/current?price_area=DK2
+```
+
+Observed local result:
+
+- backend returned HTTP `200`
+- `price_area`: `DK2`
+- `risk_level`: `low`
+- `risk_score`: `20`
+- `confidence_score`: `1.0`
+- `reason_codes` included `NORMAL_PRICE`, `MODERATE_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`
+- `model_version`: `rule-engine-v0`
+- `decision_support_only`: `true`
+- `metadata.source_tables_used` included `spot_prices` and `power_balance`
+- `metadata.spot_price_row_found`: `true`
+- `metadata.power_balance_row_found`: `true`
+
 An invalid input smoke test called:
 
 ```text
@@ -157,6 +224,69 @@ Important boundary notes:
 - No Azure resources were used.
 - No production database was used.
 - No LLM or ML model was used.
+- No automatic control, dispatch, activation, or operational functionality
+  exists.
+
+### Local DK2 read-only DB risk backtest result
+
+Manual local read-only risk backtest validation was run for DK2 using existing
+local PostgreSQL rows only. Before the backtest, local table counts were:
+
+- `spot_prices` DK1: `3`
+- `spot_prices` DK2: `2`
+- `power_balance` DK1: `3`
+- `power_balance` DK2: `2`
+
+The command run was:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK2 --limit 10 --pretty
+```
+
+Observed local result:
+
+- `price_area` was `DK2`.
+- `limit` was `10`.
+- `read_only` was `true`.
+- `decision_support_only` was `true`.
+- `pairing_strategy` was `nearest_timestamp_v0_1`.
+- `spot_price_rows_read` was `2`.
+- `power_balance_rows_read` was `2`.
+- `composed_rows` was `2`.
+- `backtest_summary.total_rows` was `2`.
+- `backtest_summary.evaluated_rows` was `2`.
+- `backtest_summary.failed_rows` was `0`.
+- `backtest_summary.risk_level_counts.low` was `2`.
+- `backtest_summary.risk_level_counts.medium` was `0`.
+- `backtest_summary.risk_level_counts.high` was `0`.
+- `backtest_summary.average_risk_score` was `20.0`.
+- `backtest_summary.average_confidence_score` was `1.0`.
+- `backtest_summary.reason_code_counts` included `NORMAL_PRICE: 2`,
+  `MODERATE_RENEWABLE_SHARE: 2`, and `EXCHANGE_NET_NOT_USED_V0: 2`.
+- `backtest_summary.missing_price_count` was `0`.
+- `backtest_summary.missing_generation_data_count` was `0`.
+- `backtest_summary.model_version` was `rule-engine-v0`.
+
+Interpretation:
+
+- DK2 local read-only path is now validated.
+- The DK2 current risk endpoint returned low risk on the tiny local sample.
+- The DK2 local DB backtest returned low risk for both composed rows.
+- This is still technical validation, not full model validation.
+- The dataset is tiny and not enough for performance conclusions.
+
+Important boundary notes:
+
+- Local PostgreSQL only.
+- SELECT/read-only backtest only.
+- No database writes were performed by the backtest.
+- No live EDS polling was performed by the backtest.
+- No backend or frontend server was started for the backtest.
+- No startup migrations were run.
+- No production database was used.
+- No Azure resources were used.
+- No ML training was performed.
+- No LLM was used.
 - No automatic control, dispatch, activation, or operational functionality
   exists.
 

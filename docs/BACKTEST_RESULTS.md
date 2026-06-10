@@ -7,9 +7,10 @@ FlexSignal AI now includes a pure Python backtest evaluator for
 list of local row dictionaries, and each valid row is passed to
 `calculate_surplus_risk`.
 
-A first local read-only database backtest has been run against a tiny locally
-stored DK1 sample of EDS-derived rows. This document does not claim validated
-production performance, predictive accuracy, or statistical calibration.
+First local read-only database backtests have been run against tiny locally
+stored DK1 and DK2 samples of EDS-derived rows. This document does not claim
+validated production performance, predictive accuracy, or statistical
+calibration.
 
 ## Synthetic Preview Script
 
@@ -134,6 +135,114 @@ Safety notes:
 - No startup migrations.
 - No production database.
 - No Azure resources.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
+
+### Observed Local DK2 Result After Manual Local Ingest
+
+DK2 was manually validated with tiny local Energi Data Service samples before
+running the current-risk smoke test and local read-only DB backtest.
+
+Local EDS dry-run validation:
+
+- `DayAheadPrices` DK2 returned HTTP `200`.
+- `DayAheadPrices` raw record count: `2`.
+- `DayAheadPrices` normalized record count: `2`.
+- `DayAheadPrices` SQL command count: `2`.
+- `DayAheadPrices` committed: `false`.
+- `ElectricityProdex5MinRealtime` DK2 returned HTTP `200`.
+- `ElectricityProdex5MinRealtime` raw record count: `2`.
+- `ElectricityProdex5MinRealtime` normalized record count: `2`.
+- `ElectricityProdex5MinRealtime` SQL command count: `2`.
+- `ElectricityProdex5MinRealtime` committed: `false`.
+
+Confirmed local write validation:
+
+- `DayAheadPrices` DK2 committed: `true`.
+- `ElectricityProdex5MinRealtime` DK2 committed: `true`.
+- Local PostgreSQL only.
+- Manual confirmed local write only.
+
+Local row counts after DK2 ingest:
+
+- `spot_prices`:
+  - `DK1`: `3`
+  - `DK2`: `2`
+- `power_balance`:
+  - `DK1`: `3`
+  - `DK2`: `2`
+
+Current risk API smoke test:
+
+```text
+GET /api/risk/current?price_area=DK2
+```
+
+Observed result:
+
+- backend returned HTTP `200`
+- `price_area`: `DK2`
+- `risk_level`: `low`
+- `risk_score`: `20`
+- `confidence_score`: `1.0`
+- `reason_codes` included `NORMAL_PRICE`, `MODERATE_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`
+- `model_version`: `rule-engine-v0`
+- `decision_support_only`: `true`
+- `metadata.source_tables_used` included `spot_prices` and `power_balance`
+- `metadata.spot_price_row_found`: `true`
+- `metadata.power_balance_row_found`: `true`
+
+Command run:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK2 --limit 10 --pretty
+```
+
+Observed output:
+
+- `price_area`: `DK2`
+- `limit`: `10`
+- `read_only`: `true`
+- `decision_support_only`: `true`
+- `pairing_strategy`: `nearest_timestamp_v0_1`
+- `spot_price_rows_read`: `2`
+- `power_balance_rows_read`: `2`
+- `composed_rows`: `2`
+- `backtest_summary.total_rows`: `2`
+- `backtest_summary.evaluated_rows`: `2`
+- `backtest_summary.failed_rows`: `0`
+- `backtest_summary.risk_level_counts.low`: `2`
+- `backtest_summary.risk_level_counts.medium`: `0`
+- `backtest_summary.risk_level_counts.high`: `0`
+- `backtest_summary.average_risk_score`: `20.0`
+- `backtest_summary.average_confidence_score`: `1.0`
+- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `2`
+- `backtest_summary.reason_code_counts.MODERATE_RENEWABLE_SHARE`: `2`
+- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `2`
+- `backtest_summary.missing_price_count`: `0`
+- `backtest_summary.missing_generation_data_count`: `0`
+- `backtest_summary.model_version`: `rule-engine-v0`
+
+Interpretation:
+
+- DK2 local read-only path is now validated.
+- The DK2 current risk endpoint returned low risk on the tiny local sample.
+- The DK2 local DB backtest returned low risk for both composed rows.
+- This is still technical validation, not full model validation.
+- The dataset is tiny and not enough for performance conclusions.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Manual validation only.
+- SELECT/read-only backtest only.
+- No production database.
+- No Azure resources.
+- No startup migrations.
+- No automated ingestion job.
+- No live polling loop.
 - No ML training.
 - No LLM use.
 - No automatic control, dispatch, activation, or operational functionality.
