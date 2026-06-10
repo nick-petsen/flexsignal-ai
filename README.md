@@ -32,6 +32,8 @@ Working read-only core:
   surplus risk.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
+- `forecast-window-v0` exists as pure backend Python aggregation over
+  caller-provided rows for 0-24h, 24-48h, and 48-72h windows.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
 - Synthetic backtest preview exists.
 - Local DB read-only backtest exists.
@@ -59,7 +61,9 @@ Still preview / not production:
 
 - Dataset is still small and no full historical backtest has been run.
 - No outcome labels or statistical calibration exist.
-- No 24-72 hour forecast exists yet.
+- The 24-72 hour forecast-window foundation is deterministic aggregation only;
+  it is not ML, not DMI/weather based yet, does not fetch data, does not write
+  data, does not expose an API yet, and is not production forecast validation.
 - No DMI/weather ingestion exists yet.
 - No PDF report export exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
@@ -67,9 +71,10 @@ Still preview / not production:
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
-Recommended next MVP step: start a simple deterministic 24-72 hour forecast
-foundation using available local EDS data first. Do not use an LLM as the
-forecast engine, and do not add control, dispatch, or activation behavior.
+Recommended next MVP step: keep the deterministic forecast-window foundation
+read-only while adding explicit validation and caller-provided/local data
+composition before any API or UI surface. Do not use an LLM as the forecast
+engine, and do not add control, dispatch, or activation behavior.
 
 ## Historical Local EDS Import Plan
 
@@ -276,7 +281,16 @@ into the FastAPI application and no database migrations are run in `v0.1`.
 
 ## Backend Local Development
 
-The current backend is a minimal FastAPI API for `v0.1` read-only decision support. It does not include control endpoints, authentication, runtime database code, data ingestion, forecasting logic, or infrastructure deployment.
+The current backend is a minimal FastAPI API plus pure Python decision-support
+logic for `v0.1`. It does not include control endpoints, authentication,
+runtime forecast data ingestion, forecast-window API exposure, or
+infrastructure deployment.
+
+`backend/app/forecast/window_forecast.py` provides the current
+`forecast-window-v0` foundation as pure Python logic only. It accepts
+caller-provided rows, reuses `rule-engine-v0` scoring, returns
+decision-support-only window summaries, and must not be used for automatic
+control, dispatch, or activation.
 
 From the `backend/` directory:
 

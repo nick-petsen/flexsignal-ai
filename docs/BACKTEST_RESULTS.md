@@ -33,6 +33,8 @@ Current read-only foundation:
 - Synthetic backtest preview exists for local smoke validation.
 - Local PostgreSQL read-only backtest exists for existing local rows.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
+- `forecast-window-v0` exists as deterministic pure Python aggregation over
+  caller-provided rows for `0-24h`, `24-48h`, and `48-72h` windows.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
@@ -44,7 +46,10 @@ Still preview / not production:
 - Dataset is still small.
 - No full historical backtest has been run.
 - No outcome labels are available.
-- No 24-72 hour forecast has been validated.
+- No production 24-72 hour forecast has been validated.
+- `forecast-window-v0` is not ML, not DMI/weather based yet, does not fetch
+  data, does not write data, does not expose an API, and is not production
+  forecast validation.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
 - No PDF/report export exists yet.
@@ -52,9 +57,10 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP step: add a simple deterministic 24-72 hour forecast
-foundation using available local EDS data first. Do not use an LLM as the
-forecast engine, and do not add control, dispatch, or activation behavior.
+Recommended next MVP step: keep the deterministic forecast-window foundation
+read-only while adding explicit validation and caller-provided/local data
+composition before any API or UI surface. Do not use an LLM as the forecast
+engine, and do not add control, dispatch, or activation behavior.
 
 ## Planned Historical Local Sample Backtest Validation
 
@@ -106,8 +112,9 @@ dispatch, activation, closed-loop, or operational behavior.
 
 Even after these larger local samples are imported, the results remain
 technical validation only. They are not full model validation because there are
-no outcome labels, no DMI/weather data, no 24-72 hour forecast, no statistical
-calibration, and `rule-engine-v0` remains deterministic and simple.
+no outcome labels, no DMI/weather data, no production-validated 24-72 hour
+forecast, no statistical calibration, and `rule-engine-v0` remains
+deterministic and simple.
 
 ## Confirmed Local Batch Backtest Results
 

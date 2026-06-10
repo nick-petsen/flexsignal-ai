@@ -2,6 +2,26 @@
 
 ## v0.1.0 - TODO
 
+- Added `forecast-window-v0`, a pure backend Python deterministic aggregation
+  layer for caller-provided DK1/DK2 surplus-risk rows. It returns three
+  non-overlapping windows (`0-24h`, `24-48h`, `48-72h`), ignores rows before
+  `generated_at_utc`, at or beyond +72h, or for another valid price area,
+  rejects invalid DK areas and timezone-naive timestamps, reuses
+  `calculate_surplus_risk` from `rule-engine-v0`, bases each non-empty window
+  risk level on the maximum observed risk score, and includes deterministic
+  averages, risk counts, top reason codes, human-review actions, and
+  decision-support-only safety wording. Added forecast-window tests covering
+  window assignment, ignored rows, empty windows, max-risk aggregation,
+  deterministic reason-code ordering, timestamp validation, absence of DB/API
+  and network dependencies in the forecast module, and required safety output.
+  Updated README, model card, and backtest notes to document that this is not
+  ML, not DMI/weather based yet, does not fetch data, does not write data, does
+  not expose an API yet, is not production forecast validation, and must not be
+  used for automatic control, dispatch, or activation. No FastAPI endpoint,
+  frontend behavior, database access, SQL, live Energi Data Service calls,
+  DMI/weather ingestion, scheduler, Azure infrastructure, secrets, auth, ML
+  training, LLM use, control, dispatch, activation, or operational
+  functionality was added.
 - Added a concise MVP readiness summary across the README, local database
   runbook, model card, and backtest notes. Documented that FlexSignal AI is
   ready for a local technical MVP demo, not production ready, not a validated
