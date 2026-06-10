@@ -11,6 +11,28 @@ No real historical backtest has been run yet. This document does not claim
 validated production performance, predictive accuracy, or statistical
 calibration.
 
+## Synthetic Preview Script
+
+`scripts/risk_backtest_preview.py` provides a manual local preview of
+`evaluate_risk_backtest(rows)` using a tiny hardcoded synthetic dataset. The
+sample rows are included only to exercise low-, medium-, and high-like
+rule-engine outputs, missing-data counters, and one invalid row captured in
+`failed_rows`.
+
+Run it manually:
+
+```bash
+python3 scripts/risk_backtest_preview.py
+python3 scripts/risk_backtest_preview.py --pretty
+```
+
+The script prints a JSON summary of the evaluator output. It does not read a
+historical dataset and does not establish model validity.
+
+This preview is not a real historical backtest, not model validation, not
+statistical calibration, and not evidence of production performance. It is only
+a local smoke preview of existing deterministic aggregation behavior.
+
 ## Reported Metrics
 
 `evaluate_risk_backtest(rows)` reports:
@@ -53,3 +75,8 @@ jobs, or use LLMs.
 It does not perform or trigger automatic control, dispatch, activation,
 closed-loop workflows, asset connections, plant/device commands, or live
 control signals.
+
+The synthetic preview script follows the same boundary: it uses hardcoded local
+rows only and does not require `DATABASE_URL`, fetch live Energi Data Service
+data, call HTTP APIs, run backend or frontend servers, use Azure, train ML
+models, or add operational behavior.
