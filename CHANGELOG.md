@@ -2,6 +2,17 @@
 
 ## v0.1.0 - TODO
 
+- Added a manual synthetic local `scripts/forecast_window_preview.py` for
+  `forecast-window-v0`, with fixed `generated_at_utc`, DK1/DK2 selection,
+  `balanced`, `high-risk`, and `empty-window` scenarios, compact or pretty JSON
+  output, direct use of `build_forecast_window_forecast(...)`, and explicit
+  synthetic-only safety warnings. Documented usage in the scripts README,
+  README, model card, and backtest notes. This does not require `DATABASE_URL`,
+  connect to a database, execute SQL, fetch live Energi Data Service data, call
+  DMI/weather APIs, add FastAPI endpoints, modify backend startup, add frontend
+  code, create ingestion jobs, use Azure, add secrets, add auth, train ML
+  models, use LLMs, control, dispatch, activation, or operational
+  functionality.
 - Added `forecast-window-v0`, a pure backend Python deterministic aggregation
   layer for caller-provided DK1/DK2 surplus-risk rows. It returns three
   non-overlapping windows (`0-24h`, `24-48h`, `48-72h`), ignores rows before

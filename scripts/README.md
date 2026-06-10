@@ -255,6 +255,41 @@ polling, backend startup ingestion, frontend-triggered ingestion, automatic
 polling loop, ML training, LLM use, or automatic control, dispatch,
 activation, or operational functionality.
 
+## Forecast Window Synthetic Preview
+
+`forecast_window_preview.py` is a manual synthetic local preview for
+`forecast-window-v0`. It uses only in-script caller-provided sample rows, calls
+`build_forecast_window_forecast(...)`, and prints JSON for the `0-24h`,
+`24-48h`, and `48-72h` forecast windows. `generated_at_utc` is fixed for stable
+output.
+
+```bash
+python3 scripts/forecast_window_preview.py
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+Scenarios:
+
+- `balanced`: rows across all three windows with mixed low/medium-like scores.
+- `high-risk`: includes a negative-price and high-renewable-share row to show
+  max-risk window aggregation.
+- `empty-window`: leaves at least one matching-price-area window empty so that
+  window returns `risk_level` `unknown`.
+
+The script prints a scope warning and JSON including `price_area`,
+`generated_at_utc`, `model_version`, `decision_support_only`, safety text, and
+per-window counts, scores, reason codes, human-review action, explanation, and
+decision-support-only flag.
+
+This is synthetic/caller-provided preview-only. It does not require
+`DATABASE_URL`, connect to a database, execute SQL, fetch live Energi Data
+Service data, call DMI/weather APIs, add or use FastAPI endpoints, run frontend
+code, create ingestion jobs, use Azure, add secrets, add auth, train ML models,
+use LLMs, control assets, dispatch, activate, or perform operational
+functionality.
+
 ## Risk Backtest Synthetic Preview
 
 `risk_backtest_preview.py` is a manual synthetic local preview for the existing
