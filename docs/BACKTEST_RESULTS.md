@@ -19,25 +19,26 @@ The current backtest work is a read-only technical validation layer for
 paired with `nearest_timestamp_v0_1`, scored, and summarized. It does not
 validate commercial performance or operational readiness.
 
-Validated local sample results:
+Latest documented local DB backtest results after the confirmed manual EDS
+historical batch write:
 
-| Area | Spot prices read | Power balance read | Current risk | Backtest risk counts | Average risk score |
-| --- | ---: | ---: | --- | --- | ---: |
-| DK1 | 3 | 3 | medium, score 35 | low=1, medium=2, high=0 | 26.6667 |
-| DK2 | 2 | 2 | low, score 20 | low=2, medium=0, high=0 | 20.0 |
+| Area | Spot prices read | Power balance read | Backtest risk counts | Average risk score |
+| --- | ---: | ---: | --- | ---: |
+| DK1 | 13 | 13 | low=1, medium=12, high=0 | 33.0769 |
+| DK2 | 10 | 12 | low=12, medium=0, high=0 | 20.0 |
 
 Current read-only foundation:
 
 - Synthetic backtest preview exists for local smoke validation.
 - Local PostgreSQL read-only backtest exists for existing local rows.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
-- DK1 and DK2 local DB backtests complete with no failed rows on the tiny
-  local samples.
+- DK1 and DK2 local DB backtests complete with no failed rows on the expanded
+  local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
 
 Still preview / not production:
 
-- Dataset is tiny.
+- Dataset is still small.
 - No full historical backtest has been run.
 - No outcome labels are available.
 - No 24-72 hour forecast has been validated.
@@ -101,6 +102,146 @@ Even after these larger local samples are imported, the results remain
 technical validation only. They are not full model validation because there are
 no outcome labels, no DMI/weather data, no 24-72 hour forecast, no statistical
 calibration, and `rule-engine-v0` remains deterministic and simple.
+
+## Confirmed Local Batch Backtest Results
+
+The following local DB backtests were run after the manual EDS historical batch
+wrapper performed confirmed local writes for `DayAheadPrices` and
+`ElectricityProdex5MinRealtime` across `DK1` and `DK2`.
+
+Counts before the confirmed batch write:
+
+| Table | DK1 | DK2 |
+| --- | ---: | ---: |
+| `spot_prices` | 3 | 2 |
+| `power_balance` | 3 | 2 |
+
+Confirmed batch write command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write --continue-on-error
+```
+
+Confirmed batch summary:
+
+- `child_exit_codes`: `[0, 0, 0, 0]`
+- `commands_planned`: `4`
+- `commands_succeeded`: `4`
+- `commands_failed`: `0`
+- `confirmed_local_write`: `true`
+- `dry_run`: `false`
+- `limit`: `10`
+- `local_only`: `true`
+- `decision_support_only`: `true`
+- `price_areas`: `DK1`, `DK2`
+- `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`
+
+Counts after the confirmed batch write:
+
+| Table | DK1 | DK2 |
+| --- | ---: | ---: |
+| `spot_prices` | 13 | 10 |
+| `power_balance` | 13 | 12 |
+
+The same confirmed batch command was run a second time as an idempotency
+check. The second run reported `child_exit_codes: [0, 0, 0, 0]`,
+`commands_planned: 4`, `commands_succeeded: 4`, `commands_failed: 0`,
+`confirmed_local_write: true`, `dry_run: false`, `limit: 10`, and
+`local_only: true`. Counts remained unchanged after the second run:
+`spot_prices` DK1 `13`, `spot_prices` DK2 `10`, `power_balance` DK1 `13`, and
+`power_balance` DK2 `12`. No duplicate explosion was observed, and the
+repeated import was idempotent for the same 10-record batch.
+
+### DK1 Result After Confirmed Batch Write
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK1 --limit 20 --pretty
+```
+
+Observed output:
+
+- `price_area`: `DK1`
+- `read_only`: `true`
+- `decision_support_only`: `true`
+- `pairing_strategy`: `nearest_timestamp_v0_1`
+- `spot_price_rows_read`: `13`
+- `power_balance_rows_read`: `13`
+- `composed_rows`: `13`
+- `backtest_summary.total_rows`: `13`
+- `backtest_summary.evaluated_rows`: `13`
+- `backtest_summary.failed_rows`: `0`
+- `backtest_summary.risk_level_counts.low`: `1`
+- `backtest_summary.risk_level_counts.medium`: `12`
+- `backtest_summary.risk_level_counts.high`: `0`
+- `backtest_summary.average_risk_score`: `33.0769`
+- `backtest_summary.average_confidence_score`: `1.0`
+- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `13`
+- `backtest_summary.reason_code_counts.HIGH_RENEWABLE_SHARE`: `12`
+- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `13`
+- `backtest_summary.reason_code_counts.ELEVATED_RENEWABLE_SHARE`: `1`
+- `backtest_summary.missing_price_count`: `0`
+- `backtest_summary.missing_generation_data_count`: `0`
+- `backtest_summary.model_version`: `rule-engine-v0`
+
+### DK2 Result After Confirmed Batch Write
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK2 --limit 20 --pretty
+```
+
+Observed output:
+
+- `price_area`: `DK2`
+- `read_only`: `true`
+- `decision_support_only`: `true`
+- `pairing_strategy`: `nearest_timestamp_v0_1`
+- `spot_price_rows_read`: `10`
+- `power_balance_rows_read`: `12`
+- `composed_rows`: `12`
+- `backtest_summary.total_rows`: `12`
+- `backtest_summary.evaluated_rows`: `12`
+- `backtest_summary.failed_rows`: `0`
+- `backtest_summary.risk_level_counts.low`: `12`
+- `backtest_summary.risk_level_counts.medium`: `0`
+- `backtest_summary.risk_level_counts.high`: `0`
+- `backtest_summary.average_risk_score`: `20.0`
+- `backtest_summary.average_confidence_score`: `1.0`
+- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `12`
+- `backtest_summary.reason_code_counts.MODERATE_RENEWABLE_SHARE`: `12`
+- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `12`
+- `backtest_summary.missing_price_count`: `0`
+- `backtest_summary.missing_generation_data_count`: `0`
+- `backtest_summary.model_version`: `rule-engine-v0`
+
+Interpretation:
+
+- The batch wrapper successfully performed confirmed local writes for all
+  supported DK1/DK2 dataset combinations.
+- The import was idempotent for the repeated 10-record batch.
+- DK1 shifted to mostly medium risk on the expanded local sample.
+- DK2 remained low risk on the expanded local sample.
+- This is still technical validation and not full model validation.
+- Dataset size is still small and has no outcome labels.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Manual confirmed write only.
+- Explicit `--confirm-local-db-write` was required.
+- Backtests were read-only.
+- No production database.
+- No Azure resources.
+- No scheduler.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
 
 ## Synthetic Preview Script
 
