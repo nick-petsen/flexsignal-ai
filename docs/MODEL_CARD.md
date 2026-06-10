@@ -136,6 +136,43 @@ endpoint, run frontend code, create a scheduler, use Azure, add secrets, add
 auth, train ML models, use LLMs, or perform control, dispatch, activation, or
 operational functionality.
 
+### Forecast Window Preview Results
+
+The synthetic preview script was run with:
+
+```bash
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+All observed outputs used `generated_at_utc=2026-01-01T00:00:00Z`,
+`model_version=rule-engine-v0+forecast-window-v0`, and
+`decision_support_only=true`.
+
+Balanced synthetic rows for `price_area=DK1` returned the three expected
+windows: `0-24h` had `row_count=2`, `risk_level=medium`, and
+`max_risk_score=45`; `24-48h` had `row_count=2`, `risk_level=low`, and
+`max_risk_score=30`; `48-72h` had `row_count=2`, `risk_level=medium`, and
+`max_risk_score=35`. Top reason codes were deterministic and included
+`EXCHANGE_NET_NOT_USED_V0` in all three windows, with price and renewable-share
+codes reflecting the in-script rows.
+
+The high-risk synthetic DK2 run demonstrated max-risk aggregation: the
+`24-48h` window became `high` risk with `max_risk_score=75`. Its top reason
+codes included `NEGATIVE_PRICE` and `HIGH_RENEWABLE_SHARE`.
+
+The empty-window synthetic run demonstrated insufficient caller-provided data
+handling: the `24-48h` window had `row_count=0`, `risk_level=unknown`,
+`average_risk_score=null`, `max_risk_score=null`, and no top reason codes.
+
+These results are local synthetic preview results only. They are deterministic
+aggregation over caller-provided rows, not ML, not DMI/weather based yet, not
+production forecast validation, and not evidence of predictive accuracy. The
+script does not fetch data, read or write a database, expose an API, run
+backend or frontend servers, schedule jobs, use Azure, use ML or LLMs, or
+perform control, dispatch, activation, closed-loop, or operational behavior.
+
 ## Limitations
 
 - This is a simple baseline for traceable decision support, not a validated

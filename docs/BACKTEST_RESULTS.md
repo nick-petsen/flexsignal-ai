@@ -388,6 +388,66 @@ data, call DMI/weather APIs, expose an API endpoint, run frontend code, create
 ingestion jobs, use Azure, add secrets, add auth, train ML models, use LLMs,
 control assets, dispatch, activate, or perform operational functionality.
 
+### Observed Forecast Window Synthetic Preview Results
+
+The following local synthetic commands were run:
+
+```bash
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+All three outputs printed the synthetic-only warning and reported
+`generated_at_utc=2026-01-01T00:00:00Z`,
+`model_version=rule-engine-v0+forecast-window-v0`, and
+`decision_support_only=true`.
+
+Balanced scenario, `price_area=DK1`:
+
+| Window | Row count | Risk level | Max risk score | Top reason codes |
+| --- | ---: | --- | ---: | --- |
+| `0-24h` | 2 | medium | 45 | `EXCHANGE_NET_NOT_USED_V0:2`, `LOW_PRICE:1`, `LOW_RENEWABLE_SHARE:1`, `MODERATE_RENEWABLE_SHARE:1`, `NORMAL_PRICE:1` |
+| `24-48h` | 2 | low | 30 | `EXCHANGE_NET_NOT_USED_V0:2`, `ELEVATED_RENEWABLE_SHARE:1`, `MODERATE_PRICE:1`, `MODERATE_RENEWABLE_SHARE:1`, `NORMAL_PRICE:1` |
+| `48-72h` | 2 | medium | 35 | `EXCHANGE_NET_NOT_USED_V0:2`, `ELEVATED_RENEWABLE_SHARE:1`, `LOW_PRICE:1`, `LOW_RENEWABLE_SHARE:1`, `NORMAL_PRICE:1` |
+
+High-risk scenario, `price_area=DK2`: the `24-48h` window became `high` risk
+with `row_count=2` and `max_risk_score=75`. The top reason codes showed the
+intended high-risk inputs, including `NEGATIVE_PRICE:1` and
+`HIGH_RENEWABLE_SHARE:1`, and demonstrated that the window risk level is based
+on the maximum observed row risk score.
+
+Empty-window scenario, `price_area=DK1`: the `24-48h` window had
+`row_count=0`, `risk_level=unknown`, `average_risk_score=null`,
+`max_risk_score=null`, and `top_reason_codes=[]`. This demonstrates the
+insufficient caller-provided data path for an empty forecast window.
+
+Interpretation:
+
+- `forecast-window-v0` preview works locally with synthetic rows.
+- It returns `0-24h`, `24-48h`, and `48-72h` windows.
+- It is deterministic aggregation over caller-provided rows.
+- It is not ML.
+- It is not DMI/weather based yet.
+- It does not fetch data.
+- It does not read or write a database.
+- It does not expose an API yet.
+- It is not production forecast validation.
+
+Safety notes:
+
+- Synthetic local preview only.
+- Read-only decision support only.
+- Human review required.
+- No database access.
+- No live Energi Data Service polling.
+- No DMI/weather calls.
+- No backend or frontend servers.
+- No scheduler.
+- No Azure resources.
+- No ML or LLM use.
+- Must not be used for automatic control, dispatch, or activation.
+
 ## Local DB Read-Only Backtest Script
 
 `scripts/risk_backtest_local_db.py` provides a manual local PostgreSQL
