@@ -17,8 +17,9 @@ control, or operational asset connectivity.
   dictionaries, using caller-provided fake cursors or connections.
 - An explicit manual local smoke-test script exists at
   `scripts/local_db_smoke_test.py`.
-- An explicit manual local EDS ingest validation script exists at
-  `scripts/manual_eds_local_db_ingest.py`.
+- Explicit manual local EDS ingest validation scripts exist at
+  `scripts/manual_eds_local_db_ingest.py` and
+  `scripts/manual_eds_historical_batch_import.py`.
 - An explicit manual local read-preview script exists at
   `scripts/manual_local_db_read_preview.py`.
 - The backend dev dependency set includes `psycopg[binary]` for local/manual
@@ -313,12 +314,12 @@ developer from a shell, against a manually created local PostgreSQL database.
    non-local database hosts, does not read secrets from files, and does not run
    automatically.
 
-6. Proposed future historical local EDS import flow.
+6. Run the staged manual historical local EDS batch wrapper.
 
-   This is a documentation-only plan for a future safe manual enhancement or
-   batch wrapper. The current `scripts/manual_eds_local_db_ingest.py` helper
-   still caps live EDS samples at `10` records, so the larger batch sizes below
-   require a deliberate local-only script enhancement before they can be run.
+   `scripts/manual_eds_historical_batch_import.py` is a manual local-only batch
+   wrapper around `scripts/manual_eds_local_db_ingest.py`. It prints the exact
+   child command plan, invokes the child script with the current Python
+   executable, and does not bypass the child script's safety gates.
 
    Goal:
 
@@ -332,12 +333,20 @@ developer from a shell, against a manually created local PostgreSQL database.
    - Price areas: `DK1` and `DK2`.
    - Local targets: `spot_prices` and `power_balance`.
 
-   Proposed batch progression:
+   Current wrapper batch size:
+
+   - Use `limit 10` or lower. The wrapper default is `10` and the wrapper hard
+     maximum is `10` to match the current child script safety gate.
+
+   Future larger batch progression:
 
    - Start with `limit 50` per dataset and price area.
    - Increase to `limit 100` only after validation passes.
    - Increase to a maximum of `limit 500` only after row counts, idempotency,
      and backtest outputs remain explainable at smaller batch sizes.
+   - These larger `50`/`100`/`500` imports require a future explicit
+     `scripts/manual_eds_local_db_ingest.py` child-script enhancement. The
+     wrapper must not bypass the child script safety gate.
 
    Required safety gates:
 
@@ -349,6 +358,19 @@ developer from a shell, against a manually created local PostgreSQL database.
    - No production database, Azure database, scheduled job, backend startup
      ingestion, frontend-triggered ingestion, or automatic polling loop.
 
+   Dry-run first:
+
+   ```bash
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_historical_batch_import.py --limit 10
+   ```
+
+   Confirmed local write only after the dry-run plan and child outputs are
+   reviewed:
+
+   ```bash
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write
+   ```
+
    Required validation after each batch:
 
    - Check row counts by `price_area`.
@@ -357,6 +379,29 @@ developer from a shell, against a manually created local PostgreSQL database.
    - Confirm counts do not duplicate unexpectedly.
    - Run the local DB read-only backtest for `DK1` and `DK2`.
    - Document `risk_level_counts` and `average_risk_score`.
+
+   Example row-count checks:
+
+   ```sql
+   SELECT price_area, COUNT(*) FROM spot_prices GROUP BY price_area ORDER BY price_area;
+   SELECT price_area, COUNT(*) FROM power_balance GROUP BY price_area ORDER BY price_area;
+   SELECT price_area, COUNT(DISTINCT source_record_id) FROM spot_prices GROUP BY price_area ORDER BY price_area;
+   SELECT price_area, COUNT(DISTINCT source_record_id) FROM power_balance GROUP BY price_area ORDER BY price_area;
+   ```
+
+   Idempotency check:
+
+   - Re-run the same wrapper command with the same dataset, price area, limit,
+     and confirmation mode.
+   - Re-run the row-count and distinct `source_record_id` checks.
+   - Confirm totals do not duplicate unexpectedly.
+
+   DK1/DK2 local DB backtest reruns:
+
+   ```bash
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/risk_backtest_local_db.py --price-area DK1 --limit 100 --pretty
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/risk_backtest_local_db.py --price-area DK2 --limit 100 --pretty
+   ```
 
    Stop immediately if any duplicate explosion, non-local database URL, write
    without explicit confirmation, failed normalization, unexpected source field
@@ -404,6 +449,8 @@ developer from a shell, against a manually created local PostgreSQL database.
   startup hooks, schedulers, or ingestion workflows.
 - `scripts/manual_eds_local_db_ingest.py` must not be run automatically by
   tests, startup hooks, schedulers, or ingestion workflows.
+- `scripts/manual_eds_historical_batch_import.py` must not be run automatically
+  by tests, startup hooks, schedulers, or ingestion workflows.
 - `scripts/manual_local_db_read_preview.py` must not be run automatically by
   tests, startup hooks, schedulers, or ingestion workflows.
 - No control, dispatch, activation, closed-loop, or operational functionality
@@ -440,14 +487,29 @@ For `scripts/manual_eds_local_db_ingest.py`, these additional checks apply:
   rolled-back status.
 - No confirmed writes should be performed by automated tests.
 
-For any future historical local EDS import enhancement or batch wrapper, these
-additional checks apply:
+For `scripts/manual_eds_historical_batch_import.py`, these additional checks
+apply:
 
 - Documentation must preserve the manual local technical validation boundary.
-- Start at `limit 50` per dataset and price area, then `100`, then maximum
-  `500` only after validation passes.
+- Dry-run is the default.
+- `DATABASE_URL` is required in dry-run and write mode.
+- `DATABASE_URL` must use DB-API format:
+  `postgresql://localhost/flexsignal_ai`.
+- `DATABASE_URL` host must be `localhost` or `127.0.0.1`.
+- Supported datasets are limited to `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`, or `all`.
+- Supported price areas are limited to `DK1`, `DK2`, or `all`.
+- Limit defaults to `10` and the wrapper must reject values above `10`.
+- Larger staged imports of `limit 50` per dataset and price area, then `100`,
+  then maximum `500`, require a future explicit child-script enhancement before
+  the wrapper can support them.
 - Dry-run must be run before confirmed write mode for each batch.
 - Confirmed writes must require explicit `--confirm-local-db-write`.
+- The wrapper must pass `--confirm-local-db-write` to child commands only when
+  the wrapper receives that flag.
+- The wrapper must stop on the first child failure unless
+  `--continue-on-error` is passed.
+- The wrapper must print the child command plan and final compact JSON summary.
 - Row counts by `price_area` and distinct `source_record_id` counts must be
   documented after each batch.
 - Repeating the same batch must not create unexpected duplicate rows.

@@ -185,12 +185,38 @@ production dataset does not provide a clear consumption field. Consumption must
 be sourced later from a separate validated dataset before surplus-risk scoring
 depends on consumption.
 
+## Energi Data Service Historical Batch Wrapper Boundary
+
+`scripts/manual_eds_historical_batch_import.py` is a manual local-only wrapper
+around `scripts/manual_eds_local_db_ingest.py` for running explicit batches of
+the already supported Energi Data Service datasets and DK1/DK2 price areas.
+
+The wrapper preserves the same source boundary:
+
+- Supported datasets: `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`.
+- Supported price areas: `DK1` and `DK2`.
+- `DATABASE_URL` is required and must target `localhost` or `127.0.0.1`.
+- Dry-run is the default.
+- Confirmed writes require explicit `--confirm-local-db-write`.
+- The wrapper prints exact child commands before invoking them.
+- The wrapper delegates to the existing child script and does not bypass its
+  safety gates.
+
+This wrapper is not scheduled ingestion, production persistence, backend
+startup work, FastAPI behavior, frontend behavior, forecasting, dispatch,
+activation, or control functionality. It must not be connected to production
+databases, Azure databases, assets, plants, devices, or operational energy
+infrastructure.
+
 ## Proposed Historical Local EDS Import Plan
 
-This plan is documentation only. It does not add code, change backend or
-frontend behavior, write to a database, run live API polling, add scheduled
-jobs, add Azure infrastructure, add secrets, add auth, add ML training, use
-LLMs, or add control, dispatch, activation, or operational functionality.
+This plan is implemented only as a manual local batch wrapper currently capped
+at `limit 10` to match the existing child ingest script safety gate. It does
+not change backend or frontend behavior, schedule database writes, run live API
+polling automatically, add Azure infrastructure, add secrets, add auth, add ML
+training, use LLMs, or add control, dispatch, activation, or operational
+functionality.
 
 Goal:
 
@@ -205,13 +231,21 @@ Planned datasets and price areas:
 | `DayAheadPrices` | `DK1`, `DK2` | `spot_prices` |
 | `ElectricityProdex5MinRealtime` | `DK1`, `DK2` | `power_balance` |
 
-Proposed batch sizes:
+Current batch size:
+
+- Use `limit 10` or lower with the current wrapper and child script.
+- The wrapper must not bypass the child script safety gate.
+
+Future proposed batch sizes:
 
 - Start with `limit 50` per dataset and price area.
 - Increase to `limit 100` only after row counts, distinct
   `source_record_id` counts, idempotency, and backtest outputs are checked.
 - Increase to a maximum of `limit 500` only after the same checks pass for the
   smaller batches.
+- These larger `50`/`100`/`500` stages require a future explicit
+  `scripts/manual_eds_local_db_ingest.py` child-script enhancement before they
+  can be run through the wrapper.
 
 Safety gates:
 

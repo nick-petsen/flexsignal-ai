@@ -2,12 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/manual_eds_historical_batch_import.py`, a manual local-only
+  batch wrapper around `scripts/manual_eds_local_db_ingest.py` for explicit
+  DK1/DK2 and `DayAheadPrices`/`ElectricityProdex5MinRealtime` validation
+  batches. The wrapper requires a local DB-API `DATABASE_URL`, refuses
+  non-local hosts, defaults to dry-run, passes `--confirm-local-db-write` to
+  child commands only when explicitly received, prints the child command plan,
+  stops on first child failure unless `--continue-on-error` is passed, defaults
+  to `limit 10`, rejects limits above `10`, and emits a compact JSON summary.
+  Updated scripts and validation docs, the local database runbook, and backtest
+  notes to clarify that larger `50`/`100`/`500` staged imports require a future
+  explicit child-script enhancement and that the wrapper must not bypass the
+  current child safety gate. No scheduler, Azure infrastructure, backend
+  startup ingestion, FastAPI endpoint, frontend code, production database
+  support, secrets, auth, ML training, LLM use, control, dispatch, activation,
+  closed-loop, or operational functionality was added.
 - Added a documentation-only historical local Energi Data Service import plan
   for expanding local DK1/DK2 samples of `DayAheadPrices` and
   `ElectricityProdex5MinRealtime` to support better read-only local backtesting.
-  Documented the staged batch progression of `limit 50`, then `100`, then
-  maximum `500` per dataset and price area only after row counts, distinct
-  `source_record_id` counts, idempotency, and backtest outputs are checked.
+  Documented the future staged batch progression of `limit 50`, then `100`,
+  then maximum `500` per dataset and price area only after an explicit child
+  script enhancement plus row counts, distinct `source_record_id` counts,
+  idempotency, and backtest outputs are checked.
   Documented required safety gates: local PostgreSQL only, `DATABASE_URL`
   targeting `localhost` or `127.0.0.1`, dry-run before confirmed write,
   explicit `--confirm-local-db-write` for confirmed writes, no production or

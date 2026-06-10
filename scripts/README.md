@@ -161,6 +161,56 @@ The script prints a warning, final request URL, HTTP status, raw count,
 normalized count, SQL command count, target tables, and committed/rolled-back
 status for each run.
 
+## Manual EDS Historical Batch Import
+
+`manual_eds_historical_batch_import.py` is a manual local-only batch wrapper
+around `manual_eds_local_db_ingest.py`. It builds explicit dataset and price
+area command combinations, prints the exact child command plan, and invokes the
+child script with the current Python executable.
+
+The wrapper is dry-run by default. It requires `DATABASE_URL`, refuses to run
+unless the parsed host is `localhost` or `127.0.0.1`, accepts only DB-API URL
+format such as `postgresql://localhost/flexsignal_ai`, and passes
+`--confirm-local-db-write` to child commands only when the wrapper receives that
+same flag. It defaults to `--limit 10`, rejects limits above `10`, and does not
+bypass the child ingest script safety gate. Larger staged imports such as
+`50`, `100`, or `500` records per dataset and price area require a future
+explicit child-script enhancement before the wrapper can support them.
+
+It supports only `DayAheadPrices` and `ElectricityProdex5MinRealtime`, filtered
+to `DK1`, `DK2`, or both. It does not schedule itself, run automatically, read
+secrets from files, import FastAPI, create jobs, expose endpoints, forecast,
+dispatch, activate, or control energy assets.
+
+Dry-run all supported datasets and DK1/DK2 with limit 10:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_historical_batch_import.py --limit 10
+```
+
+Confirmed local write for all supported datasets and DK1/DK2 with limit 10,
+only after dry-run and local migration validation:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write
+```
+
+DK1 only:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_historical_batch_import.py --price-area DK1
+```
+
+One dataset only:
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_historical_batch_import.py --dataset DayAheadPrices
+```
+
+Use `--continue-on-error` only when a failed child command should not stop
+remaining planned manual validation commands. The wrapper prints a compact JSON
+summary with planned, succeeded, and failed child command counts.
+
 ## Risk Backtest Synthetic Preview
 
 `risk_backtest_preview.py` is a manual synthetic local preview for the existing

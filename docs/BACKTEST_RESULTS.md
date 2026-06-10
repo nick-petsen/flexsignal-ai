@@ -51,24 +51,30 @@ Still preview / not production:
 ## Planned Historical Local Sample Backtest Validation
 
 This is a documentation-only plan for using larger local EDS-derived samples to
-improve read-only technical backtest coverage. It does not add code, change
-backend or frontend behavior, run database writes, run live API polling, add
-scheduled jobs, add Azure infrastructure, add secrets, add auth, add ML
-training, use LLMs, or add control, dispatch, activation, closed-loop, or
-operational functionality.
+improve read-only technical backtest coverage. The current manual batch wrapper
+is capped at `limit 10` to match the existing child ingest script safety gate.
+It does not add backend or frontend behavior, run database writes, run live API
+polling, add scheduled jobs, add Azure infrastructure, add secrets, add auth,
+add ML training, use LLMs, or add control, dispatch, activation, closed-loop,
+or operational functionality.
 
 The proposed local import source remains limited to:
 
 - `DayAheadPrices` for `DK1` and `DK2`.
 - `ElectricityProdex5MinRealtime` for `DK1` and `DK2`.
 
-The proposed batch progression is:
+The future larger batch progression is:
 
 | Stage | Limit per dataset and price area | Required action before next stage |
 | --- | ---: | --- |
 | 1 | 50 | Check row counts, distinct `source_record_id` counts, idempotency, and backtest output. |
 | 2 | 100 | Repeat the same checks and confirm counts do not duplicate unexpectedly. |
 | 3 | 500 maximum | Run only after smaller batches pass without mapping, normalization, or idempotency issues. |
+
+These `50`/`100`/`500` stages require a future explicit
+`scripts/manual_eds_local_db_ingest.py` child-script enhancement before the
+manual wrapper can run them. The wrapper must not bypass the child script
+safety gate.
 
 After each batch, rerun the local DB read-only backtest for both `DK1` and
 `DK2` and document:
@@ -81,6 +87,10 @@ After each batch, rerun the local DB read-only backtest for both `DK1` and
 - `backtest_summary.failed_rows`
 - `backtest_summary.missing_price_count`
 - `backtest_summary.missing_generation_data_count`
+
+Any future larger local sample imported through the manual batch wrapper should
+be followed by DK1 and DK2 local DB backtest reruns before drawing conclusions
+from the expanded data.
 
 Stop the local validation flow if any import produces duplicate explosion,
 uses a non-local database URL, writes without explicit confirmation, fails
