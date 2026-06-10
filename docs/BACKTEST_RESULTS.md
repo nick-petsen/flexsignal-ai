@@ -141,6 +141,64 @@ Interpretation:
 - It is read-only decision support and requires human review.
 - It is not production forecast validation.
 
+### Frontend Forecast Preview Smoke Test After CORS Fix
+
+The frontend Forecast preview card was smoke-tested manually from `main` after
+the local CORS preflight fix was merged. The backend was started without
+`DATABASE_URL`, and the frontend was started locally. The smoke test used only
+the Forecast preview card; spot prices, power balance, and current surplus risk
+cards were not used. No ingestion, database access, SQL, database writes, live
+Energi Data Service calls, DMI/weather calls, scheduler, Azure infrastructure,
+auth, secrets, ML training, LLM use, automatic control, dispatch, activation,
+or operational functionality was run or added.
+
+Frontend behavior observed:
+
+- Forecast preview card was visible.
+- Read-only badge was visible.
+- Synthetic/caller-provided preview warning was visible.
+- No forecast data appeared before clicking the manual button.
+- Manual "Load forecast preview" button triggered the preview.
+- The card displayed `model_version=rule-engine-v0+forecast-window-v0`,
+  `decision_support_only=true`, `generated_at_utc=2026-01-01T00:00:00Z`, and
+  three windows: `0-24h`, `24-48h`, and `48-72h`.
+
+DK1 frontend result:
+
+| Window | Row count | Risk level | Max risk score | Average risk score | Top reason codes observed |
+| --- | ---: | --- | ---: | ---: | --- |
+| `0-24h` | 1 | low | 30 | 30 | `EXCHANGE_NET_NOT_USED_V0`, `MODERATE_PRICE`, `MODERATE_RENEWABLE_SHARE` |
+| `24-48h` | 1 | high | 75 | 75 | `EXCHANGE_NET_NOT_USED_V0`, `HIGH_RENEWABLE_SHARE`, `NEGATIVE_PRICE`; recommended human action required human review |
+| `48-72h` | 1 | low | 10 | 10 | `ELEVATED_RENEWABLE_SHARE`, `EXCHANGE_NET_NOT_USED_V0`, `NORMAL_PRICE` |
+
+DK2 frontend result:
+
+- The selected price area was switched to `DK2`.
+- Manual "Load forecast preview" returned forecast-window data again.
+- The card displayed the same three forecast windows and decision-support-only
+  fields without frontend error.
+- This confirmed the selected price area can be used by the frontend helper
+  for the forecast preview flow.
+
+CORS interpretation: the previous browser error was caused by `OPTIONS`
+preflight returning `400`. After the CORS fix, the frontend successfully loaded
+forecast preview data from `POST /api/forecast/preview`, practically
+confirming the local CORS preflight path for the Forecast preview card.
+
+Interpretation:
+
+- The frontend forecast preview card works locally.
+- It manually calls `POST /api/forecast/preview`.
+- It displays deterministic `0-24h`, `24-48h`, and `48-72h` windows.
+- It uses synthetic/caller-provided demo rows only.
+- It is not production forecast validation, not ML, not LLM based, and not
+  DMI/weather based yet.
+- It does not fetch EDS/DMI data from the browser.
+- It does not read or write a database.
+- It does not auto-load or poll.
+- It remains local frontend/backend smoke-test documentation only, read-only
+  decision support only, and requires human review.
+
 ## Planned Historical Local Sample Backtest Validation
 
 This is a documentation-only plan for using larger local EDS-derived samples to

@@ -2,6 +2,38 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual frontend Forecast preview card smoke-test results after
+  the local CORS preflight fix was merged. The backend was started without
+  `DATABASE_URL`, the frontend was started locally, and only the Forecast
+  preview card was used; spot prices, power balance, and current surplus risk
+  cards were not used. The card was visible with the read-only badge and
+  synthetic/caller-provided preview warning, showed no forecast data before
+  the manual "Load forecast preview" click, then displayed
+  `model_version=rule-engine-v0+forecast-window-v0`,
+  `decision_support_only=true`, `generated_at_utc=2026-01-01T00:00:00Z`, and
+  `0-24h`, `24-48h`, and `48-72h` windows. DK1 returned `0-24h` low risk with
+  `row_count=1`, `max_risk_score=30`, `average_risk_score=30`, and reason
+  codes including `EXCHANGE_NET_NOT_USED_V0`, `MODERATE_PRICE`, and
+  `MODERATE_RENEWABLE_SHARE`; `24-48h` high risk with `row_count=1`,
+  `max_risk_score=75`, `average_risk_score=75`, reason codes including
+  `EXCHANGE_NET_NOT_USED_V0`, `HIGH_RENEWABLE_SHARE`, and `NEGATIVE_PRICE`,
+  and a recommended human action requiring human review; and `48-72h` low risk
+  with `row_count=1`, `max_risk_score=10`, `average_risk_score=10`, and reason
+  codes including `ELEVATED_RENEWABLE_SHARE`, `EXCHANGE_NET_NOT_USED_V0`, and
+  `NORMAL_PRICE`. Switching the selected price area to DK2 and clicking the
+  manual button returned forecast-window data again with the same three
+  windows and decision-support-only fields without frontend error, confirming
+  that the selected price area can be used by the frontend helper for this
+  flow. Clarified that the prior browser failure was caused by `OPTIONS`
+  preflight returning `400`, and the successful frontend load from
+  `POST /api/forecast/preview` practically confirms the local CORS preflight
+  path for the Forecast preview card. This is local smoke-test documentation
+  only: no ingestion, database access, SQL, database writes, live Energi Data
+  Service calls, DMI/weather calls, scheduler, Azure infrastructure, auth,
+  secrets, ML training, LLM use, automatic control, dispatch, activation, or
+  operational functionality was run or added; it remains synthetic/caller-
+  provided preview data only, read-only decision support for human review, and
+  not production forecast validation.
 - Added a manual read-only frontend "Forecast preview" dashboard card. The
   card uses the selected `DK1`/`DK2` price area, calls
   `POST /api/forecast/preview` only after the user clicks "Load forecast
