@@ -103,6 +103,27 @@ decision-making. It does not connect to a database, execute SQL, call live APIs,
 poll services, ingest data, use LLMs, or perform control, dispatch, activation,
 or operational workflows.
 
+## Forecast Window Aggregation
+
+`forecast-window-v0` is a pure Python deterministic aggregation layer over
+caller-provided surplus-risk input rows. It groups matching DK1/DK2 rows into
+three non-overlapping windows: `0-24h`, `24-48h`, and `48-72h`, then reuses
+`calculate_surplus_risk` from `rule-engine-v0` for row-level scoring.
+
+The window risk level is based on the maximum observed row risk score in the
+window, not the average alone. Empty windows return `unknown` with no risk
+score and an explanation that there is not enough caller-provided data.
+
+`forecast-window-v0` is not a machine-learning model, not DMI/weather based
+yet, not production forecast validation, and not an LLM forecast engine. It
+does not fetch data, write data, expose an API, call live Energi Data Service,
+connect to a database, schedule jobs, train models, or use secrets, auth, Azure
+infrastructure, or operational integrations.
+
+All outputs are read-only decision support only and must not be used for
+automatic control, dispatch, activation, closed-loop workflows, asset
+connections, plant/device commands, or live control signals.
+
 ## Limitations
 
 - This is a simple baseline for traceable decision support, not a validated
@@ -118,14 +139,18 @@ or operational workflows.
   statistically calibrated probabilities.
 - The current validated local dataset is tiny and no full historical backtest
   with outcome labels has been run.
-- No 24-72 hour forecast, DMI/weather ingestion, PDF report export, auth, Azure
-  deployment, scheduled ingestion job, or production database exists yet.
+- A deterministic 24-72 hour caller-provided forecast-window aggregation
+  foundation exists, but it is not production forecast validation and does not
+  fetch, persist, or ingest forecast data.
+- No DMI/weather ingestion, PDF report export, auth, Azure deployment,
+  scheduled ingestion job, or production database exists yet.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
-Recommended next MVP step: keep `rule-engine-v0` as the explainable baseline
-while adding a simple deterministic 24-72 hour forecast foundation from
-available local EDS data first. Do not use an LLM as the forecast engine.
+Recommended next MVP step: keep `rule-engine-v0` and `forecast-window-v0` as
+explainable read-only baselines while adding explicit validation and
+caller-provided/local data composition before any API or UI surface. Do not use
+an LLM as the forecast engine.
 
 ## Human Oversight and Safety
 
