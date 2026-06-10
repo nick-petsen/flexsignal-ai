@@ -250,8 +250,9 @@ Interpretation:
 - The wrapper did not write to the database.
 - This validates command orchestration and normalization path only.
 - Confirmed writes still require explicit `--confirm-local-db-write`.
-- The wrapper currently uses `limit 10` and a hard maximum of `10` to match the
-  child-script safety gates.
+- The wrapper default remains `limit 10`; explicit `limit 50` is now supported
+  for manual local validation, while `100` and `500` still require a future
+  explicit enhancement.
 
 Safety notes:
 
@@ -357,12 +358,12 @@ Safety notes:
 
 ## Proposed Historical Local EDS Import Plan
 
-This plan is implemented only as a manual local batch wrapper currently capped
-at `limit 10` to match the existing child ingest script safety gate. It does
-not change backend or frontend behavior, schedule database writes, run live API
-polling automatically, add Azure infrastructure, add secrets, add auth, add ML
-training, use LLMs, or add control, dispatch, activation, or operational
-functionality.
+This plan is implemented only as a manual local batch wrapper. The wrapper
+defaults to `limit 10` and now accepts explicit `limit 50` for manual local
+validation. It does not change backend or frontend behavior, schedule database
+writes, run live API polling automatically, add Azure infrastructure, add
+secrets, add auth, add ML training, use LLMs, or add control, dispatch,
+activation, or operational functionality.
 
 Goal:
 
@@ -379,19 +380,19 @@ Planned datasets and price areas:
 
 Current batch size:
 
-- Use `limit 10` or lower with the current wrapper and child script.
+- Use the default `limit 10` unless a larger manual validation sample is
+  explicitly requested.
+- Explicit `limit 50` is supported with the current wrapper and child script.
 - The wrapper must not bypass the child script safety gate.
 
 Future proposed batch sizes:
 
-- Start with `limit 50` per dataset and price area.
-- Increase to `limit 100` only after row counts, distinct
+- Increase to `limit 100` only after `limit 50` row counts, distinct
   `source_record_id` counts, idempotency, and backtest outputs are checked.
 - Increase to a maximum of `limit 500` only after the same checks pass for the
   smaller batches.
-- These larger `50`/`100`/`500` stages require a future explicit
-  `scripts/manual_eds_local_db_ingest.py` child-script enhancement before they
-  can be run through the wrapper.
+- These larger `100`/`500` stages require a future explicit enhancement before
+  they can be run through the wrapper.
 
 Safety gates:
 
@@ -454,7 +455,8 @@ Safety gates:
 - Supported datasets are limited to `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`.
 - Supported price areas are limited to `DK1` and `DK2`.
-- The default limit is `2`; the hard maximum is `10`.
+- The default limit is `2`; the hard maximum is `50` for explicit manual local
+  validation.
 
 The script prints a warning, final request URL, HTTP status, raw count,
 normalized count, SQL command count, target tables, committed status, and

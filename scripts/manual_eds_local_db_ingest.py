@@ -35,7 +35,7 @@ from app.integrations.energi_data_service import build_eds_url  # noqa: E402
 ALLOWED_LOCAL_HOSTS = {"localhost", "127.0.0.1"}
 CONFIRM_FLAG = "--confirm-local-db-write"
 DEFAULT_LIMIT = 2
-HARD_MAX_LIMIT = 10
+HARD_MAX_LIMIT = 50
 DEFAULT_TIMEOUT_SECONDS = 15
 USER_AGENT = "flexsignal-ai-manual-eds-local-db-ingest/0.1"
 

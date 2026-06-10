@@ -137,7 +137,7 @@ The script is dry-run by default. It requires `DATABASE_URL`, refuses to run
 unless the parsed host is `localhost` or `127.0.0.1`, accepts only DB-API URL
 format such as `postgresql://localhost/flexsignal_ai`, and writes only when
 `--confirm-local-db-write` is passed. The default limit is `2` and the hard
-maximum is `10`.
+maximum is `50` for explicit manual local validation.
 
 It supports only `DayAheadPrices` and `ElectricityProdex5MinRealtime`, filtered
 to `DK1` or `DK2`. It does not run automatically, read secrets from files,
@@ -172,10 +172,11 @@ The wrapper is dry-run by default. It requires `DATABASE_URL`, refuses to run
 unless the parsed host is `localhost` or `127.0.0.1`, accepts only DB-API URL
 format such as `postgresql://localhost/flexsignal_ai`, and passes
 `--confirm-local-db-write` to child commands only when the wrapper receives that
-same flag. It defaults to `--limit 10`, rejects limits above `10`, and does not
-bypass the child ingest script safety gate. Larger staged imports such as
-`50`, `100`, or `500` records per dataset and price area require a future
-explicit child-script enhancement before the wrapper can support them.
+same flag. It defaults to `--limit 10`, accepts explicit `--limit 50`, rejects
+limits above `50`, and does not bypass the child ingest script safety gate.
+Larger staged imports such as `100` or `500` records per dataset and price area
+still require a future explicit enhancement before the wrapper can support
+them.
 
 It supports only `DayAheadPrices` and `ElectricityProdex5MinRealtime`, filtered
 to `DK1`, `DK2`, or both. It does not schedule itself, run automatically, read
@@ -245,12 +246,13 @@ Child dry-run observations:
 | `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
 
 Confirmed writes still require explicit `--confirm-local-db-write`. The
-wrapper currently uses `limit 10` and a hard maximum of `10` to match the
-child-script safety gates. This remains local PostgreSQL dry-run validation
-only: no committed writes, production database, Azure resources, scheduler,
-backend startup ingestion, frontend-triggered ingestion, automatic polling
-loop, ML training, LLM use, or automatic control, dispatch, activation, or
-operational functionality.
+wrapper default remains `limit 10`; explicit `limit 50` is now supported for
+manual local validation, while `100` and `500` still require a future explicit
+enhancement. This remains local PostgreSQL dry-run validation only: no
+committed writes, production database, Azure resources, scheduler, backend
+startup ingestion, frontend-triggered ingestion, automatic polling loop, ML
+training, LLM use, or automatic control, dispatch, activation, or operational
+functionality.
 
 ## Risk Backtest Synthetic Preview
 

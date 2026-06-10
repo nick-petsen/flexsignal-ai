@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Raised the explicit manual local Energi Data Service ingest safety cap from
+  `limit 10` to `limit 50` in `scripts/manual_eds_local_db_ingest.py` and the
+  `scripts/manual_eds_historical_batch_import.py` wrapper while preserving the
+  conservative defaults (`2` for the child script, `10` for the wrapper),
+  dry-run default, local `DATABASE_URL` safety gate, supported datasets,
+  supported price areas, and required `--confirm-local-db-write` gate for
+  writes. Added parser and wrapper orchestration tests for `limit 50`
+  acceptance, `0`/`51` rejection, dry-run defaults, explicit confirmation
+  passthrough, and non-local database URL rejection. Updated scripts and
+  validation docs, the local database runbook, and backtest notes to state that
+  `limit 50` is supported for manual local validation while `100` and `500`
+  still require a future explicit enhancement. No scheduler, Azure
+  infrastructure, backend startup ingestion, FastAPI endpoint, frontend code,
+  production database support, secrets, auth, ML training, LLM use, control,
+  dispatch, activation, closed-loop, or operational functionality was added.
 - Documented the manual EDS historical batch confirmed local write,
   idempotency check, and DK1/DK2 local DB backtest results only. The confirmed
   command was
@@ -49,8 +64,8 @@
   `spot_prices` or `power_balance`, and `committed=false`. Clarified that this
   validates command orchestration and normalization path only, did not write to
   the database, still requires explicit `--confirm-local-db-write` for
-  confirmed writes, and remains capped at `limit 10` to match child-script
-  safety gates. No code, backend behavior, frontend behavior, database writes,
+  confirmed writes, and used the wrapper default `limit 10`. No code, backend
+  behavior, frontend behavior, database writes,
   live API polling, Azure infrastructure, secrets, auth, ML training, LLM use,
   control, dispatch, activation, or operational functionality was added.
 - Added `scripts/manual_eds_historical_batch_import.py`, a manual local-only
@@ -60,21 +75,21 @@
   non-local hosts, defaults to dry-run, passes `--confirm-local-db-write` to
   child commands only when explicitly received, prints the child command plan,
   stops on first child failure unless `--continue-on-error` is passed, defaults
-  to `limit 10`, rejects limits above `10`, and emits a compact JSON summary.
+  to `limit 10`, rejects limits above `50`, and emits a compact JSON summary.
   Updated scripts and validation docs, the local database runbook, and backtest
-  notes to clarify that larger `50`/`100`/`500` staged imports require a future
-  explicit child-script enhancement and that the wrapper must not bypass the
-  current child safety gate. No scheduler, Azure infrastructure, backend
+  notes to clarify that larger `100`/`500` staged imports require a future
+  explicit enhancement and that the wrapper must not bypass the current child
+  safety gate. No scheduler, Azure infrastructure, backend
   startup ingestion, FastAPI endpoint, frontend code, production database
   support, secrets, auth, ML training, LLM use, control, dispatch, activation,
   closed-loop, or operational functionality was added.
 - Added a documentation-only historical local Energi Data Service import plan
   for expanding local DK1/DK2 samples of `DayAheadPrices` and
   `ElectricityProdex5MinRealtime` to support better read-only local backtesting.
-  Documented the future staged batch progression of `limit 50`, then `100`,
-  then maximum `500` per dataset and price area only after an explicit child
-  script enhancement plus row counts, distinct `source_record_id` counts,
-  idempotency, and backtest outputs are checked.
+  Documented the staged batch progression of `limit 50`, then `100`, then
+  maximum `500` per dataset and price area, with `100` and `500` still
+  requiring a future explicit enhancement plus row counts, distinct
+  `source_record_id` counts, idempotency, and backtest outputs are checked.
   Documented required safety gates: local PostgreSQL only, `DATABASE_URL`
   targeting `localhost` or `127.0.0.1`, dry-run before confirmed write,
   explicit `--confirm-local-db-write` for confirmed writes, no production or
