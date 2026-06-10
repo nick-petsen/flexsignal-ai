@@ -24,6 +24,32 @@ returns source-table metadata, and does not write to the database, fetch live
 Energi Data Service data, schedule ingestion, or connect to operational
 systems.
 
+## Current MVP Status
+
+`rule-engine-v0` is the current read-only scoring baseline for the technical
+MVP foundation. It is simple, deterministic, testable, and explainable. It is
+not a trained forecasting model, not an LLM decision engine, and not validated
+for production operations.
+
+Working read-only paths around the model:
+
+- `POST /api/risk/preview` scores caller-provided DK1/DK2 JSON.
+- `GET /api/risk/current` scores the latest existing local DK1/DK2 rows.
+- The frontend can manually request current risk through the backend API.
+- Synthetic and local DB read-only backtest previews exist.
+- Local DB backtest row pairing uses `nearest_timestamp_v0_1`.
+
+Validated local sample results:
+
+| Area | Current risk | Local DB rows | Backtest risk counts | Average risk score |
+| --- | --- | --- | --- | ---: |
+| DK1 | medium, score 35 | 3 spot prices, 3 power-balance rows | low=1, medium=2, high=0 | 26.6667 |
+| DK2 | low, score 20 | 2 spot prices, 2 power-balance rows | low=2, medium=0, high=0 | 20.0 |
+
+The local validation confirms only that the read-only path works on tiny local
+samples. It does not establish predictive accuracy, statistical calibration,
+commercial validity, or operational fitness.
+
 ## Inputs
 
 - `price_area`: `DK1` or `DK2`
@@ -88,6 +114,11 @@ or operational workflows.
   curtailment, balancing markets, or operational conditions.
 - Confidence scores are deterministic data-completeness indicators, not
   statistically calibrated probabilities.
+- The current validated local dataset is tiny and no full historical backtest
+  with outcome labels has been run.
+- No 24-72 hour forecast, DMI/weather ingestion, PDF report export, auth, Azure
+  deployment, scheduled ingestion job, or production database exists yet.
+- No human approval workflow exists beyond documentation and disclaimers.
 
 ## Human Oversight and Safety
 

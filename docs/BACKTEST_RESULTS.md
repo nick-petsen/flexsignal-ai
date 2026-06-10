@@ -12,6 +12,42 @@ stored DK1 and DK2 samples of EDS-derived rows. This document does not claim
 validated production performance, predictive accuracy, or statistical
 calibration.
 
+## Current MVP Backtest Status
+
+The current backtest work is a read-only technical validation layer for
+`rule-engine-v0`. It confirms that the local sample data can be read, composed,
+paired with `nearest_timestamp_v0_1`, scored, and summarized. It does not
+validate commercial performance or operational readiness.
+
+Validated local sample results:
+
+| Area | Spot prices read | Power balance read | Current risk | Backtest risk counts | Average risk score |
+| --- | ---: | ---: | --- | --- | ---: |
+| DK1 | 3 | 3 | medium, score 35 | low=1, medium=2, high=0 | 26.6667 |
+| DK2 | 2 | 2 | low, score 20 | low=2, medium=0, high=0 | 20.0 |
+
+Current read-only foundation:
+
+- Synthetic backtest preview exists for local smoke validation.
+- Local PostgreSQL read-only backtest exists for existing local rows.
+- Backtest row pairing uses `nearest_timestamp_v0_1`.
+- DK1 and DK2 local DB backtests complete with no failed rows on the tiny
+  local samples.
+- Results are descriptive summaries of deterministic rule-engine outputs.
+
+Still preview / not production:
+
+- Dataset is tiny.
+- No full historical backtest has been run.
+- No outcome labels are available.
+- No 24-72 hour forecast has been validated.
+- No DMI/weather data is included.
+- No statistical calibration or predictive accuracy claim is made.
+- No PDF/report export exists yet.
+- No scheduled ingestion jobs, production database, Azure deployment, auth, ML
+  training, LLM decisioning, automatic control, dispatch, activation, or
+  operational workflow exists.
+
 ## Synthetic Preview Script
 
 `scripts/risk_backtest_preview.py` provides a manual local preview of
