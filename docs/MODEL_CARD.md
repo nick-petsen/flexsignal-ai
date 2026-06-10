@@ -181,6 +181,56 @@ script does not fetch data, read or write a database, expose an API, run
 backend or frontend servers, schedule jobs, use Azure, use ML or LLMs, or
 perform control, dispatch, activation, closed-loop, or operational behavior.
 
+### Forecast Preview API Smoke Test Results
+
+Manual smoke testing of `POST /api/forecast/preview` was documented with the
+backend started without `DATABASE_URL`. This confirms that caller-provided
+forecast rows can be summarized without database access. No frontend,
+ingestion, database writes, SQL, live Energi Data Service calls, DMI/weather
+calls, scheduler, Azure infrastructure, auth, secrets, ML training, LLM use,
+control, dispatch, activation, or operational functionality was used.
+
+Valid DK1 request observations:
+
+- HTTP `200`
+- `price_area`: `DK1`
+- `generated_at_utc`: `2026-01-01T00:00:00Z`
+- `model_version`: `rule-engine-v0+forecast-window-v0`
+- `decision_support_only`: `true`
+- windows returned: `3`
+- `0-24h`: `row_count=1`, `risk_level=low`, `max_risk_score=30`,
+  `average_risk_score=30.0`; top reason codes included `MODERATE_PRICE` and
+  `MODERATE_RENEWABLE_SHARE`
+- `24-48h`: `row_count=1`, `risk_level=high`, `max_risk_score=75`,
+  `average_risk_score=75.0`; top reason codes included
+  `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE`
+- `48-72h`: `row_count=0`, `risk_level=unknown`, `max_risk_score=null`,
+  `average_risk_score=null`, and `average_confidence_score=0.0`
+
+High-risk DK2 request observations:
+
+- HTTP `200`
+- `price_area`: `DK2`
+- `model_version`: `rule-engine-v0+forecast-window-v0`
+- `decision_support_only`: `true`
+- `24-48h`: `row_count=1`, `risk_level=high`, `max_risk_score=75`,
+  `average_risk_score=75.0`; top reason codes included
+  `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE`
+- `0-24h` and `48-72h` were `unknown` because `row_count=0`
+
+Validation observations:
+
+- `price_area=SE3` returned a validation error indicating that input should be
+  `DK1` or `DK2`.
+- Timezone-naive `generated_at_utc` returned a validation error indicating that
+  `generated_at_utc` must be timezone-aware.
+
+Interpretation: the API returns deterministic forecast-window summaries for
+caller-provided rows, demonstrates max-risk aggregation, handles empty windows
+as `unknown`, and validates supported price areas plus timezone-aware
+`generated_at_utc`. These observations do not establish predictive accuracy,
+statistical calibration, production readiness, or operational fitness.
+
 ## Limitations
 
 - This is a simple baseline for traceable decision support, not a validated
