@@ -2,6 +2,34 @@
 
 ## v0.1.0 - TODO
 
+- Documented the read-only current-risk API and frontend smoke-test after the
+  manual `limit 50` EDS confirmed local write had populated local PostgreSQL.
+  API observations used
+  `curl -s "http://127.0.0.1:8000/api/risk/current?price_area=DK1"` and
+  `curl -s "http://127.0.0.1:8000/api/risk/current?price_area=DK2"`; DK1
+  returned HTTP 200 with `timestamp_utc=2026-06-10T17:00:00+02:00`,
+  `risk_level=medium`, `risk_score=35`, `confidence_score=1.0`, reason codes
+  `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, and `EXCHANGE_NET_NOT_USED_V0`,
+  `model_version=rule-engine-v0`, `decision_support_only=true`, and source
+  metadata showing `spot_prices` and `power_balance` rows found; DK2 returned
+  HTTP 200 with the same timestamp, `risk_level=low`, `risk_score=20`,
+  `confidence_score=1.0`, reason codes `NORMAL_PRICE`,
+  `MODERATE_RENEWABLE_SHARE`, and `EXCHANGE_NET_NOT_USED_V0`,
+  `model_version=rule-engine-v0`, `decision_support_only=true`, and source
+  metadata showing `spot_prices` and `power_balance` rows found. Frontend
+  smoke-test observations at `http://localhost:3000` showed manual DK1 and DK2
+  spot-price loads returning 5 `spot_prices` rows, manual DK1 and DK2
+  power-balance loads returning 5 `power_balance` rows, manual current-risk
+  loads matching the DK1 medium score 35 and DK2 low score 20 API results, and
+  the read-only badge visible for both areas. Clarified that the dashboard
+  still requires manual button clicks, no automatic loading or polling was
+  observed, the current-risk endpoint still reads from local PostgreSQL and
+  returns decision-support-only results, and this is local MVP smoke-test
+  documentation only, not production validation. No code, backend behavior,
+  frontend behavior, ingestion, database writes by this change, live Energi
+  Data Service polling, tests, servers, scheduled jobs, Azure infrastructure,
+  secrets, auth, ML training, LLM use, control, dispatch, activation, or
+  operational functionality was added.
 - Documented the manual EDS historical batch wrapper `limit 50` confirmed
   local write, repeated-run idempotency check, and DK1/DK2 local DB backtest
   results only. The confirmed command was
