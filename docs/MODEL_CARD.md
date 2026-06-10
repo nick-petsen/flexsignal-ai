@@ -63,6 +63,18 @@ input shape. It does not score risk by itself, connect to a database, execute
 SQL, call live APIs, perform ML or LLM logic, or perform control, dispatch, or
 activation.
 
+## Backtest Evaluator
+
+`evaluate_risk_backtest` is a pure Python local evaluator for
+`rule-engine-v0` outputs. It passes each supplied row dictionary to
+`calculate_surplus_risk`, aggregates risk-level counts, average scores,
+confidence, reason codes, missing-data counts, and row-level validation errors.
+
+The evaluator is not ML training, threshold tuning, forecasting, or autonomous
+decision-making. It does not connect to a database, execute SQL, call live APIs,
+poll services, ingest data, use LLMs, or perform control, dispatch, activation,
+or operational workflows.
+
 ## Limitations
 
 - This is a simple baseline for traceable decision support, not a validated
