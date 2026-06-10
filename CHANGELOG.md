@@ -2,6 +2,14 @@
 
 ## v0.1.0 - TODO
 
+- Added a manual synthetic local `scripts/risk_backtest_preview.py` for the
+  existing `rule-engine-v0` backtest evaluator, with hardcoded low-, medium-,
+  high-like, missing-data, and invalid sample rows, compact or pretty JSON
+  output, documentation, and explicit synthetic-only warnings. This does not
+  require `DATABASE_URL`, connect to a database, execute SQL, fetch live Energi
+  Data Service data, add API endpoints, modify backend startup, add frontend or
+  ingestion code, use Azure, add secrets, train ML models, use LLMs, control,
+  dispatch, activation, or operational functionality.
 - Added pure Python `evaluate_risk_backtest` aggregation for local
   `rule-engine-v0` row dictionaries, including evaluated and failed row counts,
   low/medium/high counts, average risk and confidence scores, reason-code

@@ -160,3 +160,25 @@ DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_l
 The script prints a warning, final request URL, HTTP status, raw count,
 normalized count, SQL command count, target tables, and committed/rolled-back
 status for each run.
+
+## Risk Backtest Synthetic Preview
+
+`risk_backtest_preview.py` is a manual synthetic local preview for the existing
+`rule-engine-v0` backtest evaluator. It uses only hardcoded sample row
+dictionaries in the script, including low-, medium-, and high-like examples plus
+an invalid row to demonstrate `failed_rows`.
+
+```bash
+python3 scripts/risk_backtest_preview.py
+python3 scripts/risk_backtest_preview.py --pretty
+```
+
+The script prints a scope warning and a JSON summary with row counts, risk-level
+counts, average scores, reason-code counts, missing data counts, model version,
+and `decision_support_only`.
+
+This is synthetic preview-only. It does not require `DATABASE_URL`, connect to a
+database, execute SQL, fetch live Energi Data Service data, call HTTP APIs, add
+or use FastAPI endpoints, run frontend code, create ingestion jobs, use Azure,
+train ML models, use LLMs, control assets, dispatch, activate, or perform
+operational functionality.
