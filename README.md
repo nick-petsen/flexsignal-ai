@@ -292,6 +292,22 @@ caller-provided rows, reuses `rule-engine-v0` scoring, returns
 decision-support-only window summaries, and must not be used for automatic
 control, dispatch, or activation.
 
+`scripts/forecast_window_preview.py` provides a manual synthetic local preview
+of `forecast-window-v0` with fixed `generated_at_utc` output and in-script
+caller-provided rows only:
+
+```bash
+python3 scripts/forecast_window_preview.py
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+The preview does not require `DATABASE_URL`, read or write a database, run SQL,
+fetch Energi Data Service data, call DMI/weather APIs, expose an API endpoint,
+run frontend code, train ML/LLM components, schedule jobs, use Azure, or add
+control, dispatch, activation, or operational functionality.
+
 From the `backend/` directory:
 
 ```bash

@@ -359,6 +359,35 @@ This preview is not a real historical backtest, not model validation, not
 statistical calibration, and not evidence of production performance. It is only
 a local smoke preview of existing deterministic aggregation behavior.
 
+## Forecast Window Synthetic Preview Script
+
+`scripts/forecast_window_preview.py` provides a manual synthetic local preview
+of `forecast-window-v0` using fixed `generated_at_utc` output and in-script
+caller-provided rows only. It calls `build_forecast_window_forecast(...)` and
+prints compact JSON by default.
+
+Run it manually:
+
+```bash
+python3 scripts/forecast_window_preview.py
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+The `balanced` scenario covers all three windows with mixed low/medium-like
+scores. The `high-risk` scenario includes a negative-price and
+high-renewable-share row to demonstrate max-risk window aggregation. The
+`empty-window` scenario leaves a matching-price-area window empty, returning
+`risk_level` `unknown`.
+
+This preview is not a historical backtest, not model validation, not statistical
+calibration, and not evidence of production performance. It does not require
+`DATABASE_URL`, read or write a database, run SQL, fetch Energi Data Service
+data, call DMI/weather APIs, expose an API endpoint, run frontend code, create
+ingestion jobs, use Azure, add secrets, add auth, train ML models, use LLMs,
+control assets, dispatch, activate, or perform operational functionality.
+
 ## Local DB Read-Only Backtest Script
 
 `scripts/risk_backtest_local_db.py` provides a manual local PostgreSQL

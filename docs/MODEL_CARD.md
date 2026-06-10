@@ -124,6 +124,18 @@ All outputs are read-only decision support only and must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, or live control signals.
 
+`scripts/forecast_window_preview.py` is a manual synthetic local preview for
+`forecast-window-v0`. It uses fixed `generated_at_utc` output and only
+in-script caller-provided rows for `balanced`, `high-risk`, and `empty-window`
+scenarios. It calls `build_forecast_window_forecast(...)` and prints compact
+JSON by default or indented JSON with `--pretty`.
+
+The preview script does not require `DATABASE_URL`, read or write a database,
+run SQL, fetch Energi Data Service data, call DMI/weather APIs, expose a FastAPI
+endpoint, run frontend code, create a scheduler, use Azure, add secrets, add
+auth, train ML models, use LLMs, or perform control, dispatch, activation, or
+operational functionality.
+
 ## Limitations
 
 - This is a simple baseline for traceable decision support, not a validated
