@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added a manual read-only frontend "Forecast preview" dashboard card. The
+  card uses the selected `DK1`/`DK2` price area, calls
+  `POST /api/forecast/preview` only after the user clicks "Load forecast
+  preview", posts deterministic synthetic/caller-provided demo rows with
+  timezone-aware `generated_at_utc`, and displays the returned `0-24h`,
+  `24-48h`, and `48-72h` windows with risk level, row count, max and average
+  risk scores, top reason codes, recommended human action,
+  `decision_support_only`, and `model_version`. The frontend helper uses only
+  the backend API base URL helper. It does not auto-load, poll, call Energi
+  Data Service or DMI/weather APIs from the browser, read or write a database,
+  add backend endpoints, run SQL, schedule jobs, add Azure infrastructure,
+  add auth or secrets, train ML, use LLMs, or add automatic control, dispatch,
+  activation, closed-loop, or operational functionality. This remains
+  synthetic/caller-provided preview data only, read-only decision support, and
+  not production forecast validation.
 - Documented manual smoke-test results for `POST /api/forecast/preview` only.
   The backend was started without `DATABASE_URL`, confirming that
   caller-provided forecast rows can be summarized without database access. The

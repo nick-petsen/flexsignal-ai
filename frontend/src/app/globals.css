@@ -278,6 +278,35 @@ tr:last-child td {
   overflow-wrap: anywhere;
 }
 
+.preview-note {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e4c36d;
+  border-radius: 8px;
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.forecast-windows {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.forecast-window {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.forecast-window h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
 .api-note {
   margin-top: 20px;
   color: var(--muted);
