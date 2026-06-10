@@ -3,18 +3,26 @@
 import { useState } from "react";
 import {
   backendApiBaseUrl,
+  fetchCurrentRisk,
   fetchPowerBalance,
   fetchSpotPrices,
+  type CurrentRiskResponse,
   type EnergyApiResponse,
   type PowerBalanceRow,
   type PriceArea,
   type SpotPriceRow
 } from "../lib/api";
 
-type RequestState<Row> =
+type EnergyRequestState<Row> =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: EnergyApiResponse<Row> }
+  | { status: "error"; message: string };
+
+type RiskRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: CurrentRiskResponse }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -27,7 +35,7 @@ type EnergyCardProps<Row> = {
   description: string;
   endpointName: string;
   buttonLabel: string;
-  state: RequestState<Row>;
+  state: EnergyRequestState<Row>;
   columns: Column<Row>[];
   onLoad: () => void;
 };
@@ -145,11 +153,121 @@ function ResultTable<Row extends { source_record_id: string }>({
 }
 
 function formatValue(value: unknown): string {
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
   if (value === null || value === undefined || value === "") {
     return "n/a";
   }
 
   return String(value);
+}
+
+function CurrentRiskCard({
+  state,
+  onLoad
+}: {
+  state: RiskRequestState;
+  onLoad: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="current-risk-title">
+      <div className="card__header">
+        <div>
+          <h2 id="current-risk-title">Current surplus risk</h2>
+          <p className="card__description">
+            Manual read-only request to the backend current risk endpoint.
+          </p>
+        </div>
+        <span className="status">Read-only</span>
+      </div>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onLoad}
+        disabled={isLoading}
+      >
+        {isLoading ? "Loading..." : "Load current risk"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to load backend API
+            risk data.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">Loading read-only backend risk data...</p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Backend unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && <RiskResult data={state.data} />}
+      </div>
+    </section>
+  );
+}
+
+function RiskResult({ data }: { data: CurrentRiskResponse }) {
+  return (
+    <dl className="risk-list">
+      <div>
+        <dt>risk_level</dt>
+        <dd>{formatValue(data.risk_level)}</dd>
+      </div>
+      <div>
+        <dt>risk_score</dt>
+        <dd>{formatValue(data.risk_score)}</dd>
+      </div>
+      <div>
+        <dt>confidence_score</dt>
+        <dd>{formatValue(data.confidence_score)}</dd>
+      </div>
+      <div>
+        <dt>reason_codes</dt>
+        <dd>
+          {data.reason_codes.length > 0
+            ? data.reason_codes.join(", ")
+            : "n/a"}
+        </dd>
+      </div>
+      <div>
+        <dt>explanation</dt>
+        <dd>{formatValue(data.explanation)}</dd>
+      </div>
+      <div>
+        <dt>recommended_human_action</dt>
+        <dd>{formatValue(data.recommended_human_action)}</dd>
+      </div>
+      <div>
+        <dt>model_version</dt>
+        <dd>{formatValue(data.model_version)}</dd>
+      </div>
+      <div>
+        <dt>decision_support_only</dt>
+        <dd>{formatValue(data.decision_support_only)}</dd>
+      </div>
+      <div>
+        <dt>metadata.source_tables_used</dt>
+        <dd>
+          {data.metadata.source_tables_used.length > 0
+            ? data.metadata.source_tables_used.join(", ")
+            : "n/a"}
+        </dd>
+      </div>
+      <div>
+        <dt>metadata.spot_price_row_found</dt>
+        <dd>{formatValue(data.metadata.spot_price_row_found)}</dd>
+      </div>
+      <div>
+        <dt>metadata.power_balance_row_found</dt>
+        <dd>{formatValue(data.metadata.power_balance_row_found)}</dd>
+      </div>
+    </dl>
+  );
 }
 
 function errorMessage(error: unknown): string {
@@ -163,16 +281,20 @@ function errorMessage(error: unknown): string {
 export default function DashboardPage() {
   const [selectedArea, setSelectedArea] = useState<PriceArea>("DK1");
   const [spotPricesState, setSpotPricesState] = useState<
-    RequestState<SpotPriceRow>
+    EnergyRequestState<SpotPriceRow>
   >({ status: "idle" });
   const [powerBalanceState, setPowerBalanceState] = useState<
-    RequestState<PowerBalanceRow>
+    EnergyRequestState<PowerBalanceRow>
   >({ status: "idle" });
+  const [currentRiskState, setCurrentRiskState] = useState<RiskRequestState>({
+    status: "idle"
+  });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
     setSpotPricesState({ status: "idle" });
     setPowerBalanceState({ status: "idle" });
+    setCurrentRiskState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -192,6 +314,16 @@ export default function DashboardPage() {
       setPowerBalanceState({ status: "success", data });
     } catch (error) {
       setPowerBalanceState({ status: "error", message: errorMessage(error) });
+    }
+  }
+
+  async function handleLoadCurrentRisk() {
+    setCurrentRiskState({ status: "loading" });
+    try {
+      const data = await fetchCurrentRisk(selectedArea);
+      setCurrentRiskState({ status: "success", data });
+    } catch (error) {
+      setCurrentRiskState({ status: "error", message: errorMessage(error) });
     }
   }
 
@@ -248,6 +380,10 @@ export default function DashboardPage() {
             state={powerBalanceState}
             columns={powerBalanceColumns}
             onLoad={handleLoadPowerBalance}
+          />
+          <CurrentRiskCard
+            state={currentRiskState}
+            onLoad={handleLoadCurrentRisk}
           />
         </div>
 

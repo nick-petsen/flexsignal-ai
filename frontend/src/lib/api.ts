@@ -10,6 +10,24 @@ export type EnergyApiResponse<Row> = {
   rows: Row[];
 };
 
+export type CurrentRiskResponse = {
+  price_area: PriceArea;
+  timestamp_utc: string;
+  risk_level: "low" | "medium" | "high";
+  risk_score: number;
+  confidence_score: number;
+  reason_codes: string[];
+  explanation: string;
+  recommended_human_action: string;
+  model_version: string;
+  decision_support_only: boolean;
+  metadata: {
+    source_tables_used: string[];
+    spot_price_row_found: boolean;
+    power_balance_row_found: boolean;
+  };
+};
+
 export type SpotPriceRow = {
   id: number;
   price_area: PriceArea;
@@ -51,6 +69,24 @@ export async function fetchPowerBalance(
     "/api/energy/power-balance",
     priceArea
   );
+}
+
+export async function fetchCurrentRisk(
+  priceArea: PriceArea
+): Promise<CurrentRiskResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/risk/current`
+  );
+  url.searchParams.set("price_area", priceArea);
+
+  const response = await fetch(url);
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  return body as CurrentRiskResponse;
 }
 
 async function fetchEnergyApi<Row>(

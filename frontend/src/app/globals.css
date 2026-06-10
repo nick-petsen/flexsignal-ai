@@ -125,7 +125,7 @@ h1 {
 
 .summary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -248,6 +248,36 @@ tr:last-child td {
   border-bottom: 0;
 }
 
+.risk-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.risk-list div {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.risk-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.risk-list dt {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.risk-list dd {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .api-note {
   margin-top: 20px;
   color: var(--muted);
@@ -271,5 +301,11 @@ tr:last-child td {
 
   .selector {
     min-width: 0;
+  }
+}
+
+@media (min-width: 781px) and (max-width: 1040px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
