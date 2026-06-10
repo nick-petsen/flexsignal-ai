@@ -209,6 +209,65 @@ activation, or control functionality. It must not be connected to production
 databases, Azure databases, assets, plants, devices, or operational energy
 infrastructure.
 
+### Manual Historical Batch Wrapper Dry-Run Result
+
+The following dry-run result documents command orchestration and normalization
+path validation only. It did not write to the database.
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --continue-on-error
+```
+
+Wrapper result:
+
+- `dry_run`: `true`
+- `confirmed_local_write`: `false`
+- `local_only`: `true`
+- `decision_support_only`: `true`
+- `limit`: `10`
+- `price_areas`: `DK1`, `DK2`
+- `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`
+- `commands_planned`: `4`
+- `commands_succeeded`: `4`
+- `commands_failed`: `0`
+- `child_exit_codes`: `[0, 0, 0, 0]`
+
+Child dry-run observations:
+
+| Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| `DayAheadPrices` | `DK1` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
+| `DayAheadPrices` | `DK2` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+
+Interpretation:
+
+- The batch wrapper successfully orchestrated all supported DK1/DK2 dataset
+  combinations in dry-run mode.
+- The wrapper did not write to the database.
+- This validates command orchestration and normalization path only.
+- Confirmed writes still require explicit `--confirm-local-db-write`.
+- The wrapper currently uses `limit 10` and a hard maximum of `10` to match the
+  child-script safety gates.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Dry-run only.
+- No committed writes.
+- No production database.
+- No Azure resources.
+- No scheduler.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
+
 ## Proposed Historical Local EDS Import Plan
 
 This plan is implemented only as a manual local batch wrapper currently capped

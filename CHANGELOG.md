@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Documented the manual EDS historical batch wrapper dry-run result only:
+  command
+  `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --continue-on-error`;
+  wrapper output `dry_run=true`, `confirmed_local_write=false`,
+  `local_only=true`, `decision_support_only=true`, `limit=10`, price areas
+  `DK1`/`DK2`, datasets `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`, 4 planned commands, 4 succeeded commands, 0
+  failed commands, and child exit codes `[0, 0, 0, 0]`; and child dry-run
+  observations for all four dataset/price-area combinations showing HTTP 200,
+  10 raw records, 10 normalized records, 10 SQL commands, target tables
+  `spot_prices` or `power_balance`, and `committed=false`. Clarified that this
+  validates command orchestration and normalization path only, did not write to
+  the database, still requires explicit `--confirm-local-db-write` for
+  confirmed writes, and remains capped at `limit 10` to match child-script
+  safety gates. No code, backend behavior, frontend behavior, database writes,
+  live API polling, Azure infrastructure, secrets, auth, ML training, LLM use,
+  control, dispatch, activation, or operational functionality was added.
 - Added `scripts/manual_eds_historical_batch_import.py`, a manual local-only
   batch wrapper around `scripts/manual_eds_local_db_ingest.py` for explicit
   DK1/DK2 and `DayAheadPrices`/`ElectricityProdex5MinRealtime` validation
