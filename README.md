@@ -61,8 +61,8 @@ Planned local validation scope:
 
 - Datasets: `DayAheadPrices` and `ElectricityProdex5MinRealtime`.
 - Price areas: `DK1` and `DK2`.
-- Batch sizes: start at `limit 50` per dataset and price area, then `100`,
-  then maximum `500` only after validation passes.
+- Batch size: `limit 50` per dataset and price area is validated in dry-run
+  only. `100` and `500` still require future explicit enhancement.
 - Validation: row counts by `price_area`, distinct `source_record_id` counts,
   repeated-import idempotency, and local DB read-only backtests for `DK1` and
   `DK2` documenting `risk_level_counts` and `average_risk_score`.
@@ -88,29 +88,30 @@ labels, DMI/weather data, and a 24-72 hour forecast remain absent, and
 The manual historical batch wrapper dry-run was documented with:
 
 ```bash
-DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --continue-on-error
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --continue-on-error
 ```
 
 Observed wrapper result:
 
 - `dry_run=true`, `confirmed_local_write=false`, `local_only=true`, and
   `decision_support_only=true`.
-- `limit=10`, `price_areas=DK1, DK2`, and datasets
+- `limit=50`, `price_areas=DK1, DK2`, and datasets
   `DayAheadPrices`, `ElectricityProdex5MinRealtime`.
 - `commands_planned=4`, `commands_succeeded=4`, `commands_failed=0`, and
   `child_exit_codes=[0, 0, 0, 0]`.
 - Child dry-runs returned HTTP `200` for `DayAheadPrices` DK1/DK2 and
-  `ElectricityProdex5MinRealtime` DK1/DK2, with `10` raw records, `10`
-  normalized records, `10` SQL commands, and `committed=false` for each
+  `ElectricityProdex5MinRealtime` DK1/DK2, with `50` raw records, `50`
+  normalized records, `50` SQL commands, and `committed=false` for each
   combination.
 
-This validates command orchestration and the normalization path only. The
-wrapper did not write to the database, confirmed writes still require explicit
-`--confirm-local-db-write`, and the wrapper currently uses `limit 10` with a
-hard maximum of `10` to match the child-script safety gates.
+Limit 50 dry-run is validated for all supported DK1/DK2 dataset combinations.
+No database writes were committed. This validates command orchestration and the
+normalization path only. Confirmed writes still require explicit
+`--confirm-local-db-write`, and `100` and `500` still require future explicit
+enhancement.
 
 Safety notes: local PostgreSQL dry-run only; no committed writes, production
-database, Azure resources, scheduler, backend startup ingestion,
+database, Azure resources, scheduler, live API polling, backend startup ingestion,
 frontend-triggered ingestion, automatic polling loop, ML training, LLM use,
 automatic control, dispatch, activation, or operational functionality.
 

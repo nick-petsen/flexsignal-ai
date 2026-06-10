@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Documented the manual EDS historical batch wrapper `limit 50` dry-run result
+  only. The command was
+  `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --continue-on-error`;
+  wrapper output was `dry_run=true`, `confirmed_local_write=false`,
+  `local_only=true`, `decision_support_only=true`, `limit=50`, price areas
+  `DK1`/`DK2`, datasets `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`, 4 planned commands, 4 succeeded commands, 0
+  failed commands, and child exit codes `[0, 0, 0, 0]`. Child dry-runs for
+  `DayAheadPrices` DK1/DK2 and `ElectricityProdex5MinRealtime` DK1/DK2 all
+  returned HTTP 200 with 50 raw records, 50 normalized records, 50 SQL
+  commands, target tables `spot_prices` or `power_balance`, and
+  `committed=false`. Clarified that limit 50 dry-run is validated for all
+  supported DK1/DK2 dataset combinations, no database writes were committed,
+  this validates command orchestration and normalization path only, confirmed
+  writes still require explicit `--confirm-local-db-write`, and `100`/`500`
+  still require future explicit enhancement. No code, backend behavior,
+  frontend behavior, database writes, live API polling, scheduled jobs, Azure
+  infrastructure, secrets, auth, ML training, LLM use, control, dispatch,
+  activation, or operational functionality was added.
 - Raised the explicit manual local Energi Data Service ingest safety cap from
   `limit 10` to `limit 50` in `scripts/manual_eds_local_db_ingest.py` and the
   `scripts/manual_eds_historical_batch_import.py` wrapper while preserving the
