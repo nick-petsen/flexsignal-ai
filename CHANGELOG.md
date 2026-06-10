@@ -2,6 +2,26 @@
 
 ## v0.1.0 - TODO
 
+- Added a concise MVP status documentation update covering the current
+  read-only technical foundation: local PostgreSQL schema and Alembic baseline,
+  manual local EDS ingestion for `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`, validated tiny DK1/DK2 local samples,
+  read-only `spot_prices` and `power_balance` API paths, manual frontend loads
+  for spot prices, power balance, and current risk, `rule-engine-v0`,
+  `GET /api/risk/current` for DK1/DK2, synthetic and local DB read-only
+  backtest previews, and `nearest_timestamp_v0_1` backtest row pairing.
+  Documented validated local results only: DK1 has 3 spot-price rows, 3
+  power-balance rows, current risk `medium` with score `35`, local DB backtest
+  counts low/medium/high of 1/2/0, and average risk score `26.6667`; DK2 has 2
+  spot-price rows, 2 power-balance rows, current risk `low` with score `20`,
+  local DB backtest counts low/medium/high of 2/0/0, and average risk score
+  `20.0`. Clarified that this remains preview/non-production work with a tiny
+  dataset, no full historical backtest, no outcome labels, no 24-72 hour
+  forecast, no DMI/weather ingestion, no PDF report export, no auth, no Azure
+  deployment, no scheduled ingestion jobs, no production database, no human
+  approval workflow beyond documentation/disclaimers, no automatic control, no
+  dispatch, no activation, no operational energy system integration, no LLM as
+  decision engine, and no autonomous decisions.
 - Documented DK2 local Energi Data Service validation results only:
   `DayAheadPrices` DK2 and `ElectricityProdex5MinRealtime` DK2 both returned
   HTTP 200 in dry-run mode with 2 raw records, 2 normalized records, 2 SQL

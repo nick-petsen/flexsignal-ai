@@ -12,6 +12,44 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 - Support human decision-making with auditable recommendations.
 - Keep LLM usage limited to explanation, reporting, and recommendation text.
 
+## Current MVP Status
+
+The current system is a technical MVP foundation for read-only decision support,
+not a validated commercial product or operational energy system.
+
+Working read-only core:
+
+- Local PostgreSQL schema and Alembic baseline exist.
+- Manual local Energi Data Service ingestion exists for `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime`.
+- Local PostgreSQL contains validated tiny DK1 and DK2 sample data.
+- Read-only energy API endpoints exist for `spot_prices` and `power_balance`.
+- Frontend dashboard can manually load spot prices, power balance, and current
+  surplus risk.
+- `rule-engine-v0` exists for deterministic surplus-risk scoring.
+- `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
+- Synthetic backtest preview exists.
+- Local DB read-only backtest exists.
+- Backtest row pairing uses `nearest_timestamp_v0_1`.
+
+Validated local sample results:
+
+| Area | Spot prices | Power balance | Current risk | Local DB backtest | Average risk score |
+| --- | ---: | ---: | --- | --- | ---: |
+| DK1 | 3 rows | 3 rows | medium, score 35 | low=1, medium=2, high=0 | 26.6667 |
+| DK2 | 2 rows | 2 rows | low, score 20 | low=2, medium=0, high=0 | 20.0 |
+
+Still preview / not production:
+
+- Dataset is tiny and no full historical backtest has been run.
+- No outcome labels or statistical calibration exist.
+- No 24-72 hour forecast exists yet.
+- No DMI/weather ingestion exists yet.
+- No PDF report export exists yet.
+- No auth, Azure deployment, scheduled ingestion jobs, or production database
+  exist.
+- No human approval workflow exists beyond documentation and disclaimers.
+
 ## Not Included in v0.1
 
 - Automatic activation of consumption or flexibility.
@@ -19,8 +57,11 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 - Critical operational system responsibilities.
 - LLMs as the primary forecasting engine or sole decision-making component.
 - Production infrastructure deployment.
-- Runtime database integration or migrations.
+- Production runtime database integration or automatic startup migrations.
 - Production-ready frontend workflows.
+- Dispatch, activation, closed-loop workflows, or operational energy system
+  integration.
+- LLM use as a decision engine or autonomous decision-maker.
 
 ## Technology Stack
 
