@@ -16,6 +16,11 @@ as an autonomous decision-maker or critical operational system.
 only. The preview API does not fetch live data, read from a database, write to a
 database, or connect to assets or operational systems in this step.
 
+`POST /api/forecast/preview` wraps `forecast-window-v0` for caller-provided
+DK1/DK2 rows only. It returns deterministic `0-24h`, `24-48h`, and `48-72h`
+window summaries and does not fetch EDS or DMI/weather data, read or write a
+database, start jobs, use ML, use LLMs, or perform operational actions.
+
 `GET /api/risk/current?price_area=DK1|DK2` wraps the same rule engine for the
 latest existing local database rows. It lazily requires `DATABASE_URL` only when
 the endpoint is called, reads the most recent `spot_prices` and `power_balance`
@@ -34,6 +39,8 @@ for production operations.
 Working read-only paths around the model:
 
 - `POST /api/risk/preview` scores caller-provided DK1/DK2 JSON.
+- `POST /api/forecast/preview` summarizes caller-provided DK1/DK2 rows into
+  three forecast windows.
 - `GET /api/risk/current` scores the latest existing local DK1/DK2 rows.
 - The frontend can manually request current risk through the backend API.
 - Synthetic and local DB read-only backtest previews exist.
@@ -115,10 +122,11 @@ window, not the average alone. Empty windows return `unknown` with no risk
 score and an explanation that there is not enough caller-provided data.
 
 `forecast-window-v0` is not a machine-learning model, not DMI/weather based
-yet, not production forecast validation, and not an LLM forecast engine. It
-does not fetch data, write data, expose an API, call live Energi Data Service,
-connect to a database, schedule jobs, train models, or use secrets, auth, Azure
-infrastructure, or operational integrations.
+yet, not production forecast validation, and not an LLM forecast engine. The
+`POST /api/forecast/preview` API exposes this aggregation for caller-provided
+rows only. It does not fetch data, write data, call live Energi Data Service,
+call DMI/weather APIs, connect to a database, schedule jobs, train models, or
+use secrets, auth, Azure infrastructure, or operational integrations.
 
 All outputs are read-only decision support only and must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
@@ -198,8 +206,8 @@ perform control, dispatch, activation, closed-loop, or operational behavior.
 
 Recommended next MVP step: keep `rule-engine-v0` and `forecast-window-v0` as
 explainable read-only baselines while adding explicit validation and
-caller-provided/local data composition before any API or UI surface. Do not use
-an LLM as the forecast engine.
+caller-provided/local data composition before any UI surface or production data
+path. Do not use an LLM as the forecast engine.
 
 ## Human Oversight and Safety
 

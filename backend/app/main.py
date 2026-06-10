@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.energy import router as energy_router
+from app.api.forecast import router as forecast_router
 from app.api.risk import router as risk_router
 
 
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_methods=("GET", "OPTIONS"),
 )
 app.include_router(energy_router)
+app.include_router(forecast_router)
 app.include_router(risk_router)
 
 

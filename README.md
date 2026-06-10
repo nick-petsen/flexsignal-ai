@@ -34,6 +34,8 @@ Working read-only core:
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
   caller-provided rows for 0-24h, 24-48h, and 48-72h windows.
+- `POST /api/forecast/preview` exposes `forecast-window-v0` for
+  caller-provided JSON rows only.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
 - Synthetic backtest preview exists.
 - Local DB read-only backtest exists.
@@ -61,9 +63,10 @@ Still preview / not production:
 
 - Dataset is still small and no full historical backtest has been run.
 - No outcome labels or statistical calibration exist.
-- The 24-72 hour forecast-window foundation is deterministic aggregation only;
-  it is not ML, not DMI/weather based yet, does not fetch data, does not write
-  data, does not expose an API yet, and is not production forecast validation.
+- The 24-72 hour forecast-window preview API is deterministic aggregation only;
+  it uses caller-provided rows, is not ML, is not LLM based, is not DMI/weather
+  based yet, does not fetch EDS or DMI data, does not read or write a database,
+  and is not production forecast validation.
 - No DMI/weather ingestion exists yet.
 - No PDF report export exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
@@ -73,8 +76,20 @@ Still preview / not production:
 
 Recommended next MVP step: keep the deterministic forecast-window foundation
 read-only while adding explicit validation and caller-provided/local data
-composition before any API or UI surface. Do not use an LLM as the forecast
-engine, and do not add control, dispatch, or activation behavior.
+composition before any UI surface. Do not use an LLM as the forecast engine,
+and do not add control, dispatch, or activation behavior.
+
+## Forecast Preview API
+
+`POST /api/forecast/preview` returns deterministic `0-24h`, `24-48h`, and
+`48-72h` forecast-window summaries from caller-provided DK1/DK2 rows.
+
+The endpoint is read-only decision support only. It does not fetch Energi Data
+Service data, call DMI/weather APIs, read or write a database, persist payloads,
+start jobs, train ML models, use LLMs, require secrets, or perform automatic
+control, dispatch, or activation. It is not production forecast validation and
+must not be used for automatic control, dispatch, activation, closed-loop
+workflows, asset connections, plant/device commands, or live control signals.
 
 ## Forecast Window Preview Results
 
@@ -101,9 +116,10 @@ Observed synthetic results:
 These are synthetic local preview results only. The script aggregates
 caller-provided rows deterministically, does not use ML or LLMs, is not
 DMI/weather based yet, does not fetch data, does not read or write a database,
-does not expose an API, and is not production forecast validation. It remains
-read-only decision support for human review and must not be used for automatic
-control, dispatch, or activation.
+and is not production forecast validation. The backend preview API now exposes
+the same caller-provided aggregation boundary for JSON requests only. It
+remains read-only decision support for human review and must not be used for
+automatic control, dispatch, or activation.
 
 ## Historical Local EDS Import Plan
 
