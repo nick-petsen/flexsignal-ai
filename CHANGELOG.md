@@ -2,6 +2,15 @@
 
 ## v0.1.0 - TODO
 
+- Added manual read-only frontend display for the existing current surplus risk
+  API, including a third dashboard card, DK1/DK2-aware manual
+  `GET /api/risk/current` fetch through the backend API base helper, loading
+  and backend-unavailable error states, typed response fields for risk level,
+  score, confidence, reason codes, explanation, recommended human action,
+  model version, decision-support flag, and source metadata. No page-load fetch,
+  polling, automatic refresh, direct Energi Data Service frontend call, backend
+  code, database write, auth, Azure infrastructure, charts, forecasting/model
+  logic, control, dispatch, activation, or operational functionality was added.
 - Documented manual local current risk API smoke-test results for `GET
   /api/risk/current?price_area=DK1`: backend startup with
   `DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn

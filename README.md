@@ -164,10 +164,10 @@ Important boundary notes:
 
 The frontend is a minimal Next.js dashboard for `v0.1` read-only decision
 support. It includes a DK1/DK2 selector and manual buttons for loading recent
-spot prices and power balance rows from the existing backend read-only energy
-API endpoints. It does not fetch automatically on page load, poll live
-endpoints, call Energi Data Service directly, forecast, dispatch, activate, or
-control energy assets.
+spot prices, power balance rows, and the current surplus risk from existing
+backend read-only API endpoints. It does not fetch automatically on page load,
+poll live endpoints, call Energi Data Service directly, forecast, dispatch,
+activate, or control energy assets.
 
 From the `frontend/` directory:
 
@@ -185,6 +185,7 @@ Manual frontend requests use:
 
 - `GET /api/energy/spot-prices?price_area=DK1|DK2&limit=5`
 - `GET /api/energy/power-balance?price_area=DK1|DK2&limit=5`
+- `GET /api/risk/current?price_area=DK1|DK2`
 
 The read-only disclaimer remains visible in the dashboard:
 `Read-only decision support — no automatic control`.
