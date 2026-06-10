@@ -182,3 +182,33 @@ database, execute SQL, fetch live Energi Data Service data, call HTTP APIs, add
 or use FastAPI endpoints, run frontend code, create ingestion jobs, use Azure,
 train ML models, use LLMs, control assets, dispatch, activate, or perform
 operational functionality.
+
+## Risk Backtest Local DB Preview
+
+`risk_backtest_local_db.py` is a manual local-only read-only PostgreSQL
+backtest preview for `rule-engine-v0`. It uses the existing backend SELECT query
+builders to read recent `spot_prices` and `power_balance` rows for `DK1` or
+`DK2`, composes those rows through `compose_surplus_risk_input(...)`, and prints
+a JSON summary from `evaluate_risk_backtest(rows)`.
+
+The script requires `DATABASE_URL`, refuses to run unless the parsed host is
+`localhost` or `127.0.0.1`, and accepts only DB-API URL format such as
+`postgresql://localhost/flexsignal_ai`. It validates that generated SQL is
+`SELECT` only and refuses forbidden operations including `INSERT`, `UPDATE`,
+`DELETE`, `ALTER`, `DROP`, `CREATE`, and `TRUNCATE`.
+
+```bash
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/risk_backtest_local_db.py --price-area DK1
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/risk_backtest_local_db.py --price-area DK2 --limit 100 --pretty
+```
+
+Rows are paired deterministically by list order after each table is read by
+latest `timestamp_utc` descending. If one table returns more rows than the other,
+remaining rows are still composed with the missing side omitted. This is a
+technical local validation helper, not full historical model validation.
+
+The script prints a manual-use warning and writes only JSON summary output to
+stdout. It does not write to the database, fetch live Energi Data Service data,
+call HTTP APIs, create ingestion jobs, import or modify FastAPI startup, add
+frontend code, use Azure, add secrets, add auth, train ML models, use LLMs,
+control assets, dispatch, activate, or perform operational functionality.

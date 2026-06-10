@@ -2,6 +2,15 @@
 
 ## v0.1.0 - TODO
 
+- Added a manual local PostgreSQL read-only `scripts/risk_backtest_local_db.py`
+  backtest preview for `rule-engine-v0`, using existing SELECT query builders,
+  local-only `postgresql://...` `DATABASE_URL` validation, DK1/DK2 filtering,
+  latest-first list-order row pairing through `compose_surplus_risk_input`,
+  compact or pretty JSON output, and documentation of the technical-validation
+  limitation. This performs no database writes, live Energi Data Service
+  fetches, API endpoint or startup changes, frontend work, ingestion jobs,
+  Azure infrastructure, secrets, auth, ML training, LLM use, control, dispatch,
+  activation, or operational functionality.
 - Added a manual synthetic local `scripts/risk_backtest_preview.py` for the
   existing `rule-engine-v0` backtest evaluator, with hardcoded low-, medium-,
   high-like, missing-data, and invalid sample rows, compact or pretty JSON
