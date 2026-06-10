@@ -14,19 +14,23 @@ Version `v0.1` is read-only decision support. The platform may forecast, visuali
 
 ## Current MVP Status
 
-The current system is a technical MVP foundation for read-only decision support,
-not a validated commercial product or operational energy system.
+FlexSignal AI is ready for a local technical MVP demo. It is not ready for
+production, is not a validated commercial forecasting product, and must remain
+read-only decision support for human review only.
 
 Working read-only core:
 
 - Local PostgreSQL schema and Alembic baseline exist.
 - Manual local Energi Data Service ingestion exists for `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`.
-- Local PostgreSQL contains validated small DK1 and DK2 sample data from manual
-  confirmed local EDS writes.
+- Local PostgreSQL contains validated DK1 and DK2 sample data from manual
+  confirmed local EDS writes after the `limit 50` import.
+- Manual batch wrapper validation works with `limit 50`.
+- Repeating the same `limit 50` import was idempotent for the tested batch.
 - Read-only energy API endpoints exist for `spot_prices` and `power_balance`.
 - Frontend dashboard can manually load spot prices, power balance, and current
   surplus risk.
+- Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
 - Synthetic backtest preview exists.
@@ -41,6 +45,16 @@ historical batch write:
 | DK1 | 53 rows | 53 rows | low=1, medium=52, high=0 | 34.5283 |
 | DK2 | 50 rows | 50 rows | low=42, medium=8, high=0 | 21.8 |
 
+Latest read-only API/UI smoke-test observations:
+
+- DK1 current-risk API returned medium risk with score `35`.
+- DK2 current-risk API returned low risk with score `20`.
+- Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
+  surplus risk.
+- The read-only badge and disclaimer were visible.
+- No automatic loading, polling, control, dispatch, or activation behavior was
+  observed.
+
 Still preview / not production:
 
 - Dataset is still small and no full historical backtest has been run.
@@ -50,7 +64,12 @@ Still preview / not production:
 - No PDF report export exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
+- No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
+
+Recommended next MVP step: start a simple deterministic 24-72 hour forecast
+foundation using available local EDS data first. Do not use an LLM as the
+forecast engine, and do not add control, dispatch, or activation behavior.
 
 ## Historical Local EDS Import Plan
 

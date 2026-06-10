@@ -2,6 +2,30 @@
 
 ## v0.1.0 - TODO
 
+- Added a concise MVP readiness summary across the README, local database
+  runbook, model card, and backtest notes. Documented that FlexSignal AI is
+  ready for a local technical MVP demo, not production ready, not a validated
+  commercial forecasting product, and remains read-only decision support for
+  human review only. Summarized the latest validated local dataset status
+  (`spot_prices` DK1=53/DK2=50 and `power_balance` DK1=53/DK2=50), local DB
+  backtest status (DK1 53 composed rows with low/medium/high 1/52/0 and
+  average risk score `34.5283`; DK2 50 composed rows with low/medium/high
+  42/8/0 and average risk score `21.8`), and read-only API/UI smoke-test
+  status (DK1 current risk medium score 35, DK2 current risk low score 20,
+  manual frontend loads for DK1/DK2 spot prices, power balance, and current
+  risk, visible read-only badge/disclaimer, and no automatic loading, polling,
+  control, dispatch, or activation observed). Clarified remaining gaps: no
+  24-72 hour forecast, DMI/weather ingestion, full historical backtest, outcome
+  labels, model performance metrics, Azure deployment, Microsoft Entra ID auth,
+  audit-log implementation beyond documentation, PDF/report export, production
+  database, scheduled ingestion, monitoring setup, or human approval workflow
+  in product UI. Recommended the next MVP step as a simple deterministic
+  24-72 hour forecast foundation using available local EDS data first, with no
+  LLM forecast engine and no control, dispatch, or activation behavior. This
+  change is documentation only; no code, backend behavior, frontend behavior,
+  tests, servers, database writes, live API polling, scheduled jobs, Azure
+  infrastructure, auth, secrets, ML training, LLM use, or operational
+  functionality was added.
 - Documented the read-only current-risk API and frontend smoke-test after the
   manual `limit 50` EDS confirmed local write had populated local PostgreSQL.
   API observations used
