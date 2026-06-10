@@ -2,6 +2,44 @@
 
 ## v0.1.0 - TODO
 
+- Documented the manual EDS historical batch wrapper `limit 50` confirmed
+  local write, repeated-run idempotency check, and DK1/DK2 local DB backtest
+  results only. The confirmed command was
+  `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --confirm-local-db-write --continue-on-error`;
+  before the write, counts were `spot_prices` DK1=13 and DK2=10, and
+  `power_balance` DK1=13 and DK2=12; the wrapper reported
+  `child_exit_codes=[0, 0, 0, 0]`, 4 planned commands, 4 succeeded commands, 0
+  failed commands, `confirmed_local_write=true`, `dry_run=false`, `limit=50`,
+  `local_only=true`, `decision_support_only=true`, price areas `DK1`/`DK2`,
+  and datasets `DayAheadPrices` and `ElectricityProdex5MinRealtime`; child
+  confirmed writes all returned HTTP 200 with 50 raw records, 50 normalized
+  records, 50 SQL commands, target tables `spot_prices` or `power_balance`,
+  and `committed=true`; after the write, counts were `spot_prices` DK1=53 and
+  DK2=50, and `power_balance` DK1=53 and DK2=50. Documented the repeated
+  confirmed command idempotency check: the second run again reported
+  `child_exit_codes=[0, 0, 0, 0]`, 4 planned commands, 4 succeeded commands, 0
+  failed commands, `confirmed_local_write=true`, `dry_run=false`, `limit=50`,
+  and `local_only=true`; counts remained unchanged, so no duplicate explosion
+  was observed and the repeated import was idempotent for the same 50-record
+  batch. Documented read-only local DB backtests after the batch: DK1 with 53
+  spot-price rows read, 53 power-balance rows read, 53 composed and evaluated
+  rows, 0 failed rows, low/medium/high counts of 1/52/0, average risk score
+  `34.5283`, average confidence `1.0`, reason-code counts including
+  `NORMAL_PRICE: 53`, `HIGH_RENEWABLE_SHARE: 52`,
+  `EXCHANGE_NET_NOT_USED_V0: 53`, and `ELEVATED_RENEWABLE_SHARE: 1`; DK2 with
+  50 spot-price rows read, 50 power-balance rows read, 50 composed and
+  evaluated rows, 0 failed rows, low/medium/high counts of 42/8/0, average risk
+  score `21.8`, average confidence `1.0`, reason-code counts including
+  `NORMAL_PRICE: 50`, `MODERATE_RENEWABLE_SHARE: 39`,
+  `HIGH_RENEWABLE_SHARE: 8`, `ELEVATED_RENEWABLE_SHARE: 3`, and
+  `EXCHANGE_NET_NOT_USED_V0: 50`. Clarified that DK1 remained mostly medium
+  risk on the expanded local sample, DK2 now includes both low and medium risk,
+  and this is stronger technical validation than the 10-row sample but still
+  not full model validation because the dataset is still small and has no
+  outcome labels. No code, backend behavior, frontend behavior, database writes
+  by this change, live API polling, scheduled jobs, Azure infrastructure,
+  secrets, auth, ML training, LLM use, control, dispatch, activation, or
+  operational functionality was added.
 - Documented the manual EDS historical batch wrapper `limit 50` dry-run result
   only. The command was
   `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --continue-on-error`;

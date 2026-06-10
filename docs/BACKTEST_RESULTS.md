@@ -24,8 +24,8 @@ historical batch write:
 
 | Area | Spot prices read | Power balance read | Backtest risk counts | Average risk score |
 | --- | ---: | ---: | --- | ---: |
-| DK1 | 13 | 13 | low=1, medium=12, high=0 | 33.0769 |
-| DK2 | 10 | 12 | low=12, medium=0, high=0 | 20.0 |
+| DK1 | 53 | 53 | low=1, medium=52, high=0 | 34.5283 |
+| DK2 | 50 | 50 | low=42, medium=8, high=0 | 21.8 |
 
 Current read-only foundation:
 
@@ -64,11 +64,11 @@ The proposed local import source remains limited to:
 - `DayAheadPrices` for `DK1` and `DK2`.
 - `ElectricityProdex5MinRealtime` for `DK1` and `DK2`.
 
-The future larger batch progression is:
+The larger batch progression is:
 
 | Stage | Limit per dataset and price area | Required action before next stage |
 | --- | ---: | --- |
-| 1 | 50 | Supported now for explicit manual local validation. Check row counts, distinct `source_record_id` counts, idempotency, and backtest output. |
+| 1 | 50 | Confirmed local write, repeated-import idempotency, and DK1/DK2 local DB backtest results are documented below. |
 | 2 | 100 | Repeat the same checks and confirm counts do not duplicate unexpectedly. |
 | 3 | 500 maximum | Run only after smaller batches pass without mapping, normalization, or idempotency issues. |
 
@@ -112,13 +112,13 @@ Counts before the confirmed batch write:
 
 | Table | DK1 | DK2 |
 | --- | ---: | ---: |
-| `spot_prices` | 3 | 2 |
-| `power_balance` | 3 | 2 |
+| `spot_prices` | 13 | 10 |
+| `power_balance` | 13 | 12 |
 
 Confirmed batch write command:
 
 ```bash
-DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write --continue-on-error
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --confirm-local-db-write --continue-on-error
 ```
 
 Confirmed batch summary:
@@ -129,34 +129,43 @@ Confirmed batch summary:
 - `commands_failed`: `0`
 - `confirmed_local_write`: `true`
 - `dry_run`: `false`
-- `limit`: `10`
+- `limit`: `50`
 - `local_only`: `true`
 - `decision_support_only`: `true`
 - `price_areas`: `DK1`, `DK2`
 - `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`
 
+Child confirmed write observations:
+
+| Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| `DayAheadPrices` | `DK1` | 200 | 50 | 50 | 50 | `spot_prices` | `true` |
+| `DayAheadPrices` | `DK2` | 200 | 50 | 50 | 50 | `spot_prices` | `true` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 50 | 50 | 50 | `power_balance` | `true` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 50 | 50 | 50 | `power_balance` | `true` |
+
 Counts after the confirmed batch write:
 
 | Table | DK1 | DK2 |
 | --- | ---: | ---: |
-| `spot_prices` | 13 | 10 |
-| `power_balance` | 13 | 12 |
+| `spot_prices` | 53 | 50 |
+| `power_balance` | 53 | 50 |
 
 The same confirmed batch command was run a second time as an idempotency
 check. The second run reported `child_exit_codes: [0, 0, 0, 0]`,
 `commands_planned: 4`, `commands_succeeded: 4`, `commands_failed: 0`,
-`confirmed_local_write: true`, `dry_run: false`, `limit: 10`, and
+`confirmed_local_write: true`, `dry_run: false`, `limit: 50`, and
 `local_only: true`. Counts remained unchanged after the second run:
-`spot_prices` DK1 `13`, `spot_prices` DK2 `10`, `power_balance` DK1 `13`, and
-`power_balance` DK2 `12`. No duplicate explosion was observed, and the
-repeated import was idempotent for the same 10-record batch.
+`spot_prices` DK1 `53`, `spot_prices` DK2 `50`, `power_balance` DK1 `53`, and
+`power_balance` DK2 `50`. No duplicate explosion was observed, and the
+repeated import was idempotent for the same 50-record batch.
 
 ### DK1 Result After Confirmed Batch Write
 
 Command:
 
 ```bash
-DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK1 --limit 20 --pretty
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK1 --limit 100 --pretty
 ```
 
 Observed output:
@@ -165,20 +174,20 @@ Observed output:
 - `read_only`: `true`
 - `decision_support_only`: `true`
 - `pairing_strategy`: `nearest_timestamp_v0_1`
-- `spot_price_rows_read`: `13`
-- `power_balance_rows_read`: `13`
-- `composed_rows`: `13`
-- `backtest_summary.total_rows`: `13`
-- `backtest_summary.evaluated_rows`: `13`
+- `spot_price_rows_read`: `53`
+- `power_balance_rows_read`: `53`
+- `composed_rows`: `53`
+- `backtest_summary.total_rows`: `53`
+- `backtest_summary.evaluated_rows`: `53`
 - `backtest_summary.failed_rows`: `0`
 - `backtest_summary.risk_level_counts.low`: `1`
-- `backtest_summary.risk_level_counts.medium`: `12`
+- `backtest_summary.risk_level_counts.medium`: `52`
 - `backtest_summary.risk_level_counts.high`: `0`
-- `backtest_summary.average_risk_score`: `33.0769`
+- `backtest_summary.average_risk_score`: `34.5283`
 - `backtest_summary.average_confidence_score`: `1.0`
-- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `13`
-- `backtest_summary.reason_code_counts.HIGH_RENEWABLE_SHARE`: `12`
-- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `13`
+- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `53`
+- `backtest_summary.reason_code_counts.HIGH_RENEWABLE_SHARE`: `52`
+- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `53`
 - `backtest_summary.reason_code_counts.ELEVATED_RENEWABLE_SHARE`: `1`
 - `backtest_summary.missing_price_count`: `0`
 - `backtest_summary.missing_generation_data_count`: `0`
@@ -189,7 +198,7 @@ Observed output:
 Command:
 
 ```bash
-DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK2 --limit 20 --pretty
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK2 --limit 100 --pretty
 ```
 
 Observed output:
@@ -198,20 +207,22 @@ Observed output:
 - `read_only`: `true`
 - `decision_support_only`: `true`
 - `pairing_strategy`: `nearest_timestamp_v0_1`
-- `spot_price_rows_read`: `10`
-- `power_balance_rows_read`: `12`
-- `composed_rows`: `12`
-- `backtest_summary.total_rows`: `12`
-- `backtest_summary.evaluated_rows`: `12`
+- `spot_price_rows_read`: `50`
+- `power_balance_rows_read`: `50`
+- `composed_rows`: `50`
+- `backtest_summary.total_rows`: `50`
+- `backtest_summary.evaluated_rows`: `50`
 - `backtest_summary.failed_rows`: `0`
-- `backtest_summary.risk_level_counts.low`: `12`
-- `backtest_summary.risk_level_counts.medium`: `0`
+- `backtest_summary.risk_level_counts.low`: `42`
+- `backtest_summary.risk_level_counts.medium`: `8`
 - `backtest_summary.risk_level_counts.high`: `0`
-- `backtest_summary.average_risk_score`: `20.0`
+- `backtest_summary.average_risk_score`: `21.8`
 - `backtest_summary.average_confidence_score`: `1.0`
-- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `12`
-- `backtest_summary.reason_code_counts.MODERATE_RENEWABLE_SHARE`: `12`
-- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `12`
+- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `50`
+- `backtest_summary.reason_code_counts.MODERATE_RENEWABLE_SHARE`: `39`
+- `backtest_summary.reason_code_counts.HIGH_RENEWABLE_SHARE`: `8`
+- `backtest_summary.reason_code_counts.ELEVATED_RENEWABLE_SHARE`: `3`
+- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `50`
 - `backtest_summary.missing_price_count`: `0`
 - `backtest_summary.missing_generation_data_count`: `0`
 - `backtest_summary.model_version`: `rule-engine-v0`
@@ -220,9 +231,10 @@ Interpretation:
 
 - The batch wrapper successfully performed confirmed local writes for all
   supported DK1/DK2 dataset combinations.
-- The import was idempotent for the repeated 10-record batch.
-- DK1 shifted to mostly medium risk on the expanded local sample.
-- DK2 remained low risk on the expanded local sample.
+- The import was idempotent for the repeated 50-record batch.
+- DK1 remained mostly medium risk on the expanded local sample.
+- DK2 now includes both low and medium risk on the expanded local sample.
+- This is stronger technical validation than the 10-row sample.
 - This is still technical validation and not full model validation.
 - Dataset size is still small and has no outcome labels.
 
@@ -235,6 +247,7 @@ Safety notes:
 - No production database.
 - No Azure resources.
 - No scheduler.
+- No live API polling.
 - No backend startup ingestion.
 - No frontend-triggered ingestion.
 - No automatic polling loop.

@@ -232,13 +232,13 @@ Counts before the confirmed batch write:
 
 | Table | DK1 | DK2 |
 | --- | ---: | ---: |
-| `spot_prices` | 3 | 2 |
-| `power_balance` | 3 | 2 |
+| `spot_prices` | 13 | 10 |
+| `power_balance` | 13 | 12 |
 
 Command:
 
 ```bash
-DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write --continue-on-error
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --confirm-local-db-write --continue-on-error
 ```
 
 Confirmed batch summary:
@@ -249,7 +249,7 @@ Confirmed batch summary:
 - `commands_failed`: `0`.
 - `confirmed_local_write`: `true`.
 - `dry_run`: `false`.
-- `limit`: `10`.
+- `limit`: `50`.
 - `local_only`: `true`.
 - `decision_support_only`: `true`.
 - `price_areas`: `DK1`, `DK2`.
@@ -259,39 +259,55 @@ Child confirmed write observations:
 
 | Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- |
-| `DayAheadPrices` | `DK1` | 200 | 10 | 10 | 10 | `spot_prices` | `true` |
-| `DayAheadPrices` | `DK2` | 200 | 10 | 10 | 10 | `spot_prices` | `true` |
-| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 10 | 10 | 10 | `power_balance` | `true` |
-| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `true` |
+| `DayAheadPrices` | `DK1` | 200 | 50 | 50 | 50 | `spot_prices` | `true` |
+| `DayAheadPrices` | `DK2` | 200 | 50 | 50 | 50 | `spot_prices` | `true` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 50 | 50 | 50 | `power_balance` | `true` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 50 | 50 | 50 | `power_balance` | `true` |
 
 Counts after the confirmed batch write:
 
 | Table | DK1 | DK2 |
 | --- | ---: | ---: |
-| `spot_prices` | 13 | 10 |
-| `power_balance` | 13 | 12 |
+| `spot_prices` | 53 | 50 |
+| `power_balance` | 53 | 50 |
 
 Idempotency check:
 
 - The same confirmed batch command was run a second time.
 - The second run reported `child_exit_codes: [0, 0, 0, 0]`,
   `commands_planned: 4`, `commands_succeeded: 4`, `commands_failed: 0`,
-  `confirmed_local_write: true`, `dry_run: false`, `limit: 10`, and
+  `confirmed_local_write: true`, `dry_run: false`, `limit: 50`, and
   `local_only: true`.
-- Counts after the second run remained unchanged: `spot_prices` DK1 `13`,
-  `spot_prices` DK2 `10`, `power_balance` DK1 `13`, and `power_balance` DK2
-  `12`.
+- Counts after the second run remained unchanged: `spot_prices` DK1 `53`,
+  `spot_prices` DK2 `50`, `power_balance` DK1 `53`, and `power_balance` DK2
+  `50`.
 - No duplicate explosion was observed.
-- The repeated import was idempotent for the same 10-record batch.
+- The repeated import was idempotent for the same 50-record batch.
 
 Interpretation:
 
 - The batch wrapper successfully performed confirmed local writes for all
   supported DK1/DK2 dataset combinations.
 - Confirmed writes remained manual and local-only.
-- The import was idempotent for the repeated 10-record batch.
+- The import was idempotent for the repeated 50-record batch.
 - This remains technical validation and not full model validation.
 - Dataset size is still small and has no outcome labels.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Manual confirmed write only.
+- Explicit `--confirm-local-db-write` was required.
+- No production database.
+- No Azure resources.
+- No scheduler.
+- No live API polling.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
 
 ### Manual Local Read-Only API Smoke Test
 
@@ -495,14 +511,14 @@ developer from a shell, against a manually created local PostgreSQL database.
    Dry-run first:
 
    ```bash
-   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_historical_batch_import.py --limit 10
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_historical_batch_import.py --limit 50
    ```
 
    Confirmed local write only after the dry-run plan and child outputs are
    reviewed:
 
    ```bash
-   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write
+   DATABASE_URL="postgresql://localhost/flexsignal_ai" python3 ../scripts/manual_eds_historical_batch_import.py --limit 50 --confirm-local-db-write
    ```
 
    Required validation after each batch:
