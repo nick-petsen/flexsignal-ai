@@ -253,11 +253,22 @@ were:
 - Selected DK1.
 - Clicked Load spot prices.
 - Clicked Load power balance.
+- Clicked Load current risk.
 
 Observed local result:
 
 - Spot prices displayed 3 rows for DK1.
 - Power balance displayed 3 rows for DK1.
+- Current surplus risk displayed `risk_level` `medium`.
+- `risk_score` was `35`.
+- `confidence_score` was `1`.
+- `reason_codes` included `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`.
+- `model_version` was `rule-engine-v0`.
+- `decision_support_only` was `true`.
+- `metadata.source_tables_used` showed `spot_prices` and `power_balance`.
+- `metadata.spot_price_row_found` was `true`.
+- `metadata.power_balance_row_found` was `true`.
 - No Failed to fetch error appeared.
 - Backend logs showed HTTP 200 for both read-only API calls.
 - The local-development CORS fix worked.
@@ -266,14 +277,15 @@ Important boundary notes:
 
 - The frontend only called the backend API helper.
 - No direct Energi Data Service calls were made from the frontend.
-- No polling was added or observed.
-- No database writes were added or performed.
-- No live EDS polling was added or performed.
-- No startup migrations were added or run.
-- No Azure resources were added or used.
+- No polling or automatic refresh was used.
+- No database writes were performed.
+- No live EDS polling was performed.
+- No startup migrations were run.
+- No Azure resources were used.
 - No production database was used.
-- No forecasting/model logic was added.
-- No control, dispatch, activation, or operational functionality was added.
+- No LLM or ML model was used.
+- No automatic control, dispatch, activation, or operational functionality
+  exists.
 
 ## Compliance Principles
 

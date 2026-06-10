@@ -2,6 +2,24 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual local frontend current-risk smoke-test results only:
+  backend startup with `DATABASE_URL="postgresql://localhost/flexsignal_ai"
+  python -m uvicorn app.main:app --reload`, frontend startup with
+  `cd frontend`, `npm install`, and `npm run dev`, browser validation at
+  `http://localhost:3000`, DK1 selection, manual Load spot prices, Load power
+  balance, and Load current risk actions, 3 displayed spot price rows, 3
+  displayed power balance rows, current surplus risk `risk_level=medium`,
+  `risk_score=35`, `confidence_score=1`, `reason_codes` including
+  `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, and `EXCHANGE_NET_NOT_USED_V0`,
+  `model_version=rule-engine-v0`, `decision_support_only=true`,
+  `metadata.source_tables_used` showing `spot_prices` and `power_balance`,
+  `metadata.spot_price_row_found=true`,
+  `metadata.power_balance_row_found=true`, and no Failed to fetch error.
+  Confirmed the frontend used only the backend API helper, with no direct
+  Energi Data Service frontend call, polling or automatic refresh, database
+  writes, live EDS polling, startup migrations, Azure resources, production
+  database, LLM or ML model use, automatic control, dispatch, activation, or
+  operational functionality.
 - Added manual read-only frontend display for the existing current surplus risk
   API, including a third dashboard card, DK1/DK2-aware manual
   `GET /api/risk/current` fetch through the backend API base helper, loading

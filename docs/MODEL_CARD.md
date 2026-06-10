@@ -151,3 +151,47 @@ Service polling was performed, no startup migrations were run, no Azure
 resources were used, no production database was used, no LLM or ML model was
 used, and no automatic control, dispatch, activation, or operational
 functionality exists.
+
+## Local Frontend Current-Risk Smoke Test Results
+
+Manual local frontend current-risk smoke testing was documented with the backend
+started manually:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" python -m uvicorn app.main:app --reload
+```
+
+The frontend was started manually:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The browser opened `http://localhost:3000`. The manual read-only UI actions
+were selecting DK1, clicking Load spot prices, clicking Load power balance, and
+clicking Load current risk.
+
+Observed frontend output:
+
+- Spot prices displayed 3 rows.
+- Power balance displayed 3 rows.
+- Current surplus risk displayed `risk_level` `medium`.
+- `risk_score` was `35`.
+- `confidence_score` was `1`.
+- `reason_codes` included `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`.
+- `model_version` was `rule-engine-v0`.
+- `decision_support_only` was `true`.
+- `metadata.source_tables_used` showed `spot_prices` and `power_balance`.
+- `metadata.spot_price_row_found` was `true`.
+- `metadata.power_balance_row_found` was `true`.
+- No Failed to fetch error appeared.
+
+The frontend used only the backend API helper and did not call Energi Data
+Service directly. No polling or automatic refresh was used, no database writes
+were performed, no live EDS polling was performed, no startup migrations were
+run, no Azure resources were used, no production database was used, no LLM or
+ML model was used, and no automatic control, dispatch, activation, or
+operational functionality exists.
