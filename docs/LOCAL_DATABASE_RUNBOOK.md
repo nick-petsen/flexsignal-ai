@@ -313,7 +313,57 @@ developer from a shell, against a manually created local PostgreSQL database.
    non-local database hosts, does not read secrets from files, and does not run
    automatically.
 
-6. Optionally run the explicit manual local DB read-preview script.
+6. Proposed future historical local EDS import flow.
+
+   This is a documentation-only plan for a future safe manual enhancement or
+   batch wrapper. The current `scripts/manual_eds_local_db_ingest.py` helper
+   still caps live EDS samples at `10` records, so the larger batch sizes below
+   require a deliberate local-only script enhancement before they can be run.
+
+   Goal:
+
+   - Expand local EDS-derived samples for `DK1` and `DK2`.
+   - Improve local read-only backtest coverage.
+   - Keep the flow as manual local technical validation only.
+
+   Scope:
+
+   - Datasets: `DayAheadPrices` and `ElectricityProdex5MinRealtime`.
+   - Price areas: `DK1` and `DK2`.
+   - Local targets: `spot_prices` and `power_balance`.
+
+   Proposed batch progression:
+
+   - Start with `limit 50` per dataset and price area.
+   - Increase to `limit 100` only after validation passes.
+   - Increase to a maximum of `limit 500` only after row counts, idempotency,
+     and backtest outputs remain explainable at smaller batch sizes.
+
+   Required safety gates:
+
+   - `DATABASE_URL` must use DB-API format:
+     `postgresql://localhost/flexsignal_ai`.
+   - The parsed host must be `localhost` or `127.0.0.1`.
+   - Dry-run must be run before every confirmed write batch.
+   - Confirmed writes must require explicit `--confirm-local-db-write`.
+   - No production database, Azure database, scheduled job, backend startup
+     ingestion, frontend-triggered ingestion, or automatic polling loop.
+
+   Required validation after each batch:
+
+   - Check row counts by `price_area`.
+   - Check distinct `source_record_id` counts.
+   - Repeat the same import to confirm idempotency.
+   - Confirm counts do not duplicate unexpectedly.
+   - Run the local DB read-only backtest for `DK1` and `DK2`.
+   - Document `risk_level_counts` and `average_risk_score`.
+
+   Stop immediately if any duplicate explosion, non-local database URL, write
+   without explicit confirmation, failed normalization, unexpected source field
+   mapping, control behavior, dispatch behavior, activation behavior, or
+   operational workflow appears.
+
+7. Optionally run the explicit manual local DB read-preview script.
 
    This script reads recent rows from an existing local PostgreSQL table using
    the backend read-only query builders. It supports only `spot_prices` and
@@ -334,7 +384,7 @@ developer from a shell, against a manually created local PostgreSQL database.
    Data Service data, create ingestion jobs, import FastAPI, expose endpoints,
    forecast, dispatch, activate, or control energy assets.
 
-7. Review and document the result.
+8. Review and document the result.
 
    Record the command used, local-only target, row counts or preview counts,
    rollback/error behavior observed, and confirmation that no startup integration
@@ -389,6 +439,24 @@ For `scripts/manual_eds_local_db_ingest.py`, these additional checks apply:
   normalized count, SQL command count, target tables, committed status, and
   rolled-back status.
 - No confirmed writes should be performed by automated tests.
+
+For any future historical local EDS import enhancement or batch wrapper, these
+additional checks apply:
+
+- Documentation must preserve the manual local technical validation boundary.
+- Start at `limit 50` per dataset and price area, then `100`, then maximum
+  `500` only after validation passes.
+- Dry-run must be run before confirmed write mode for each batch.
+- Confirmed writes must require explicit `--confirm-local-db-write`.
+- Row counts by `price_area` and distinct `source_record_id` counts must be
+  documented after each batch.
+- Repeating the same batch must not create unexpected duplicate rows.
+- Local DB read-only backtests for `DK1` and `DK2` must be rerun after each
+  batch and the `risk_level_counts` plus `average_risk_score` documented.
+- The enhancement must not add scheduled jobs, backend startup ingestion,
+  frontend-triggered ingestion, automatic polling, production database access,
+  Azure database access, secrets, auth, ML training, LLM use, control,
+  dispatch, activation, closed-loop behavior, or operational workflows.
 
 For `scripts/manual_local_db_read_preview.py`, these additional checks apply:
 
