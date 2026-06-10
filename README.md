@@ -160,6 +160,69 @@ Important boundary notes:
 - No automatic control, dispatch, activation, or operational functionality
   exists.
 
+### Local read-only DB risk backtest result
+
+Manual local read-only risk backtest validation was documented with existing
+local PostgreSQL rows only. Before the backtest, local table counts were:
+
+- `spot_prices`: `3`
+- `power_balance`: `3`
+
+The command run was:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK1 --limit 10 --pretty
+```
+
+Observed local result:
+
+- `price_area` was `DK1`.
+- `limit` was `10`.
+- `read_only` was `true`.
+- `decision_support_only` was `true`.
+- `spot_price_rows_read` was `3`.
+- `power_balance_rows_read` was `3`.
+- `composed_rows` was `3`.
+- `backtest_summary.total_rows` was `3`.
+- `backtest_summary.evaluated_rows` was `3`.
+- `backtest_summary.failed_rows` was `0`.
+- `backtest_summary.risk_level_counts.low` was `1`.
+- `backtest_summary.risk_level_counts.medium` was `2`.
+- `backtest_summary.risk_level_counts.high` was `0`.
+- `backtest_summary.average_risk_score` was `26.6667`.
+- `backtest_summary.average_confidence_score` was `1.0`.
+- `backtest_summary.reason_code_counts` included `NORMAL_PRICE: 3`,
+  `EXCHANGE_NET_NOT_USED_V0: 3`, `HIGH_RENEWABLE_SHARE: 2`, and
+  `ELEVATED_RENEWABLE_SHARE: 1`.
+- `backtest_summary.missing_price_count` was `0`.
+- `backtest_summary.missing_generation_data_count` was `0`.
+- `backtest_summary.model_version` was `rule-engine-v0`.
+
+Interpretation:
+
+- This is the first local read-only DB backtest against actual locally stored
+  EDS-derived rows.
+- The result indicates mostly low/medium risk on the tiny local DK1 sample.
+- This is not full model validation because the dataset is only 3 composed
+  rows.
+- Row pairing is still simple v0 behavior and must be improved before serious
+  evaluation.
+
+Important boundary notes:
+
+- Local PostgreSQL only.
+- SELECT/read-only only.
+- No database writes were performed.
+- No live EDS polling was performed.
+- No backend or frontend server was started.
+- No startup migrations were run.
+- No production database was used.
+- No Azure resources were used.
+- No ML training was performed.
+- No LLM was used.
+- No automatic control, dispatch, activation, or operational functionality
+  exists.
+
 ## Frontend Local Development
 
 The frontend is a minimal Next.js dashboard for `v0.1` read-only decision
