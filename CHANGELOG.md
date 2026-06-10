@@ -2,6 +2,15 @@
 
 ## v0.1.0 - TODO
 
+- Added pure Python `evaluate_risk_backtest` aggregation for local
+  `rule-engine-v0` row dictionaries, including evaluated and failed row counts,
+  low/medium/high counts, average risk and confidence scores, reason-code
+  aggregation, missing price and generation-data counts, row-level error
+  capture, unit tests, and documentation. This is synthetic/local
+  decision-support evaluation only, with no database connections, SQL
+  execution, API endpoints, FastAPI startup changes, frontend code, ingestion
+  jobs, Azure infrastructure, secrets, ML training, LLM use, control, dispatch,
+  activation, or operational functionality.
 - Documented manual local frontend current-risk smoke-test results only:
   backend startup with `DATABASE_URL="postgresql://localhost/flexsignal_ai"
   python -m uvicorn app.main:app --reload`, frontend startup with
