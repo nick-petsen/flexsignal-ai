@@ -160,10 +160,11 @@ Important boundary notes:
 - No automatic control, dispatch, activation, or operational functionality
   exists.
 
-### Local read-only DB risk backtest result
+### Local read-only DB risk backtest result after nearest-timestamp pairing
 
-Manual local read-only risk backtest validation was documented with existing
-local PostgreSQL rows only. Before the backtest, local table counts were:
+Manual local read-only risk backtest validation was rerun after
+`nearest_timestamp_v0_1` pairing was merged, using existing local PostgreSQL
+rows only. Before the backtest, local table counts were:
 
 - `spot_prices`: `3`
 - `power_balance`: `3`
@@ -180,6 +181,7 @@ Observed local result:
 - `limit` was `10`.
 - `read_only` was `true`.
 - `decision_support_only` was `true`.
+- `pairing_strategy` was `nearest_timestamp_v0_1`.
 - `spot_price_rows_read` was `3`.
 - `power_balance_rows_read` was `3`.
 - `composed_rows` was `3`.
@@ -200,13 +202,13 @@ Observed local result:
 
 Interpretation:
 
-- This is the first local read-only DB backtest against actual locally stored
-  EDS-derived rows.
-- The result indicates mostly low/medium risk on the tiny local DK1 sample.
-- This is not full model validation because the dataset is only 3 composed
-  rows.
-- Row pairing is still simple v0 behavior and must be improved before serious
-  evaluation.
+- `nearest_timestamp_v0_1` pairing is active.
+- On the tiny local DK1 sample, the risk distribution remained unchanged
+  compared with the previous simple pairing run.
+- This is expected because the local dataset only contains 3 composed rows.
+- This is still technical validation, not full model validation.
+- A larger historical dataset is required before drawing performance
+  conclusions.
 
 Important boundary notes:
 
