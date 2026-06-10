@@ -16,7 +16,7 @@ app = FastAPI(title="FlexSignal AI API", version=APP_VERSION)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=LOCAL_DEVELOPMENT_CORS_ORIGINS,
-    allow_methods=("GET", "OPTIONS"),
+    allow_methods=("GET", "POST", "OPTIONS"),
 )
 app.include_router(energy_router)
 app.include_router(forecast_router)
