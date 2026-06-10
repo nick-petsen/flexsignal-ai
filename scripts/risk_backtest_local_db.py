@@ -11,7 +11,6 @@ import os
 import re
 import sys
 from collections.abc import Callable, Mapping
-from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -28,7 +27,7 @@ from app.db.read_queries import (  # noqa: E402
     build_recent_power_balance_query,
     build_recent_spot_prices_query,
 )
-from app.risk import compose_surplus_risk_input, evaluate_risk_backtest  # noqa: E402
+from app.risk import evaluate_risk_backtest, pair_rows_by_nearest_timestamp  # noqa: E402
 from app.risk.rule_engine import NUMERIC_FIELDS  # noqa: E402
 
 
@@ -44,6 +43,7 @@ FORBIDDEN_SQL_OPERATIONS = (
     "CREATE",
     "TRUNCATE",
 )
+PAIRING_STRATEGY = "nearest_timestamp_v0_1"
 
 
 def limited_positive_int(value: str) -> int:
@@ -178,20 +178,16 @@ def compose_backtest_rows(
     spot_price_rows: list[dict[str, Any]],
     power_balance_rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    composed_rows: list[dict[str, Any]] = []
-
-    for spot_price_row, power_balance_row in zip_longest(
+    paired_rows = pair_rows_by_nearest_timestamp(
         spot_price_rows,
         power_balance_rows,
-    ):
-        composed = compose_surplus_risk_input(
-            price_area,
-            spot_price_row,
-            power_balance_row,
-        )
-        composed_rows.append(normalize_rule_engine_input(composed))
+        price_area,
+    )
 
-    return composed_rows
+    return [
+        normalize_rule_engine_input(composed_row)
+        for composed_row in paired_rows
+    ]
 
 
 def normalize_rule_engine_input(input_data: dict[str, Any]) -> dict[str, Any]:
@@ -223,6 +219,7 @@ def build_summary(
         "spot_price_rows_read": len(spot_price_rows),
         "power_balance_rows_read": len(power_balance_rows),
         "composed_rows": len(composed_rows),
+        "pairing_strategy": PAIRING_STRATEGY,
         "backtest_summary": evaluate_risk_backtest(composed_rows),
         "decision_support_only": True,
         "read_only": True,

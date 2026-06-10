@@ -53,16 +53,20 @@ The script:
 - refuses non-local hosts and allows only `localhost` or `127.0.0.1`
 - reads latest rows from `spot_prices` and `power_balance` through existing
   SELECT-only query builders
-- composes rows through `compose_surplus_risk_input(...)`
+- composes rows with `nearest_timestamp_v0_1` pairing through
+  `compose_surplus_risk_input(...)`
 - runs `evaluate_risk_backtest(rows)`
 - prints compact JSON by default and indented JSON with `--pretty`
+- reports `pairing_strategy: nearest_timestamp_v0_1`
 - reports `decision_support_only: true` and `read_only: true`
 
-Row pairing is deliberately simple in v0. The script reads each table ordered by
-latest `timestamp_utc` descending, then pairs rows by list order. If one table
-returns more rows than the other, remaining rows are still composed with the
-missing side omitted. This keeps the behavior deterministic but means results
-should not be interpreted as fully time-aligned historical validation.
+Row pairing now uses deterministic `nearest_timestamp_v0_1` behavior. The
+power-balance rows are the primary timeline, and each power-balance row is
+paired with the nearest spot-price row by `timestamp_utc`. Ties are resolved by
+the earlier spot-price timestamp, then original row order. If one table is
+empty, remaining rows from the other table are still composed with the missing
+side omitted. This improves on list-order pairing but remains a simple timestamp
+pairing strategy, not audited historical alignment.
 
 This is still a local technical validation helper, not full model validation,
 not statistical calibration, and not evidence of production performance. It
@@ -93,6 +97,7 @@ Observed output:
 - `spot_price_rows_read`: `3`
 - `power_balance_rows_read`: `3`
 - `composed_rows`: `3`
+- `pairing_strategy`: `nearest_timestamp_v0_1`
 - `backtest_summary.total_rows`: `3`
 - `backtest_summary.evaluated_rows`: `3`
 - `backtest_summary.failed_rows`: `0`
@@ -116,8 +121,8 @@ Interpretation:
 - The result indicates mostly low/medium risk on the tiny local DK1 sample.
 - This is not full model validation because the dataset is only 3 composed
   rows.
-- Row pairing is still simple v0 behavior and must be improved before serious
-  evaluation.
+- Row pairing now uses nearest-timestamp behavior, but it is still simple and
+  must not be treated as full time-series validation.
 
 Safety notes:
 
@@ -159,7 +164,11 @@ errors and continues with remaining rows.
 - The evaluator only summarizes deterministic `rule-engine-v0` outputs.
 - It does not fetch, clean, or validate a historical dataset.
 - The local DB backtest script reads local rows only and pairs spot-price and
-  power-balance rows by list order after latest-first table reads.
+  power-balance rows with simple nearest-timestamp matching.
+- No outcome labels are used, so the backtest cannot measure predictive
+  correctness.
+- Tiny local samples can be useful for smoke validation but are too small for
+  statistical conclusions.
 - It does not train a model or tune thresholds.
 - It does not calculate precision, recall, false positives, false negatives,
   MAE, RMSE, or calibrated probabilities because no labeled historical
