@@ -2,6 +2,31 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed results from the synthetic local
+  `scripts/forecast_window_preview.py` commands only:
+  `python3 scripts/forecast_window_preview.py --pretty`,
+  `python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty`,
+  and
+  `python3 scripts/forecast_window_preview.py --scenario empty-window --pretty`.
+  All runs printed the synthetic-only warning and reported
+  `generated_at_utc=2026-01-01T00:00:00Z`,
+  `model_version=rule-engine-v0+forecast-window-v0`, and
+  `decision_support_only=true`. The balanced DK1 run returned the three
+  expected `0-24h`, `24-48h`, and `48-72h` windows with row counts `2/2/2`,
+  risk levels `medium/low/medium`, and max risk scores `45/30/35`. The DK2
+  high-risk run showed `24-48h` as `high` risk with `max_risk_score=75` and
+  reason codes including `NEGATIVE_PRICE` and `HIGH_RENEWABLE_SHARE`,
+  demonstrating max-risk aggregation. The empty-window run showed DK1
+  `24-48h` with `row_count=0`, `risk_level=unknown`,
+  `average_risk_score=null`, `max_risk_score=null`, and no top reason codes,
+  demonstrating insufficient caller-provided data handling. Clarified that
+  this is synthetic/caller-provided local preview only, deterministic
+  aggregation only, not ML, not DMI/weather based yet, not production forecast
+  validation, and that no database access, SQL, live Energi Data Service
+  polling, DMI/weather calls, backend/frontend servers, scheduler, Azure
+  resources, secrets, auth, ML training, LLM use, automatic control, dispatch,
+  activation, or operational functionality was added or used by this
+  documentation update.
 - Added a manual synthetic local `scripts/forecast_window_preview.py` for
   `forecast-window-v0`, with fixed `generated_at_utc`, DK1/DK2 selection,
   `balanced`, `high-risk`, and `empty-window` scenarios, compact or pretty JSON

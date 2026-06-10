@@ -290,6 +290,50 @@ code, create ingestion jobs, use Azure, add secrets, add auth, train ML models,
 use LLMs, control assets, dispatch, activate, or perform operational
 functionality.
 
+### Observed Forecast Window Preview Results
+
+The following commands were run locally against synthetic in-script rows only:
+
+```bash
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+All three runs printed the synthetic-only warning, used
+`generated_at_utc=2026-01-01T00:00:00Z`,
+`model_version=rule-engine-v0+forecast-window-v0`, and
+`decision_support_only=true`. The rows were caller-provided by the script only;
+no database, SQL, live Energi Data Service, DMI/weather API, backend server,
+frontend server, scheduler, Azure resource, secret, auth, ML, LLM, control,
+dispatch, activation, or operational functionality was used.
+
+Balanced scenario, command
+`python3 scripts/forecast_window_preview.py --pretty`, returned
+`price_area=DK1`:
+
+| Window | Row count | Risk level | Max risk score | Top reason codes |
+| --- | ---: | --- | ---: | --- |
+| `0-24h` | 2 | medium | 45 | `EXCHANGE_NET_NOT_USED_V0:2`, `LOW_PRICE:1`, `LOW_RENEWABLE_SHARE:1`, `MODERATE_RENEWABLE_SHARE:1`, `NORMAL_PRICE:1` |
+| `24-48h` | 2 | low | 30 | `EXCHANGE_NET_NOT_USED_V0:2`, `ELEVATED_RENEWABLE_SHARE:1`, `MODERATE_PRICE:1`, `MODERATE_RENEWABLE_SHARE:1`, `NORMAL_PRICE:1` |
+| `48-72h` | 2 | medium | 35 | `EXCHANGE_NET_NOT_USED_V0:2`, `ELEVATED_RENEWABLE_SHARE:1`, `LOW_PRICE:1`, `LOW_RENEWABLE_SHARE:1`, `NORMAL_PRICE:1` |
+
+High-risk scenario, command
+`python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty`,
+returned `price_area=DK2`. The `24-48h` window became `high` risk with
+`row_count=2` and `max_risk_score=75`, demonstrating max-risk aggregation. Its
+top reason codes included `NEGATIVE_PRICE:1` and
+`HIGH_RENEWABLE_SHARE:1`, alongside `EXCHANGE_NET_NOT_USED_V0:2`,
+`LOW_PRICE:1`, and `MODERATE_RENEWABLE_SHARE:1`.
+
+Empty-window scenario, command
+`python3 scripts/forecast_window_preview.py --scenario empty-window --pretty`,
+returned `price_area=DK1`. The `24-48h` window had `row_count=0`,
+`risk_level=unknown`, `average_risk_score=null`, `max_risk_score=null`,
+`top_reason_codes=[]`, and an explanation that there was not enough
+caller-provided data for the window. This demonstrates insufficient
+caller-provided data handling.
+
 ## Risk Backtest Synthetic Preview
 
 `risk_backtest_preview.py` is a manual synthetic local preview for the existing

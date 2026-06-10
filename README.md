@@ -76,6 +76,35 @@ read-only while adding explicit validation and caller-provided/local data
 composition before any API or UI surface. Do not use an LLM as the forecast
 engine, and do not add control, dispatch, or activation behavior.
 
+## Forecast Window Preview Results
+
+The synthetic forecast-window preview script was run locally with:
+
+```bash
+python3 scripts/forecast_window_preview.py --pretty
+python3 scripts/forecast_window_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/forecast_window_preview.py --scenario empty-window --pretty
+```
+
+All three runs used `generated_at_utc=2026-01-01T00:00:00Z`,
+`model_version=rule-engine-v0+forecast-window-v0`, and
+`decision_support_only=true`.
+
+Observed synthetic results:
+
+| Scenario | Price area | Key result |
+| --- | --- | --- |
+| `balanced` | DK1 | Returned `0-24h`, `24-48h`, and `48-72h` windows with row counts `2`, `2`, and `2`; risk levels `medium`, `low`, and `medium`; max risk scores `45`, `30`, and `35`. |
+| `high-risk` | DK2 | The `24-48h` window became `high` risk with `max_risk_score=75`; reason codes included `NEGATIVE_PRICE` and `HIGH_RENEWABLE_SHARE`, demonstrating max-risk aggregation. |
+| `empty-window` | DK1 | The `24-48h` window had `row_count=0`, `risk_level=unknown`, `average_risk_score=null`, and `max_risk_score=null`, demonstrating insufficient caller-provided data handling. |
+
+These are synthetic local preview results only. The script aggregates
+caller-provided rows deterministically, does not use ML or LLMs, is not
+DMI/weather based yet, does not fetch data, does not read or write a database,
+does not expose an API, and is not production forecast validation. It remains
+read-only decision support for human review and must not be used for automatic
+control, dispatch, or activation.
+
 ## Historical Local EDS Import Plan
 
 A documentation-only plan now defines how to expand local EDS-derived samples
