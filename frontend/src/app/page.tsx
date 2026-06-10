@@ -4,10 +4,13 @@ import { useState } from "react";
 import {
   backendApiBaseUrl,
   fetchCurrentRisk,
+  fetchForecastPreview,
   fetchPowerBalance,
   fetchSpotPrices,
   type CurrentRiskResponse,
   type EnergyApiResponse,
+  type ForecastPreviewResponse,
+  type ForecastWindowSummary,
   type PowerBalanceRow,
   type PriceArea,
   type SpotPriceRow
@@ -23,6 +26,12 @@ type RiskRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: CurrentRiskResponse }
+  | { status: "error"; message: string };
+
+type ForecastRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: ForecastPreviewResponse }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -270,6 +279,132 @@ function RiskResult({ data }: { data: CurrentRiskResponse }) {
   );
 }
 
+function ForecastPreviewCard({
+  state,
+  onLoad
+}: {
+  state: ForecastRequestState;
+  onLoad: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="forecast-preview-title">
+      <div className="card__header">
+        <div>
+          <h2 id="forecast-preview-title">Forecast preview</h2>
+          <p className="card__description">
+            Manual request to preview deterministic forecast windows from
+            synthetic/caller-provided rows only.
+          </p>
+        </div>
+        <span className="status">Read-only</span>
+      </div>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onLoad}
+        disabled={isLoading}
+      >
+        {isLoading ? "Loading..." : "Load forecast preview"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>POST /api/forecast/preview</code>.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">Loading read-only forecast preview...</p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Backend unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <ForecastPreviewResult data={state.data} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ForecastPreviewResult({ data }: { data: ForecastPreviewResponse }) {
+  return (
+    <div>
+      <p className="preview-note">
+        Synthetic/caller-provided preview data only. This is not production
+        forecast validation.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>model_version</dt>
+          <dd>{formatValue(data.model_version)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only</dt>
+          <dd>{formatValue(data.decision_support_only)}</dd>
+        </div>
+        <div>
+          <dt>generated_at_utc</dt>
+          <dd>{formatValue(data.generated_at_utc)}</dd>
+        </div>
+      </dl>
+      <div className="forecast-windows">
+        {data.windows.map((window) => (
+          <ForecastWindow key={window.window_label} window={window} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ForecastWindow({ window }: { window: ForecastWindowSummary }) {
+  return (
+    <article className="forecast-window">
+      <h3>{window.window_label}</h3>
+      <dl className="risk-list">
+        <div>
+          <dt>risk_level</dt>
+          <dd>{formatValue(window.risk_level)}</dd>
+        </div>
+        <div>
+          <dt>row_count</dt>
+          <dd>{formatValue(window.row_count)}</dd>
+        </div>
+        <div>
+          <dt>max_risk_score</dt>
+          <dd>{formatValue(window.max_risk_score)}</dd>
+        </div>
+        <div>
+          <dt>average_risk_score</dt>
+          <dd>{formatValue(window.average_risk_score)}</dd>
+        </div>
+        <div>
+          <dt>top_reason_codes</dt>
+          <dd>{formatReasonCodes(window.top_reason_codes)}</dd>
+        </div>
+        <div>
+          <dt>recommended_human_action</dt>
+          <dd>{formatValue(window.recommended_human_action)}</dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+function formatReasonCodes(
+  reasonCodes: ForecastWindowSummary["top_reason_codes"]
+): string {
+  if (reasonCodes.length === 0) {
+    return "n/a";
+  }
+
+  return reasonCodes
+    .map((reasonCode) => `${reasonCode.reason_code} (${reasonCode.count})`)
+    .join(", ");
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -289,12 +424,17 @@ export default function DashboardPage() {
   const [currentRiskState, setCurrentRiskState] = useState<RiskRequestState>({
     status: "idle"
   });
+  const [forecastPreviewState, setForecastPreviewState] =
+    useState<ForecastRequestState>({
+      status: "idle"
+    });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
     setSpotPricesState({ status: "idle" });
     setPowerBalanceState({ status: "idle" });
     setCurrentRiskState({ status: "idle" });
+    setForecastPreviewState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -327,6 +467,19 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleLoadForecastPreview() {
+    setForecastPreviewState({ status: "loading" });
+    try {
+      const data = await fetchForecastPreview(selectedArea);
+      setForecastPreviewState({ status: "success", data });
+    } catch (error) {
+      setForecastPreviewState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
   return (
     <main className="dashboard">
       <div className="dashboard__inner">
@@ -340,8 +493,9 @@ export default function DashboardPage() {
             <p className="lead">
               Minimal dashboard for Danish electricity decision support. Data
               loads only when requested from the backend API helper, and the
-              frontend does not dispatch, activate, forecast, poll, control
-              energy assets, or call Energi Data Service directly.
+              frontend does not dispatch, activate, poll, control energy
+              assets, run forecasting logic, or call Energi Data Service
+              directly.
             </p>
           </div>
           <div className="selector">
@@ -385,12 +539,17 @@ export default function DashboardPage() {
             state={currentRiskState}
             onLoad={handleLoadCurrentRisk}
           />
+          <ForecastPreviewCard
+            state={forecastPreviewState}
+            onLoad={handleLoadForecastPreview}
+          />
         </div>
 
         <p className="api-note">
           Frontend requests use only the backend API base URL helper:{" "}
           <code>{backendApiBaseUrl}</code>. The browser does not call Energi
-          Data Service directly.
+          Data Service or external data APIs directly, and nothing auto-loads
+          or polls.
         </p>
       </div>
     </main>

@@ -28,6 +28,56 @@ export type CurrentRiskResponse = {
   };
 };
 
+export type ForecastRiskLevel = "low" | "medium" | "high" | "unknown";
+
+export type ForecastPreviewRow = {
+  price_area: PriceArea;
+  timestamp_utc: string;
+  price_dkk_per_mwh: number | null;
+  production_mw: number | null;
+  consumption_mw: number | null;
+  wind_onshore_mw: number | null;
+  wind_offshore_mw: number | null;
+  solar_mw: number | null;
+  exchange_net_mw?: number | null;
+};
+
+export type ForecastPreviewRequest = {
+  price_area: PriceArea;
+  generated_at_utc: string;
+  rows: ForecastPreviewRow[];
+};
+
+export type ForecastReasonCodeCount = {
+  reason_code: string;
+  count: number;
+};
+
+export type ForecastWindowSummary = {
+  window_label: string;
+  start_utc: string;
+  end_utc: string;
+  row_count: number;
+  risk_level: ForecastRiskLevel;
+  max_risk_score: number | null;
+  average_risk_score: number | null;
+  average_confidence_score: number;
+  risk_level_counts: Record<string, number>;
+  top_reason_codes: ForecastReasonCodeCount[];
+  recommended_human_action: string;
+  explanation: string;
+  decision_support_only: boolean;
+};
+
+export type ForecastPreviewResponse = {
+  price_area: PriceArea;
+  generated_at_utc: string;
+  model_version: string;
+  decision_support_only: boolean;
+  safety: string;
+  windows: ForecastWindowSummary[];
+};
+
 export type SpotPriceRow = {
   id: number;
   price_area: PriceArea;
@@ -89,6 +139,28 @@ export async function fetchCurrentRisk(
   return body as CurrentRiskResponse;
 }
 
+export async function fetchForecastPreview(
+  priceArea: PriceArea
+): Promise<ForecastPreviewResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/forecast/preview`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(buildForecastPreviewRequest(priceArea))
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  return body as ForecastPreviewResponse;
+}
+
 async function fetchEnergyApi<Row>(
   path: string,
   priceArea: PriceArea
@@ -105,6 +177,52 @@ async function fetchEnergyApi<Row>(
   }
 
   return body as EnergyApiResponse<Row>;
+}
+
+function buildForecastPreviewRequest(
+  priceArea: PriceArea
+): ForecastPreviewRequest {
+  const generatedAtUtc = "2026-01-01T00:00:00+00:00";
+
+  return {
+    price_area: priceArea,
+    generated_at_utc: generatedAtUtc,
+    rows: [
+      {
+        price_area: priceArea,
+        timestamp_utc: "2026-01-01T01:00:00+00:00",
+        price_dkk_per_mwh: 100,
+        production_mw: 5000,
+        consumption_mw: 4500,
+        wind_onshore_mw: 2000,
+        wind_offshore_mw: 1000,
+        solar_mw: 100,
+        exchange_net_mw: 50
+      },
+      {
+        price_area: priceArea,
+        timestamp_utc: "2026-01-02T01:00:00+00:00",
+        price_dkk_per_mwh: -25,
+        production_mw: 5000,
+        consumption_mw: 4200,
+        wind_onshore_mw: 2500,
+        wind_offshore_mw: 1500,
+        solar_mw: 400,
+        exchange_net_mw: -100
+      },
+      {
+        price_area: priceArea,
+        timestamp_utc: "2026-01-03T01:00:00+00:00",
+        price_dkk_per_mwh: 320,
+        production_mw: 5000,
+        consumption_mw: 4700,
+        wind_onshore_mw: 1200,
+        wind_offshore_mw: 800,
+        solar_mw: 150,
+        exchange_net_mw: 20
+      }
+    ]
+  };
 }
 
 function getApiErrorMessage(body: unknown, status: number): string {

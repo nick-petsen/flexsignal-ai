@@ -28,8 +28,8 @@ Working read-only core:
 - Manual batch wrapper validation works with `limit 50`.
 - Repeating the same `limit 50` import was idempotent for the tested batch.
 - Read-only energy API endpoints exist for `spot_prices` and `power_balance`.
-- Frontend dashboard can manually load spot prices, power balance, and current
-  surplus risk.
+- Frontend dashboard can manually load spot prices, power balance, current
+  surplus risk, and a forecast-window preview.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
@@ -57,6 +57,8 @@ Latest read-only API/UI smoke-test observations:
   summaries without `DATABASE_URL`, including high-risk max aggregation,
   empty-window `unknown` handling, DK1/DK2 validation, and timezone-aware
   `generated_at_utc` validation.
+- Frontend forecast preview card manually calls `POST /api/forecast/preview`
+  with deterministic synthetic/caller-provided demo rows only.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
   surplus risk.
 - The read-only badge and disclaimer were visible.
@@ -70,7 +72,8 @@ Still preview / not production:
 - The 24-72 hour forecast-window preview API is deterministic aggregation only;
   it uses caller-provided rows, is not ML, is not LLM based, is not DMI/weather
   based yet, does not fetch EDS or DMI data, does not read or write a database,
-  and is not production forecast validation.
+  and is not production forecast validation. The frontend card is a manual
+  preview surface for the same synthetic/caller-provided boundary only.
 - No DMI/weather ingestion exists yet.
 - No PDF report export exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
@@ -80,13 +83,20 @@ Still preview / not production:
 
 Recommended next MVP step: keep the deterministic forecast-window foundation
 read-only while adding explicit validation and caller-provided/local data
-composition before any UI surface. Do not use an LLM as the forecast engine,
-and do not add control, dispatch, or activation behavior.
+composition before any production data path. Do not use an LLM as the forecast
+engine, and do not add control, dispatch, or activation behavior.
 
 ## Forecast Preview API
 
 `POST /api/forecast/preview` returns deterministic `0-24h`, `24-48h`, and
 `48-72h` forecast-window summaries from caller-provided DK1/DK2 rows.
+
+The frontend dashboard includes a manual "Forecast preview" card that calls
+`POST /api/forecast/preview` only after the user clicks "Load forecast
+preview". It posts deterministic synthetic/caller-provided demo rows with a
+timezone-aware `generated_at_utc`, uses only the backend API base URL helper,
+does not auto-load or poll, does not call Energi Data Service or DMI/weather
+APIs from the browser, and does not read or write a database.
 
 The endpoint is read-only decision support only. It does not fetch Energi Data
 Service data, call DMI/weather APIs, read or write a database, persist payloads,

@@ -42,7 +42,8 @@ Working read-only paths around the model:
 - `POST /api/forecast/preview` summarizes caller-provided DK1/DK2 rows into
   three forecast windows.
 - `GET /api/risk/current` scores the latest existing local DK1/DK2 rows.
-- The frontend can manually request current risk through the backend API.
+- The frontend can manually request current risk and forecast-window previews
+  through the backend API.
 - Synthetic and local DB read-only backtest previews exist.
 - Local DB backtest row pairing uses `nearest_timestamp_v0_1`.
 
@@ -127,6 +128,14 @@ yet, not production forecast validation, and not an LLM forecast engine. The
 rows only. It does not fetch data, write data, call live Energi Data Service,
 call DMI/weather APIs, connect to a database, schedule jobs, train models, or
 use secrets, auth, Azure infrastructure, or operational integrations.
+
+The frontend dashboard includes a manual read-only forecast preview card that
+calls `POST /api/forecast/preview` only after a button click. It sends
+deterministic synthetic/caller-provided demo rows with timezone-aware
+`generated_at_utc`, uses only the backend API base URL helper, does not
+auto-load or poll, does not call Energi Data Service or DMI/weather APIs from
+the browser, and does not read or write a database. It is a preview surface
+only, not production forecast validation.
 
 All outputs are read-only decision support only and must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
@@ -256,8 +265,8 @@ statistical calibration, production readiness, or operational fitness.
 
 Recommended next MVP step: keep `rule-engine-v0` and `forecast-window-v0` as
 explainable read-only baselines while adding explicit validation and
-caller-provided/local data composition before any UI surface or production data
-path. Do not use an LLM as the forecast engine.
+caller-provided/local data composition before any production data path. Do not
+use an LLM as the forecast engine.
 
 ## Human Oversight and Safety
 
