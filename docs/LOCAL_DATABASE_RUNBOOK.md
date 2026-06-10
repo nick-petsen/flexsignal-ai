@@ -8,6 +8,46 @@ run migrations automatically, or write data to PostgreSQL.
 control signals, dispatch instructions, activation workflows, closed-loop
 control, or operational asset connectivity.
 
+## MVP Readiness Summary
+
+The local PostgreSQL-backed path is ready for a local technical MVP demo. It is
+not ready for production, is not a validated commercial forecasting product,
+and remains read-only decision support for human review only.
+
+Latest validated local dataset status after the manual `limit 50` EDS import:
+
+| Table | DK1 | DK2 |
+| --- | ---: | ---: |
+| `spot_prices` | 53 | 50 |
+| `power_balance` | 53 | 50 |
+
+Latest local read-only backtest status:
+
+| Area | Composed rows | Low | Medium | High | Average risk score |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| DK1 | 53 | 1 | 52 | 0 | 34.5283 |
+| DK2 | 50 | 42 | 8 | 0 | 21.8 |
+
+Latest read-only API/UI smoke-test status:
+
+- DK1 current-risk API returned medium risk with score `35`.
+- DK2 current-risk API returned low risk with score `20`.
+- Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
+  surplus risk.
+- The read-only badge and disclaimer were visible.
+- No automatic loading, polling, control, dispatch, or activation behavior was
+  observed.
+
+Still not ready: no 24-72 hour forecast, DMI/weather ingestion, full historical
+backtest, outcome labels, model performance metrics, Azure deployment,
+Microsoft Entra ID auth, audit-log implementation beyond documentation,
+PDF/report export, production database, scheduled ingestion, monitoring setup,
+or human approval workflow in the product UI.
+
+Recommended next MVP step: start a simple deterministic 24-72 hour forecast
+foundation using available local EDS data first. Do not use an LLM as the
+forecast engine, and do not add control, dispatch, or activation behavior.
+
 ## Current Status
 
 - A PostgreSQL schema baseline exists in `backend/app/db/schema.sql`.

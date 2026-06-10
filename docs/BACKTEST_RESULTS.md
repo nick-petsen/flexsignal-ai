@@ -7,9 +7,10 @@ FlexSignal AI now includes a pure Python backtest evaluator for
 list of local row dictionaries, and each valid row is passed to
 `calculate_surplus_risk`.
 
-First local read-only database backtests have been run against tiny locally
-stored DK1 and DK2 samples of EDS-derived rows. This document does not claim
-validated production performance, predictive accuracy, or statistical
+Local read-only database backtests have been run against DK1 and DK2
+EDS-derived rows after the manual `limit 50` import. This supports a local
+technical MVP demo only. It does not claim production readiness, validated
+commercial forecasting performance, predictive accuracy, or statistical
 calibration.
 
 ## Current MVP Backtest Status
@@ -22,10 +23,10 @@ validate commercial performance or operational readiness.
 Latest documented local DB backtest results after the confirmed manual EDS
 historical batch write:
 
-| Area | Spot prices read | Power balance read | Backtest risk counts | Average risk score |
-| --- | ---: | ---: | --- | ---: |
-| DK1 | 53 | 53 | low=1, medium=52, high=0 | 34.5283 |
-| DK2 | 50 | 50 | low=42, medium=8, high=0 | 21.8 |
+| Area | Spot prices read | Power balance read | Composed rows | Backtest risk counts | Average risk score |
+| --- | ---: | ---: | ---: | --- | ---: |
+| DK1 | 53 | 53 | 53 | low=1, medium=52, high=0 | 34.5283 |
+| DK2 | 50 | 50 | 50 | low=42, medium=8, high=0 | 21.8 |
 
 Current read-only foundation:
 
@@ -35,6 +36,8 @@ Current read-only foundation:
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
+- Latest local dataset status is `spot_prices` DK1 `53`, `spot_prices` DK2
+  `50`, `power_balance` DK1 `53`, and `power_balance` DK2 `50`.
 
 Still preview / not production:
 
@@ -48,6 +51,10 @@ Still preview / not production:
 - No scheduled ingestion jobs, production database, Azure deployment, auth, ML
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
+
+Recommended next MVP step: add a simple deterministic 24-72 hour forecast
+foundation using available local EDS data first. Do not use an LLM as the
+forecast engine, and do not add control, dispatch, or activation behavior.
 
 ## Planned Historical Local Sample Backtest Validation
 

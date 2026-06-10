@@ -41,14 +41,16 @@ Working read-only paths around the model:
 
 Validated local sample results:
 
-| Area | Current risk | Local DB rows | Backtest risk counts | Average risk score |
+| Area | Current risk API smoke-test | Local DB rows | Local DB backtest | Average risk score |
 | --- | --- | --- | --- | ---: |
-| DK1 | medium, score 35 | 3 spot prices, 3 power-balance rows | low=1, medium=2, high=0 | 26.6667 |
-| DK2 | low, score 20 | 2 spot prices, 2 power-balance rows | low=2, medium=0, high=0 | 20.0 |
+| DK1 | medium, score 35 | 53 spot prices, 53 power-balance rows | low=1, medium=52, high=0 | 34.5283 |
+| DK2 | low, score 20 | 50 spot prices, 50 power-balance rows | low=42, medium=8, high=0 | 21.8 |
 
-The local validation confirms only that the read-only path works on tiny local
-samples. It does not establish predictive accuracy, statistical calibration,
-commercial validity, or operational fitness.
+The latest local validation confirms that the read-only API, frontend manual
+loads, local DB backtest, and deterministic scoring path work for DK1 and DK2
+after the `limit 50` local import. It supports a local technical MVP demo only.
+It does not establish predictive accuracy, statistical calibration, commercial
+validity, production readiness, or operational fitness.
 
 ## Inputs
 
@@ -118,7 +120,12 @@ or operational workflows.
   with outcome labels has been run.
 - No 24-72 hour forecast, DMI/weather ingestion, PDF report export, auth, Azure
   deployment, scheduled ingestion job, or production database exists yet.
+- No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
+
+Recommended next MVP step: keep `rule-engine-v0` as the explainable baseline
+while adding a simple deterministic 24-72 hour forecast foundation from
+available local EDS data first. Do not use an LLM as the forecast engine.
 
 ## Human Oversight and Safety
 
