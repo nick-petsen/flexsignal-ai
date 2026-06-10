@@ -53,11 +53,11 @@ Still preview / not production:
 
 This is a documentation-only plan for using larger local EDS-derived samples to
 improve read-only technical backtest coverage. The current manual batch wrapper
-is capped at `limit 10` to match the existing child ingest script safety gate.
-It does not add backend or frontend behavior, run database writes, run live API
-polling, add scheduled jobs, add Azure infrastructure, add secrets, add auth,
-add ML training, use LLMs, or add control, dispatch, activation, closed-loop,
-or operational functionality.
+defaults to `limit 10` and now supports explicit `limit 50` for manual local
+validation. It does not add backend or frontend behavior, run database writes,
+run live API polling, add scheduled jobs, add Azure infrastructure, add
+secrets, add auth, add ML training, use LLMs, or add control, dispatch,
+activation, closed-loop, or operational functionality.
 
 The proposed local import source remains limited to:
 
@@ -68,13 +68,12 @@ The future larger batch progression is:
 
 | Stage | Limit per dataset and price area | Required action before next stage |
 | --- | ---: | --- |
-| 1 | 50 | Check row counts, distinct `source_record_id` counts, idempotency, and backtest output. |
+| 1 | 50 | Supported now for explicit manual local validation. Check row counts, distinct `source_record_id` counts, idempotency, and backtest output. |
 | 2 | 100 | Repeat the same checks and confirm counts do not duplicate unexpectedly. |
 | 3 | 500 maximum | Run only after smaller batches pass without mapping, normalization, or idempotency issues. |
 
-These `50`/`100`/`500` stages require a future explicit
-`scripts/manual_eds_local_db_ingest.py` child-script enhancement before the
-manual wrapper can run them. The wrapper must not bypass the child script
+The `100` and `500` stages still require a future explicit enhancement before
+the manual wrapper can run them. The wrapper must not bypass the child script
 safety gate.
 
 After each batch, rerun the local DB read-only backtest for both `DK1` and

@@ -18,7 +18,7 @@ CONFIRM_FLAG = "--confirm-local-db-write"
 DATASETS = ("DayAheadPrices", "ElectricityProdex5MinRealtime")
 PRICE_AREAS = ("DK1", "DK2")
 DEFAULT_LIMIT = 10
-HARD_MAX_LIMIT = 10
+HARD_MAX_LIMIT = 50
 CHILD_SCRIPT = Path(__file__).resolve().with_name("manual_eds_local_db_ingest.py")
 
 

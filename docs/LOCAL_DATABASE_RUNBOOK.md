@@ -196,8 +196,9 @@ Child dry-run observations:
 | `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
 
 Confirmed writes still require explicit `--confirm-local-db-write`. The
-wrapper currently uses `limit 10` and a hard maximum of `10` to match the
-child-script safety gates.
+documented dry-run used the wrapper default `limit 10`; explicit `limit 50` is
+now supported for manual local validation, while `100` and `500` still require
+a future explicit enhancement.
 
 Safety notes:
 
@@ -417,7 +418,8 @@ developer from a shell, against a manually created local PostgreSQL database.
    dataset and one DK1/DK2 price area, normalizes records, builds write-plan
    entries, builds SQL commands, and defaults to dry-run. It supports only
    `DayAheadPrices` and `ElectricityProdex5MinRealtime`, and only `DK1` and
-   `DK2`. The default limit is `2`; the hard maximum is `10`.
+   `DK2`. The default limit is `2`; the hard maximum is `50` for explicit
+   manual local validation.
 
    Dry-run is the default and still requires a local `DATABASE_URL` safety gate:
 
@@ -462,18 +464,18 @@ developer from a shell, against a manually created local PostgreSQL database.
 
    Current wrapper batch size:
 
-   - Use `limit 10` or lower. The wrapper default is `10` and the wrapper hard
-     maximum is `10` to match the current child script safety gate.
+   - The wrapper default is `limit 10`.
+   - Explicit `limit 50` is supported for manual local validation.
+   - The wrapper hard maximum is `50` to match the current child script safety
+     gate.
 
    Future larger batch progression:
 
-   - Start with `limit 50` per dataset and price area.
-   - Increase to `limit 100` only after validation passes.
+   - Increase to `limit 100` only after `limit 50` validation passes.
    - Increase to a maximum of `limit 500` only after row counts, idempotency,
      and backtest outputs remain explainable at smaller batch sizes.
-   - These larger `50`/`100`/`500` imports require a future explicit
-     `scripts/manual_eds_local_db_ingest.py` child-script enhancement. The
-     wrapper must not bypass the child script safety gate.
+   - These larger `100`/`500` imports require a future explicit enhancement.
+     The wrapper must not bypass the child script safety gate.
 
    Required safety gates:
 
@@ -608,7 +610,7 @@ For `scripts/manual_eds_local_db_ingest.py`, these additional checks apply:
 - Supported datasets are limited to `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`.
 - Supported price areas are limited to `DK1` and `DK2`.
-- Limit defaults to `2` and must not exceed `10`.
+- Limit defaults to `2` and must not exceed `50`.
 - The script must print the final request URL, HTTP status, raw count,
   normalized count, SQL command count, target tables, committed status, and
   rolled-back status.
@@ -626,10 +628,10 @@ apply:
 - Supported datasets are limited to `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`, or `all`.
 - Supported price areas are limited to `DK1`, `DK2`, or `all`.
-- Limit defaults to `10` and the wrapper must reject values above `10`.
-- Larger staged imports of `limit 50` per dataset and price area, then `100`,
-  then maximum `500`, require a future explicit child-script enhancement before
-  the wrapper can support them.
+- Limit defaults to `10`; explicit `limit 50` is supported; the wrapper must
+  reject values above `50`.
+- Larger staged imports of `limit 100`, then maximum `500`, require a future
+  explicit enhancement before the wrapper can support them.
 - Dry-run must be run before confirmed write mode for each batch.
 - Confirmed writes must require explicit `--confirm-local-db-write`.
 - The wrapper must pass `--confirm-local-db-write` to child commands only when
