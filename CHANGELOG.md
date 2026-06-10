@@ -2,6 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Added a documentation-only historical local Energi Data Service import plan
+  for expanding local DK1/DK2 samples of `DayAheadPrices` and
+  `ElectricityProdex5MinRealtime` to support better read-only local backtesting.
+  Documented the staged batch progression of `limit 50`, then `100`, then
+  maximum `500` per dataset and price area only after row counts, distinct
+  `source_record_id` counts, idempotency, and backtest outputs are checked.
+  Documented required safety gates: local PostgreSQL only, `DATABASE_URL`
+  targeting `localhost` or `127.0.0.1`, dry-run before confirmed write,
+  explicit `--confirm-local-db-write` for confirmed writes, no production or
+  Azure database, no scheduled jobs, no backend startup ingestion, no
+  frontend-triggered ingestion, and no automatic polling loop. Documented
+  post-batch validation expectations for row counts by `price_area`, distinct
+  source IDs, repeated-import idempotency, DK1/DK2 local DB read-only backtests,
+  `risk_level_counts`, and `average_risk_score`; stop conditions for duplicate
+  explosion, non-local DB URLs, unconfirmed writes, failed normalization,
+  unexpected field mapping, and any control/dispatch/activation behavior; and
+  limitations that larger local samples are still not full model validation
+  because outcome labels, DMI/weather data, and a 24-72 hour forecast are
+  absent while `rule-engine-v0` remains deterministic and simple. No code,
+  backend behavior, frontend behavior, database writes, live API polling, Azure
+  infrastructure, secrets, auth, ML training, LLM use, control, dispatch,
+  activation, or operational functionality was added.
 - Added a concise MVP status documentation update covering the current
   read-only technical foundation: local PostgreSQL schema and Alembic baseline,
   manual local EDS ingestion for `DayAheadPrices` and

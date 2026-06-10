@@ -48,6 +48,50 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
+## Planned Historical Local Sample Backtest Validation
+
+This is a documentation-only plan for using larger local EDS-derived samples to
+improve read-only technical backtest coverage. It does not add code, change
+backend or frontend behavior, run database writes, run live API polling, add
+scheduled jobs, add Azure infrastructure, add secrets, add auth, add ML
+training, use LLMs, or add control, dispatch, activation, closed-loop, or
+operational functionality.
+
+The proposed local import source remains limited to:
+
+- `DayAheadPrices` for `DK1` and `DK2`.
+- `ElectricityProdex5MinRealtime` for `DK1` and `DK2`.
+
+The proposed batch progression is:
+
+| Stage | Limit per dataset and price area | Required action before next stage |
+| --- | ---: | --- |
+| 1 | 50 | Check row counts, distinct `source_record_id` counts, idempotency, and backtest output. |
+| 2 | 100 | Repeat the same checks and confirm counts do not duplicate unexpectedly. |
+| 3 | 500 maximum | Run only after smaller batches pass without mapping, normalization, or idempotency issues. |
+
+After each batch, rerun the local DB read-only backtest for both `DK1` and
+`DK2` and document:
+
+- `spot_price_rows_read`
+- `power_balance_rows_read`
+- `composed_rows`
+- `backtest_summary.risk_level_counts`
+- `backtest_summary.average_risk_score`
+- `backtest_summary.failed_rows`
+- `backtest_summary.missing_price_count`
+- `backtest_summary.missing_generation_data_count`
+
+Stop the local validation flow if any import produces duplicate explosion,
+uses a non-local database URL, writes without explicit confirmation, fails
+normalization, reveals unexpected source field mapping, or introduces control,
+dispatch, activation, closed-loop, or operational behavior.
+
+Even after these larger local samples are imported, the results remain
+technical validation only. They are not full model validation because there are
+no outcome labels, no DMI/weather data, no 24-72 hour forecast, no statistical
+calibration, and `rule-engine-v0` remains deterministic and simple.
+
 ## Synthetic Preview Script
 
 `scripts/risk_backtest_preview.py` provides a manual local preview of

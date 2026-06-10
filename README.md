@@ -50,6 +50,37 @@ Still preview / not production:
   exist.
 - No human approval workflow exists beyond documentation and disclaimers.
 
+## Historical Local EDS Import Plan
+
+A documentation-only plan now defines how to expand local EDS-derived samples
+for safer read-only backtesting without changing runtime behavior.
+
+Planned local validation scope:
+
+- Datasets: `DayAheadPrices` and `ElectricityProdex5MinRealtime`.
+- Price areas: `DK1` and `DK2`.
+- Batch sizes: start at `limit 50` per dataset and price area, then `100`,
+  then maximum `500` only after validation passes.
+- Validation: row counts by `price_area`, distinct `source_record_id` counts,
+  repeated-import idempotency, and local DB read-only backtests for `DK1` and
+  `DK2` documenting `risk_level_counts` and `average_risk_score`.
+
+Safety gates:
+
+- Local PostgreSQL only, with `DATABASE_URL` targeting `localhost` or
+  `127.0.0.1`.
+- Dry-run before confirmed writes.
+- Confirmed writes require explicit `--confirm-local-db-write`.
+- No production database, Azure database, scheduled job, backend startup
+  ingestion, frontend-triggered ingestion, or automatic polling loop.
+- No code, backend behavior, frontend behavior, secrets, auth, ML training,
+  LLM use, control, dispatch, activation, or operational workflow is added by
+  this plan.
+
+This larger local sample would still not be full model validation. Outcome
+labels, DMI/weather data, and a 24-72 hour forecast remain absent, and
+`rule-engine-v0` remains deterministic and simple.
+
 ## Not Included in v0.1
 
 - Automatic activation of consumption or flexibility.

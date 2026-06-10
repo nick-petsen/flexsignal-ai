@@ -185,6 +185,77 @@ production dataset does not provide a clear consumption field. Consumption must
 be sourced later from a separate validated dataset before surplus-risk scoring
 depends on consumption.
 
+## Proposed Historical Local EDS Import Plan
+
+This plan is documentation only. It does not add code, change backend or
+frontend behavior, write to a database, run live API polling, add scheduled
+jobs, add Azure infrastructure, add secrets, add auth, add ML training, use
+LLMs, or add control, dispatch, activation, or operational functionality.
+
+Goal:
+
+- Expand local EDS-derived sample data for `DK1` and `DK2`.
+- Support better local read-only backtesting for `rule-engine-v0`.
+- Keep the work as manual local technical validation only.
+
+Planned datasets and price areas:
+
+| Dataset | Price areas | Intended local target |
+| --- | --- | --- |
+| `DayAheadPrices` | `DK1`, `DK2` | `spot_prices` |
+| `ElectricityProdex5MinRealtime` | `DK1`, `DK2` | `power_balance` |
+
+Proposed batch sizes:
+
+- Start with `limit 50` per dataset and price area.
+- Increase to `limit 100` only after row counts, distinct
+  `source_record_id` counts, idempotency, and backtest outputs are checked.
+- Increase to a maximum of `limit 500` only after the same checks pass for the
+  smaller batches.
+
+Safety gates:
+
+- Local PostgreSQL only.
+- `DATABASE_URL` must target `localhost` or `127.0.0.1`.
+- No production database.
+- No Azure database.
+- No scheduled jobs.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- Confirmed writes require explicit `--confirm-local-db-write`.
+- Dry-run must be run before any confirmed write.
+
+Validation after each import batch:
+
+- Check row counts by `price_area`.
+- Check distinct `source_record_id` counts.
+- Re-run the same import to validate idempotency.
+- Confirm counts do not duplicate unexpectedly.
+- Run the local DB read-only backtest for `DK1` and `DK2`.
+- Document `risk_level_counts` and `average_risk_score`.
+
+Stop conditions:
+
+- Any duplicate explosion.
+- Any non-local `DATABASE_URL`.
+- Any write without explicit confirmation.
+- Any failed normalization.
+- Any unexpected source field mapping.
+- Any control, dispatch, activation, closed-loop, or operational behavior.
+
+Limitations:
+
+- A larger local sample is still not full model validation.
+- No outcome labels are available yet.
+- No DMI/weather data is included yet.
+- No 24-72 hour forecast exists yet.
+- `rule-engine-v0` remains deterministic and simple.
+
+Recommended next implementation after this plan: add a safe manual historical
+import script enhancement or batch wrapper. It should remain local-only,
+dry-run-first, and confirmation-gated.
+
 ## Manual EDS Local DB Ingest Validation
 
 The manual `scripts/manual_eds_local_db_ingest.py` helper can be used by a
