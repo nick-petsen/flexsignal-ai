@@ -2,6 +2,17 @@
 
 ## v0.1.0 - TODO
 
+- Added pure read-only nearest-timestamp risk backtest row pairing with
+  `pair_rows_by_nearest_timestamp(...)`, deterministic DK1/DK2 validation,
+  timezone-aware ISO timestamp parsing including trailing `Z`, power-balance
+  rows as the primary timeline, deterministic tie-breaking by earlier
+  spot-price timestamp then original order, unit tests, and local DB backtest
+  metadata `pairing_strategy=nearest_timestamp_v0_1`. Updated the manual local
+  DB backtest script and docs while preserving SELECT/read-only behavior only,
+  no database writes, no live EDS polling, no API endpoint or startup changes,
+  no frontend work, no ingestion jobs, no Azure resources, no secrets, no auth,
+  no ML training, no LLM use, and no automatic control, dispatch, activation,
+  or operational functionality.
 - Documented the first local read-only DB risk backtest result only:
   pre-backtest local table counts of 3 `spot_prices` rows and 3
   `power_balance` rows, command
