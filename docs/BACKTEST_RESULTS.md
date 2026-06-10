@@ -75,6 +75,62 @@ read or write a database, persist rows, start jobs, train ML models, use LLMs,
 or perform automatic control, dispatch, activation, closed-loop workflows,
 asset connections, plant/device commands, or live control signals.
 
+### Forecast Preview API Smoke Test Results
+
+`POST /api/forecast/preview` was smoke-tested manually with the backend started
+without `DATABASE_URL`. This confirms that the endpoint does not require
+database access for caller-provided forecast rows. No frontend was used, and no
+ingestion, database writes, SQL, live Energi Data Service calls, DMI/weather
+calls, scheduler, Azure infrastructure, auth, secrets, ML training, LLM use,
+control, dispatch, activation, or operational functionality was used.
+
+Valid DK1 request:
+
+| Field | Observed value |
+| --- | --- |
+| HTTP | `200` |
+| `price_area` | `DK1` |
+| `generated_at_utc` | `2026-01-01T00:00:00Z` |
+| `model_version` | `rule-engine-v0+forecast-window-v0` |
+| `decision_support_only` | `true` |
+| Windows returned | `3` |
+
+Valid DK1 window results:
+
+| Window | Row count | Risk level | Max risk score | Average risk score | Notes |
+| --- | ---: | --- | ---: | ---: | --- |
+| `0-24h` | 1 | low | 30 | 30.0 | top reason codes included `MODERATE_PRICE` and `MODERATE_RENEWABLE_SHARE` |
+| `24-48h` | 1 | high | 75 | 75.0 | top reason codes included `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE` |
+| `48-72h` | 0 | unknown | null | null | `average_confidence_score=0.0` |
+
+High-risk DK2 request:
+
+- HTTP `200`
+- `price_area`: `DK2`
+- `model_version`: `rule-engine-v0+forecast-window-v0`
+- `decision_support_only`: `true`
+- `24-48h` returned `row_count=1`, `risk_level=high`,
+  `max_risk_score=75`, `average_risk_score=75.0`, and top reason codes
+  including `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE`.
+- `0-24h` and `48-72h` were `unknown` because `row_count=0`.
+
+Validation requests:
+
+- `price_area=SE3` returned a validation error indicating that input should be
+  `DK1` or `DK2`.
+- Timezone-naive `generated_at_utc` returned a validation error indicating that
+  `generated_at_utc` must be timezone-aware.
+
+Interpretation:
+
+- `POST /api/forecast/preview` works for caller-provided rows.
+- It returns deterministic `0-24h`, `24-48h`, and `48-72h` forecast windows.
+- It demonstrates max-risk aggregation.
+- It handles empty windows as `unknown`.
+- It validates DK1/DK2 and timezone-aware `generated_at_utc`.
+- It is read-only decision support and requires human review.
+- It is not production forecast validation.
+
 ## Planned Historical Local Sample Backtest Validation
 
 This is a documentation-only plan for using larger local EDS-derived samples to

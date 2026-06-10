@@ -2,6 +2,37 @@
 
 ## v0.1.0 - TODO
 
+- Documented manual smoke-test results for `POST /api/forecast/preview` only.
+  The backend was started without `DATABASE_URL`, confirming that
+  caller-provided forecast rows can be summarized without database access. The
+  valid DK1 request returned HTTP 200 with `price_area=DK1`,
+  `generated_at_utc=2026-01-01T00:00:00Z`,
+  `model_version=rule-engine-v0+forecast-window-v0`,
+  `decision_support_only=true`, and three windows: `0-24h` with
+  `row_count=1`, `risk_level=low`, `max_risk_score=30`,
+  `average_risk_score=30.0`, and reason codes including `MODERATE_PRICE` and
+  `MODERATE_RENEWABLE_SHARE`; `24-48h` with `row_count=1`,
+  `risk_level=high`, `max_risk_score=75`, `average_risk_score=75.0`, and
+  reason codes including `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE`; and
+  `48-72h` with `row_count=0`, `risk_level=unknown`,
+  `max_risk_score=null`, `average_risk_score=null`, and
+  `average_confidence_score=0.0`. The high-risk DK2 request returned HTTP 200,
+  `price_area=DK2`, `model_version=rule-engine-v0+forecast-window-v0`,
+  `decision_support_only=true`, and a `24-48h` high-risk window with
+  `row_count=1`, `max_risk_score=75`, `average_risk_score=75.0`, and reason
+  codes including `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE`; the `0-24h` and
+  `48-72h` windows were `unknown` because `row_count=0`. Invalid
+  `price_area=SE3` and timezone-naive `generated_at_utc` requests returned
+  validation errors indicating that input should be `DK1` or `DK2` and that
+  `generated_at_utc` must be timezone-aware. Clarified that this demonstrates
+  deterministic caller-provided `0-24h`, `24-48h`, and `48-72h` window
+  summaries, max-risk aggregation, empty-window `unknown` handling, and input
+  validation only. No frontend was used; no ingestion, database access, SQL,
+  database writes, live Energi Data Service calls, DMI/weather calls,
+  scheduler, Azure infrastructure, auth, secrets, ML training, LLM use,
+  automatic control, dispatch, activation, or operational functionality was
+  used or added. This is read-only decision support, not production forecast
+  validation.
 - Added `POST /api/forecast/preview`, a read-only FastAPI wrapper around
   `forecast-window-v0` for caller-provided DK1/DK2 rows only. The endpoint
   returns deterministic `0-24h`, `24-48h`, and `48-72h` summaries from

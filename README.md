@@ -53,6 +53,10 @@ Latest read-only API/UI smoke-test observations:
 
 - DK1 current-risk API returned medium risk with score `35`.
 - DK2 current-risk API returned low risk with score `20`.
+- Forecast preview API returned deterministic caller-provided DK1/DK2 window
+  summaries without `DATABASE_URL`, including high-risk max aggregation,
+  empty-window `unknown` handling, DK1/DK2 validation, and timezone-aware
+  `generated_at_utc` validation.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
   surplus risk.
 - The read-only badge and disclaimer were visible.
@@ -120,6 +124,57 @@ and is not production forecast validation. The backend preview API now exposes
 the same caller-provided aggregation boundary for JSON requests only. It
 remains read-only decision support for human review and must not be used for
 automatic control, dispatch, or activation.
+
+### Forecast Preview API Smoke Test Results
+
+`POST /api/forecast/preview` was smoke-tested manually with the backend started
+without `DATABASE_URL`. This confirms the endpoint can summarize
+caller-provided forecast rows without database access. No frontend was used,
+and no ingestion, database writes, SQL, live Energi Data Service calls,
+DMI/weather calls, scheduler, Azure infrastructure, auth, secrets, ML
+training, LLM use, control, dispatch, activation, or operational functionality
+was used or added.
+
+Valid DK1 forecast preview request:
+
+- HTTP `200`
+- `price_area`: `DK1`
+- `generated_at_utc`: `2026-01-01T00:00:00Z`
+- `model_version`: `rule-engine-v0+forecast-window-v0`
+- `decision_support_only`: `true`
+- windows returned: `3`
+
+Observed DK1 windows:
+
+| Window | Row count | Risk level | Max risk score | Average risk score | Top reason codes observed |
+| --- | ---: | --- | ---: | ---: | --- |
+| `0-24h` | 1 | low | 30 | 30.0 | `MODERATE_PRICE`, `MODERATE_RENEWABLE_SHARE` |
+| `24-48h` | 1 | high | 75 | 75.0 | `HIGH_RENEWABLE_SHARE`, `NEGATIVE_PRICE` |
+| `48-72h` | 0 | unknown | null | null | none; `average_confidence_score=0.0` |
+
+High-risk DK2 forecast preview request:
+
+- HTTP `200`
+- `price_area`: `DK2`
+- `model_version`: `rule-engine-v0+forecast-window-v0`
+- `decision_support_only`: `true`
+- `24-48h` returned `row_count=1`, `risk_level=high`,
+  `max_risk_score=75`, `average_risk_score=75.0`, and reason codes including
+  `HIGH_RENEWABLE_SHARE` and `NEGATIVE_PRICE`.
+- `0-24h` and `48-72h` were `unknown` because `row_count=0`.
+
+Validation observations:
+
+- A request using `price_area=SE3` returned a validation error indicating that
+  input should be `DK1` or `DK2`.
+- A request using timezone-naive `generated_at_utc` returned a validation error
+  indicating that `generated_at_utc` must be timezone-aware.
+
+Interpretation: the forecast preview API works for caller-provided rows,
+returns deterministic `0-24h`, `24-48h`, and `48-72h` windows, demonstrates
+max-risk aggregation, handles empty windows as `unknown`, and validates DK1/DK2
+plus timezone-aware `generated_at_utc`. This is read-only decision support for
+human review, not production forecast validation.
 
 ## Historical Local EDS Import Plan
 
