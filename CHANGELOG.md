@@ -2,6 +2,37 @@
 
 ## v0.1.0 - TODO
 
+- Documented DK2 local Energi Data Service validation results only:
+  `DayAheadPrices` DK2 and `ElectricityProdex5MinRealtime` DK2 both returned
+  HTTP 200 in dry-run mode with 2 raw records, 2 normalized records, 2 SQL
+  commands, and `committed=false`; both datasets were then manually confirmed
+  with `committed=true` against local PostgreSQL only. Documented local row
+  counts after ingest as `spot_prices` DK1=3 and DK2=2, and `power_balance`
+  DK1=3 and DK2=2. This documentation preserves the local/manual boundary with
+  no production database, Azure resources, startup migrations, automated
+  ingestion job, live polling loop, ML training, LLM use, or automatic control,
+  dispatch, activation, or operational functionality.
+- Documented DK2 current-risk and local read-only DB backtest validation only:
+  `GET /api/risk/current?price_area=DK2` returned HTTP 200 with
+  `risk_level=low`, `risk_score=20`, `confidence_score=1.0`, reason codes
+  including `NORMAL_PRICE`, `MODERATE_RENEWABLE_SHARE`, and
+  `EXCHANGE_NET_NOT_USED_V0`, `model_version=rule-engine-v0`,
+  `decision_support_only=true`, and source metadata showing `spot_prices` and
+  `power_balance` rows found. Documented the command
+  `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python
+  scripts/risk_backtest_local_db.py --price-area DK2 --limit 10 --pretty` and
+  observed read-only output with `pairing_strategy=nearest_timestamp_v0_1`, 2
+  spot-price rows read, 2 power-balance rows read, 2 composed/evaluated rows, 0
+  failed rows, low/medium/high risk counts of 2/0/0, average risk score `20.0`,
+  average confidence score `1.0`, reason-code counts for `NORMAL_PRICE`,
+  `MODERATE_RENEWABLE_SHARE`, and `EXCHANGE_NET_NOT_USED_V0`, no missing price
+  or generation data, and `model_version=rule-engine-v0`. Documented that this
+  is technical validation on a tiny local sample, not full model validation or
+  evidence for performance conclusions, with local PostgreSQL, manual
+  validation, SELECT/read-only backtest behavior, no production database, no
+  Azure resources, no startup migrations, no automated ingestion job, no live
+  polling loop, no ML training, no LLM use, and no automatic control, dispatch,
+  activation, or operational functionality.
 - Added pure read-only nearest-timestamp risk backtest row pairing with
   `pair_rows_by_nearest_timestamp(...)`, deterministic DK1/DK2 validation,
   timezone-aware ISO timestamp parsing including trailing `Z`, power-balance
