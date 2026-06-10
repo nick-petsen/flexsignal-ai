@@ -268,6 +268,93 @@ Safety notes:
 - No LLM use.
 - No automatic control, dispatch, activation, or operational functionality.
 
+### Manual Historical Batch Wrapper Confirmed Local Write Result
+
+The following confirmed local write result documents a manual local PostgreSQL
+batch only. It did not add application ingestion behavior, backend startup
+behavior, frontend behavior, scheduled jobs, Azure infrastructure, production
+database access, ML training, LLM use, dispatch, activation, or control
+functionality.
+
+Counts before the confirmed batch write:
+
+| Table | DK1 | DK2 |
+| --- | ---: | ---: |
+| `spot_prices` | 3 | 2 |
+| `power_balance` | 3 | 2 |
+
+Command:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write --continue-on-error
+```
+
+Wrapper result:
+
+- `confirmed_local_write`: `true`
+- `dry_run`: `false`
+- `local_only`: `true`
+- `decision_support_only`: `true`
+- `limit`: `10`
+- `price_areas`: `DK1`, `DK2`
+- `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`
+- `commands_planned`: `4`
+- `commands_succeeded`: `4`
+- `commands_failed`: `0`
+- `child_exit_codes`: `[0, 0, 0, 0]`
+
+Child confirmed write observations:
+
+| Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| `DayAheadPrices` | `DK1` | 200 | 10 | 10 | 10 | `spot_prices` | `true` |
+| `DayAheadPrices` | `DK2` | 200 | 10 | 10 | 10 | `spot_prices` | `true` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 10 | 10 | 10 | `power_balance` | `true` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `true` |
+
+Counts after the confirmed batch write:
+
+| Table | DK1 | DK2 |
+| --- | ---: | ---: |
+| `spot_prices` | 13 | 10 |
+| `power_balance` | 13 | 12 |
+
+Idempotency check:
+
+- The same confirmed batch command was run a second time.
+- The second run reported `child_exit_codes: [0, 0, 0, 0]`,
+  `commands_planned: 4`, `commands_succeeded: 4`, `commands_failed: 0`,
+  `confirmed_local_write: true`, `dry_run: false`, `limit: 10`, and
+  `local_only: true`.
+- Counts after the second run remained unchanged: `spot_prices` DK1 `13`,
+  `spot_prices` DK2 `10`, `power_balance` DK1 `13`, and `power_balance` DK2
+  `12`.
+- No duplicate explosion was observed.
+- The repeated import was idempotent for the same 10-record batch.
+
+Interpretation:
+
+- The batch wrapper successfully performed confirmed local writes for all
+  supported DK1/DK2 dataset combinations.
+- Confirmed writes still required explicit `--confirm-local-db-write`.
+- The import was idempotent for the repeated 10-record batch.
+- This remains technical data-source and local persistence validation only.
+- Dataset size is still small and has no outcome labels.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Manual confirmed write only.
+- No production database.
+- No Azure resources.
+- No scheduler.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
+
 ## Proposed Historical Local EDS Import Plan
 
 This plan is implemented only as a manual local batch wrapper currently capped

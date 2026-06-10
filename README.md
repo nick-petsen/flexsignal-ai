@@ -22,7 +22,8 @@ Working read-only core:
 - Local PostgreSQL schema and Alembic baseline exist.
 - Manual local Energi Data Service ingestion exists for `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`.
-- Local PostgreSQL contains validated tiny DK1 and DK2 sample data.
+- Local PostgreSQL contains validated small DK1 and DK2 sample data from manual
+  confirmed local EDS writes.
 - Read-only energy API endpoints exist for `spot_prices` and `power_balance`.
 - Frontend dashboard can manually load spot prices, power balance, and current
   surplus risk.
@@ -32,16 +33,17 @@ Working read-only core:
 - Local DB read-only backtest exists.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
 
-Validated local sample results:
+Latest documented local DB backtest results after the confirmed manual EDS
+historical batch write:
 
-| Area | Spot prices | Power balance | Current risk | Local DB backtest | Average risk score |
-| --- | ---: | ---: | --- | --- | ---: |
-| DK1 | 3 rows | 3 rows | medium, score 35 | low=1, medium=2, high=0 | 26.6667 |
-| DK2 | 2 rows | 2 rows | low, score 20 | low=2, medium=0, high=0 | 20.0 |
+| Area | Spot prices read | Power balance read | Local DB backtest | Average risk score |
+| --- | ---: | ---: | --- | ---: |
+| DK1 | 13 rows | 13 rows | low=1, medium=12, high=0 | 33.0769 |
+| DK2 | 10 rows | 12 rows | low=12, medium=0, high=0 | 20.0 |
 
 Still preview / not production:
 
-- Dataset is tiny and no full historical backtest has been run.
+- Dataset is still small and no full historical backtest has been run.
 - No outcome labels or statistical calibration exist.
 - No 24-72 hour forecast exists yet.
 - No DMI/weather ingestion exists yet.
@@ -111,6 +113,61 @@ Safety notes: local PostgreSQL dry-run only; no committed writes, production
 database, Azure resources, scheduler, backend startup ingestion,
 frontend-triggered ingestion, automatic polling loop, ML training, LLM use,
 automatic control, dispatch, activation, or operational functionality.
+
+### Manual EDS Historical Batch Confirmed Local Write
+
+The manual historical batch wrapper was also run as a confirmed local
+PostgreSQL write with explicit confirmation:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --confirm-local-db-write --continue-on-error
+```
+
+Before the confirmed batch write, `spot_prices` contained DK1 `3` and DK2 `2`
+rows, and `power_balance` contained DK1 `3` and DK2 `2` rows. The confirmed
+batch summary reported `child_exit_codes=[0, 0, 0, 0]`,
+`commands_planned=4`, `commands_succeeded=4`, `commands_failed=0`,
+`confirmed_local_write=true`, `dry_run=false`, `limit=10`,
+`local_only=true`, and `decision_support_only=true` for `DK1`/`DK2` and
+`DayAheadPrices`/`ElectricityProdex5MinRealtime`.
+
+Each child confirmed write returned HTTP `200`, with `10` raw records, `10`
+normalized records, `10` SQL commands, and `committed=true`. The target tables
+were `spot_prices` for `DayAheadPrices` and `power_balance` for
+`ElectricityProdex5MinRealtime`.
+
+After the confirmed batch write, counts were:
+
+| Table | DK1 | DK2 |
+| --- | ---: | ---: |
+| `spot_prices` | 13 | 10 |
+| `power_balance` | 13 | 12 |
+
+The same confirmed batch command was run a second time. The second run again
+reported `child_exit_codes=[0, 0, 0, 0]`, `commands_planned=4`,
+`commands_succeeded=4`, `commands_failed=0`, `confirmed_local_write=true`,
+`dry_run=false`, `limit=10`, and `local_only=true`. Counts remained unchanged,
+so no duplicate explosion was observed and the repeated import was idempotent
+for the same 10-record batch.
+
+Read-only local DB backtests after the confirmed batch write observed:
+
+| Area | Command limit | Spot prices read | Power balance read | Risk counts | Average risk score |
+| --- | ---: | ---: | ---: | --- | ---: |
+| DK1 | 20 | 13 | 13 | low=1, medium=12, high=0 | 33.0769 |
+| DK2 | 20 | 10 | 12 | low=12, medium=0, high=0 | 20.0 |
+
+Interpretation: the wrapper successfully performed confirmed local writes for
+all supported DK1/DK2 dataset combinations, the repeated import was idempotent,
+DK1 shifted to mostly medium risk on the expanded local sample, and DK2
+remained low risk. This is still technical validation only, not full model
+validation, because the dataset is still small and has no outcome labels.
+
+Safety notes: local PostgreSQL only; manual confirmed write only; explicit
+`--confirm-local-db-write` was required; no production database, Azure
+resources, scheduler, backend startup ingestion, frontend-triggered ingestion,
+automatic polling loop, ML training, LLM use, automatic control, dispatch,
+activation, or operational functionality.
 
 ## Not Included in v0.1
 
