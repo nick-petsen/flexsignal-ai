@@ -2,6 +2,24 @@
 
 ## v0.1.0 - TODO
 
+- Documented the first local read-only DB risk backtest result only:
+  pre-backtest local table counts of 3 `spot_prices` rows and 3
+  `power_balance` rows, command
+  `DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python
+  scripts/risk_backtest_local_db.py --price-area DK1 --limit 10 --pretty`,
+  observed DK1 output with `read_only=true`, `decision_support_only=true`, 3
+  spot-price rows read, 3 power-balance rows read, 3 composed rows, 3 total and
+  evaluated rows, 0 failed rows, low/medium/high risk counts of 1/2/0, average
+  risk score `26.6667`, average confidence score `1.0`, reason-code counts for
+  `NORMAL_PRICE`, `EXCHANGE_NET_NOT_USED_V0`, `HIGH_RENEWABLE_SHARE`, and
+  `ELEVATED_RENEWABLE_SHARE`, 0 missing price rows, 0 missing generation-data
+  rows, and `model_version=rule-engine-v0`. Documented that this tiny local
+  DK1 sample is not full model validation and that simple v0 row pairing must
+  improve before serious evaluation. Confirmed documentation-only scope with
+  local PostgreSQL SELECT/read-only behavior only, no database writes, no live
+  EDS polling, no backend or frontend server, no startup migrations, no
+  production database, no Azure resources, no ML training, no LLM use, and no
+  automatic control, dispatch, activation, or operational functionality.
 - Added a manual local PostgreSQL read-only `scripts/risk_backtest_local_db.py`
   backtest preview for `rule-engine-v0`, using existing SELECT query builders,
   local-only `postgresql://...` `DATABASE_URL` validation, DK1/DK2 filtering,

@@ -7,9 +7,9 @@ FlexSignal AI now includes a pure Python backtest evaluator for
 list of local row dictionaries, and each valid row is passed to
 `calculate_surplus_risk`.
 
-No real historical backtest has been run yet. This document does not claim
-validated production performance, predictive accuracy, or statistical
-calibration.
+A first local read-only database backtest has been run against a tiny locally
+stored DK1 sample of EDS-derived rows. This document does not claim validated
+production performance, predictive accuracy, or statistical calibration.
 
 ## Synthetic Preview Script
 
@@ -67,6 +67,71 @@ should not be interpreted as fully time-aligned historical validation.
 This is still a local technical validation helper, not full model validation,
 not statistical calibration, and not evidence of production performance. It
 does not fetch, clean, label, or audit a complete historical dataset.
+
+### Observed Local DK1 Result
+
+The first local read-only DB backtest was run against actual locally stored
+EDS-derived rows for DK1.
+
+Local table counts before the backtest:
+
+- `spot_prices`: `3`
+- `power_balance`: `3`
+
+Command run:
+
+```bash
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/risk_backtest_local_db.py --price-area DK1 --limit 10 --pretty
+```
+
+Observed output:
+
+- `price_area`: `DK1`
+- `limit`: `10`
+- `read_only`: `true`
+- `decision_support_only`: `true`
+- `spot_price_rows_read`: `3`
+- `power_balance_rows_read`: `3`
+- `composed_rows`: `3`
+- `backtest_summary.total_rows`: `3`
+- `backtest_summary.evaluated_rows`: `3`
+- `backtest_summary.failed_rows`: `0`
+- `backtest_summary.risk_level_counts.low`: `1`
+- `backtest_summary.risk_level_counts.medium`: `2`
+- `backtest_summary.risk_level_counts.high`: `0`
+- `backtest_summary.average_risk_score`: `26.6667`
+- `backtest_summary.average_confidence_score`: `1.0`
+- `backtest_summary.reason_code_counts.NORMAL_PRICE`: `3`
+- `backtest_summary.reason_code_counts.EXCHANGE_NET_NOT_USED_V0`: `3`
+- `backtest_summary.reason_code_counts.HIGH_RENEWABLE_SHARE`: `2`
+- `backtest_summary.reason_code_counts.ELEVATED_RENEWABLE_SHARE`: `1`
+- `backtest_summary.missing_price_count`: `0`
+- `backtest_summary.missing_generation_data_count`: `0`
+- `backtest_summary.model_version`: `rule-engine-v0`
+
+Interpretation:
+
+- This is the first local read-only DB backtest against actual locally stored
+  EDS-derived rows.
+- The result indicates mostly low/medium risk on the tiny local DK1 sample.
+- This is not full model validation because the dataset is only 3 composed
+  rows.
+- Row pairing is still simple v0 behavior and must be improved before serious
+  evaluation.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- SELECT/read-only only.
+- No database writes.
+- No live EDS polling.
+- No backend or frontend server.
+- No startup migrations.
+- No production database.
+- No Azure resources.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
 
 ## Reported Metrics
 
