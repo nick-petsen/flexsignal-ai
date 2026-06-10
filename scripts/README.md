@@ -183,10 +183,10 @@ to `DK1`, `DK2`, or both. It does not schedule itself, run automatically, read
 secrets from files, import FastAPI, create jobs, expose endpoints, forecast,
 dispatch, activate, or control energy assets.
 
-Dry-run all supported datasets and DK1/DK2 with limit 10:
+Dry-run all supported datasets and DK1/DK2 with limit 50:
 
 ```bash
-DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_historical_batch_import.py --limit 10
+DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_eds_historical_batch_import.py --limit 50
 ```
 
 Confirmed local write for all supported datasets and DK1/DK2 with limit 10,
@@ -219,7 +219,7 @@ path behavior for all supported DK1/DK2 dataset combinations only. It did not
 write to the database.
 
 ```bash
-DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 10 --continue-on-error
+DATABASE_URL="postgresql://localhost/flexsignal_ai" backend/.venv/bin/python scripts/manual_eds_historical_batch_import.py --limit 50 --continue-on-error
 ```
 
 Wrapper result:
@@ -228,7 +228,7 @@ Wrapper result:
 - `confirmed_local_write`: `false`
 - `local_only`: `true`
 - `decision_support_only`: `true`
-- `limit`: `10`
+- `limit`: `50`
 - `price_areas`: `DK1`, `DK2`
 - `datasets`: `DayAheadPrices`, `ElectricityProdex5MinRealtime`
 - `commands_planned`: `4`
@@ -240,19 +240,20 @@ Child dry-run observations:
 
 | Dataset | PriceArea | HTTP | Raw | Normalized | SQL commands | Table | Committed |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- |
-| `DayAheadPrices` | `DK1` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
-| `DayAheadPrices` | `DK2` | 200 | 10 | 10 | 10 | `spot_prices` | `false` |
-| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
-| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 10 | 10 | 10 | `power_balance` | `false` |
+| `DayAheadPrices` | `DK1` | 200 | 50 | 50 | 50 | `spot_prices` | `false` |
+| `DayAheadPrices` | `DK2` | 200 | 50 | 50 | 50 | `spot_prices` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK1` | 200 | 50 | 50 | 50 | `power_balance` | `false` |
+| `ElectricityProdex5MinRealtime` | `DK2` | 200 | 50 | 50 | 50 | `power_balance` | `false` |
 
-Confirmed writes still require explicit `--confirm-local-db-write`. The
-wrapper default remains `limit 10`; explicit `limit 50` is now supported for
-manual local validation, while `100` and `500` still require a future explicit
-enhancement. This remains local PostgreSQL dry-run validation only: no
-committed writes, production database, Azure resources, scheduler, backend
-startup ingestion, frontend-triggered ingestion, automatic polling loop, ML
-training, LLM use, or automatic control, dispatch, activation, or operational
-functionality.
+Interpretation: limit 50 dry-run is validated for all supported DK1/DK2
+dataset combinations. No database writes were committed. This validates command
+orchestration and normalization path only. Confirmed writes still require
+explicit `--confirm-local-db-write`, and `100` and `500` still require future
+explicit enhancement. This remains local PostgreSQL dry-run validation only:
+no committed writes, production database, Azure resources, scheduler, live API
+polling, backend startup ingestion, frontend-triggered ingestion, automatic
+polling loop, ML training, LLM use, or automatic control, dispatch,
+activation, or operational functionality.
 
 ## Risk Backtest Synthetic Preview
 
