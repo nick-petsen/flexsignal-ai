@@ -255,6 +255,74 @@ Safety notes:
 - No LLM use.
 - No automatic control, dispatch, activation, or operational functionality.
 
+## Read-Only API And Frontend Smoke Test After Limit 50 Local Import
+
+After local PostgreSQL had been populated by the manual `limit 50` EDS
+confirmed local write documented above, the read-only current-risk API and
+frontend dashboard were smoke-tested against the larger local sample. No
+ingestion or writes were run during this smoke-test. This was a local MVP
+smoke-test only, not production validation or model-performance validation.
+
+API commands:
+
+```bash
+curl -s "http://127.0.0.1:8000/api/risk/current?price_area=DK1"
+curl -s "http://127.0.0.1:8000/api/risk/current?price_area=DK2"
+```
+
+Observed API results:
+
+| Area | HTTP | Timestamp | Risk level | Risk score | Confidence | Reason codes | Model | Decision support only |
+| --- | ---: | --- | --- | ---: | ---: | --- | --- | --- |
+| DK1 | 200 | `2026-06-10T17:00:00+02:00` | medium | 35 | 1.0 | `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, `EXCHANGE_NET_NOT_USED_V0` | `rule-engine-v0` | true |
+| DK2 | 200 | `2026-06-10T17:00:00+02:00` | low | 20 | 1.0 | `NORMAL_PRICE`, `MODERATE_RENEWABLE_SHARE`, `EXCHANGE_NET_NOT_USED_V0` | `rule-engine-v0` | true |
+
+Both API responses reported `metadata.source_tables_used` as `spot_prices` and
+`power_balance`, with `metadata.spot_price_row_found=true` and
+`metadata.power_balance_row_found=true`.
+
+Frontend smoke-test URL:
+
+```text
+http://localhost:3000
+```
+
+Observed frontend results:
+
+| Area | Spot prices manual load | Power balance manual load | Current risk manual load | Read-only badge |
+| --- | --- | --- | --- | --- |
+| DK1 | 5 `spot_prices` rows | 5 `power_balance` rows | `risk_level=medium`, `risk_score=35`, `confidence_score=1`; reason codes included `NORMAL_PRICE`, `HIGH_RENEWABLE_SHARE`, `EXCHANGE_NET_NOT_USED_V0` | visible |
+| DK2 | 5 `spot_prices` rows | 5 `power_balance` rows | `risk_level=low`, `risk_score=20`, `confidence_score=1`; reason codes included `NORMAL_PRICE`, `MODERATE_RENEWABLE_SHARE`, `EXCHANGE_NET_NOT_USED_V0` | visible |
+
+Interpretation:
+
+- The read-only dashboard works for DK1 and DK2 after the `limit 50` local
+  import.
+- The frontend still requires manual button clicks.
+- No automatic loading, polling, dispatch, activation, or control behavior was
+  observed.
+- The current-risk endpoint still reads from local PostgreSQL and returns
+  decision-support-only results.
+- These observations are compatible with the local DB backtest summaries, but
+  they do not add outcome labels, statistical calibration, DMI/weather data, or
+  a validated 24-72 hour forecast.
+
+Safety notes:
+
+- Local PostgreSQL only.
+- Read-only API/UI smoke-test only.
+- No ingestion was run.
+- No database writes were run.
+- No live Energi Data Service polling was run.
+- No Azure resources.
+- No scheduler.
+- No backend startup ingestion.
+- No frontend-triggered ingestion.
+- No automatic polling loop.
+- No ML training.
+- No LLM use.
+- No automatic control, dispatch, activation, or operational functionality.
+
 ## Synthetic Preview Script
 
 `scripts/risk_backtest_preview.py` provides a manual local preview of
