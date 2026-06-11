@@ -79,22 +79,23 @@ Still preview / not production:
   and is not production forecast validation. The frontend card is a manual
   preview surface for the same synthetic/caller-provided boundary only.
 - The report-summary foundation is a data structure only, with a manual
-  synthetic local JSON preview script and a pure Markdown string renderer. It
-  does not generate PDF files yet, write files, fetch data, read or write a
-  database, expose an API, use frontend code, use ML, or use LLMs.
+  synthetic local JSON preview script, a pure Markdown string renderer, and a
+  manual synthetic local Markdown preview script. It does not generate PDF
+  files yet, write files, fetch data, read or write a database, expose an API,
+  use frontend code, use ML, or use LLMs.
 - No DMI/weather ingestion exists yet.
-- No Markdown preview script or PDF report export exists yet; the current
-  manual report preview script is JSON only.
+- No PDF report export exists yet; the current manual report previews are
+  stdout-only JSON and Markdown.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
 Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while adding a Markdown preview script, followed later by
-PDF export. Do not fetch data in the report builder, do not use an LLM as the
-forecast or reporting engine, and do not add control, dispatch, or activation
-behavior.
+foundation read-only while validating the Markdown preview script, followed
+later by PDF export. Do not fetch data in the report builder, do not use an
+LLM as the forecast or reporting engine, and do not add control, dispatch, or
+activation behavior.
 
 ## Report Summary Foundation
 
@@ -142,6 +143,34 @@ SQL, expose an API, run frontend code, use ML, use LLMs, or perform automatic
 control, dispatch, activation, or operational functionality. It is synthetic
 read-only decision support only and requires human review before planning.
 
+`scripts/report_markdown_preview.py` is a manual synthetic local Markdown
+preview for `report-summary-v0`. It uses the same fixed
+`generated_at_utc=2026-01-01T00:00:00Z` boundary and in-script
+caller-provided current-risk and forecast-window data only. It calls
+`build_report_summary(...)`, then `render_report_summary_markdown(...)`, and
+prints Markdown to stdout without writing files.
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+The Markdown preview supports `standard`, `high-risk`,
+`missing-current-risk`, and `missing-forecast` scenarios. The output includes
+title, report metadata, current-risk summary, forecast-window summary, key
+findings, recommended human actions, safety notes, limitations, and source
+notes. Missing current-risk or forecast inputs render as unavailable sections
+while preserving the remaining available summary.
+
+The Markdown preview uses synthetic/caller-provided data only. It does not
+generate PDF files, write files, fetch data, access the database, run SQL,
+expose an API, use frontend code, use ML, use LLMs, or perform automatic
+control, dispatch, activation, or operational functionality. It is read-only
+decision support only, requires human review before planning, and must not be
+used for automatic control, dispatch, or activation.
+
 ### Report Summary Preview Results
 
 The manual report-summary preview script was run locally with synthetic
@@ -178,9 +207,27 @@ generate PDF files yet, fetch data, read or write a database, expose an API,
 use the frontend, use ML, or use LLMs. It remains read-only decision support
 only and must not be used for automatic control, dispatch, or activation.
 
-Recommended next reporting step: add a Markdown preview script after this
-documented JSON preview and Markdown renderer. PDF export should come later,
-after Markdown/report rendering is stable.
+### Report Markdown Preview Results
+
+The manual report Markdown preview script was run locally with synthetic
+caller-provided data only:
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+All four runs printed the synthetic-only warning to stderr and rendered
+Markdown to stdout. The reports included the title, metadata, current-risk
+summary, forecast-window summary, key findings, recommended human actions,
+safety notes, limitations, and source notes. The high-risk scenario rendered a
+high current risk and high-risk `24-48h` forecast finding with human-review
+actions. The missing-input scenarios rendered the unavailable section clearly
+while keeping the other summary available.
+
+PDF export should come later, after Markdown/report rendering is stable.
 
 ## Forecast Preview API
 

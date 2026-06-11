@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/report_markdown_preview.py`, a manual synthetic local
+  Markdown preview for `report-summary-v0`. The script imports
+  `build_report_summary(...)` from `backend/app/reporting/summary.py`, imports
+  `render_report_summary_markdown(...)` from
+  `backend/app/reporting/markdown.py`, uses fixed
+  `generated_at_utc=2026-01-01T00:00:00Z`, supports
+  `--price-area DK1|DK2`, and includes `standard`, `high-risk`,
+  `missing-current-risk`, and `missing-forecast` scenarios over in-script
+  synthetic/caller-provided sample data only. It prints Markdown to stdout,
+  writes no files, generates no PDF files, fetches no data, accesses no
+  database, runs no SQL, exposes no API, uses no frontend code, uses no ML or
+  LLMs, and adds no scheduler, Azure, auth, secrets, control, dispatch,
+  activation, or operational functionality. Updated `scripts/README.md`,
+  `README.md`, `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md` with usage
+  examples, safety boundaries, and observed local synthetic preview results.
 - Added `render_report_summary_markdown(...)`, a pure backend Python Markdown
   renderer for caller-provided `report-summary-v0` dictionaries. It returns a
   deterministic Markdown string with title, report metadata, current-risk
@@ -15,9 +30,7 @@
   imports. Updated README, model card, and backtest notes to document that the
   renderer does not generate PDF files, write files, fetch data, access a
   database, expose an API, use frontend code, use ML, use LLMs, or add
-  automatic control, dispatch, activation, or operational functionality. The
-  next reporting step can be a Markdown preview script, followed later by PDF
-  export.
+  automatic control, dispatch, activation, or operational functionality.
 - Documented observed local results from the manual synthetic
   `scripts/report_summary_preview.py` commands only:
   `python3 scripts/report_summary_preview.py --pretty`,

@@ -167,14 +167,14 @@ The Markdown renderer does not generate PDF files yet, write files, fetch
 data, access a database, expose an API, use frontend code, use ML, or use
 LLMs. It is read-only decision support only, requires human review, and must
 not be used for automatic control, dispatch, activation, or autonomous
-decisions. The next reporting step can be a Markdown preview script, followed
-later by PDF export.
+decisions. The Markdown preview script now exercises this renderer locally
+with synthetic/caller-provided data only; PDF export should follow later.
 
 `report-summary-v0` is read-only decision support only. It must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, live control signals, or autonomous
-decisions. Future reporting steps can add a Markdown preview script and later
-PDF generation after the data boundary remains explicit.
+decisions. Future reporting steps can add PDF generation only after the data
+boundary remains explicit.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
@@ -196,6 +196,33 @@ access a database, run SQL, expose a FastAPI endpoint, run frontend code, call
 Energi Data Service, call DMI/weather APIs, train ML models, use LLMs, add
 scheduler/auth/Azure behavior, or perform automatic control, dispatch,
 activation, or operational functionality.
+
+`scripts/report_markdown_preview.py` is a manual synthetic local Markdown
+preview for `report-summary-v0`. It uses fixed `generated_at_utc` output and
+only in-script caller-provided current-risk and forecast-window data for
+`standard`, `high-risk`, `missing-current-risk`, and `missing-forecast`
+scenarios. It calls `build_report_summary(...)`, calls
+`render_report_summary_markdown(...)`, and prints Markdown to stdout.
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+The Markdown preview output includes a title, report metadata, current-risk
+summary, forecast-window summary, key findings, recommended human actions,
+safety notes, limitations, and source notes. Missing current-risk or forecast
+inputs render as unavailable sections while preserving the available summary.
+
+The Markdown preview script does not generate PDF files, write files, fetch
+data, access a database, run SQL, expose a FastAPI endpoint, run frontend
+code, call Energi Data Service, call DMI/weather APIs, train ML models, use
+LLMs, add scheduler/auth/Azure behavior, or perform automatic control,
+dispatch, activation, or operational functionality. It uses
+synthetic/caller-provided data only, is read-only decision support only, and
+requires human review before planning.
 
 ### Report Summary Preview Results
 
@@ -230,9 +257,41 @@ Interpretation: the report-summary preview creates deterministic payloads from
 synthetic/caller-provided current-risk and forecast-window inputs. It does not
 generate PDF files yet, fetch data, read or write a database, expose an API,
 use frontend code, use ML, or use LLMs. Markdown report rendering now exists
-as a pure string renderer over the report dictionary; a Markdown preview script
-can be added next, and PDF export should follow after Markdown/report rendering
-is stable.
+as a pure string renderer over the report dictionary, and the Markdown preview
+script exercises that renderer locally without writing files. PDF export should
+follow after Markdown/report rendering is stable.
+
+### Report Markdown Preview Results
+
+The manual synthetic report Markdown preview was observed with:
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+All outputs used `generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`. The rendered Markdown included title, report
+metadata, current-risk summary, forecast-window summary, key findings,
+recommended human actions, safety notes, limitations, and source notes.
+
+Observed scenarios:
+
+| Scenario | Price area | Current risk | Forecast windows | Markdown result |
+| --- | --- | --- | ---: | --- |
+| `standard` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 3 | Markdown rendered medium current risk, no high-risk forecast-window finding, safety notes, limitations, and source notes. |
+| `high-risk` | DK2 | `status=available`, `risk_level=high`, `risk_score=75` | 3 | Markdown rendered high current risk, a high-risk `24-48h` forecast window with `max_risk_score=80`, and human-review escalation actions. |
+| `missing-current-risk` | DK1 | `status=unavailable` | 3 | Markdown rendered the current-risk summary as unavailable and kept the forecast-window summary available. |
+| `missing-forecast` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 0 | Markdown rendered the forecast-window summary as unavailable and kept the current-risk summary available. |
+
+Interpretation: the Markdown preview uses synthetic/caller-provided data only.
+It does not generate PDF files, write files, fetch data, read or write a
+database, expose an API, use frontend code, use ML, or use LLMs. It is
+read-only decision support only and must not be used for automatic control,
+dispatch, or activation.
 
 `scripts/forecast_window_preview.py` is a manual synthetic local preview for
 `forecast-window-v0`. It uses fixed `generated_at_utc` output and only
