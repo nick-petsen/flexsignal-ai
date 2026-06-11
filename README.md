@@ -40,6 +40,8 @@ Working read-only core:
   that converts caller-provided report dictionaries into Markdown strings.
 - Manual local PDF export v0 exists for synthetic/caller-provided
   `report-summary-v0` previews through an explicit `--output` path only.
+- `audit-event-v0` exists as a pure backend Python in-memory event
+  data-structure foundation for read-only decision-support actions.
 - `POST /api/forecast/preview` exposes `forecast-window-v0` for
   caller-provided JSON rows only.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
@@ -84,17 +86,49 @@ Still preview / not production:
   and PDF preview scripts. PDF export v0 writes a PDF only when an explicit
   local `--output` path is provided. It does not fetch data, read or write a
   database, expose an API, add frontend download behavior, use ML, or use LLMs.
+- `audit-event-v0` does not persist audit logs yet, write files, expose an API,
+  read or write a database, call Energi Data Service, call DMI/weather APIs,
+  use ML, use LLMs, or perform automatic control, dispatch, activation, or
+  operational energy-system integration.
 - No DMI/weather ingestion exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
-Recommended next MVP reporting step: keep PDF export manual/local for now,
-then later consider a controlled read-only API/export flow only after separate
-review. Do not add automatic scheduled report generation, do not fetch data in
-the report builder, do not use an LLM as the forecast or reporting engine, and
-do not add control, dispatch, or activation behavior.
+Recommended next MVP audit/reporting step: keep PDF export manual/local for
+now and add an audit preview script before any audit-log persistence. Database
+persistence must be a separate reviewed module. Do not add automatic scheduled
+report generation, do not fetch data in the report builder, do not use an LLM
+as the forecast or reporting engine, and do not add control, dispatch, or
+activation behavior.
+
+## Audit Event Foundation
+
+`audit-event-v0` builds deterministic audit event dictionaries for read-only
+decision-support actions such as forecast previews, current-risk reviews,
+report summary builds, Markdown rendering, and PDF export requests. It accepts
+only caller-provided fields, validates explicit event, actor, and outcome
+values, requires timezone-aware `occurred_at_utc`, rejects empty required
+resource/action fields, and rejects secret-like metadata keys.
+
+The event id is deterministic and derived from event version, event type, actor
+type, actor id, occurrence time, resource type, resource id, action, and
+outcome. The builder always includes a safety boundary declaring read-only
+decision support, no automatic control, no dispatch, no activation, no
+operational energy-system integration, and human review required.
+
+This foundation is in-memory/data-structure logic only. It does not persist
+audit logs yet, write files, expose a FastAPI endpoint, read from or write to a
+database, call Energi Data Service, call DMI/weather APIs, use ML, use LLMs,
+add scheduling, add Azure infrastructure, add auth, or add secrets. It is
+designed for future compliance and audit logging while preserving the `v0.1`
+read-only decision-support boundary. It must not be used for automatic
+control, dispatch, activation, closed-loop workflows, live control signals, or
+operational energy-system integration.
+
+The next audit step should be a manual/local audit preview script. Database
+persistence can follow later only as a separate reviewed module.
 
 ## Report Summary Foundation
 

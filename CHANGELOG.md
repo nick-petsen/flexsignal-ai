@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added `audit-event-v0`, a pure backend Python in-memory audit event
+  foundation for read-only decision-support actions. New
+  `backend/app/audit/events.py` exposes `build_audit_event(...)`, validates
+  explicit event types, actor types, outcomes, timezone-aware
+  `occurred_at_utc`, non-empty resource/action fields, safe JSON-compatible
+  metadata, and secret-like metadata keys, and returns deterministic
+  `audit_evt_...` ids with an explicit safety boundary. Added focused tests and
+  docs. This does not persist audit logs yet, write files, expose an API, read
+  or write a database, call EDS or DMI/weather APIs, use ML, use LLMs, add
+  scheduling, add Azure infrastructure, add auth or secrets, or perform
+  automatic control, dispatch, activation, closed-loop workflows, live control
+  signals, autonomous decisions, or operational energy-system integration. The
+  next audit step should be a manual/local audit preview script, followed later
+  by database persistence only in a separate reviewed module.
 - Documented observed manual/local PDF export v0 smoke-test results. The
   validation covered `standard`, `high-risk`, `missing-current-risk`, and
   `missing-forecast` synthetic/caller-provided scenarios through the

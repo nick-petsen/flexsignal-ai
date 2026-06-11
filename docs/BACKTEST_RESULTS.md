@@ -41,6 +41,8 @@ Current read-only foundation:
   formatting over caller-provided report dictionaries.
 - Manual local PDF export v0 exists for synthetic/caller-provided report
   previews through an explicit `--output` path only.
+- `audit-event-v0` exists as a deterministic pure Python in-memory
+  data-structure foundation for read-only decision-support audit events.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -68,6 +70,9 @@ Still preview / not production:
   `report-summary-v0`. The PDF preview writes one local file only when an
   explicit `--output` path is provided and refuses overwrite without
   `--force`.
+- `audit-event-v0` does not persist audit logs yet, write files, expose an
+  API, read or write a database, call EDS or DMI/weather APIs, use ML, use
+  LLMs, or validate production forecast performance.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.
@@ -75,11 +80,34 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP reporting step: keep PDF export manual/local for now,
-then later consider a controlled read-only API/export flow only after separate
-review. Do not add automatic scheduled report generation, do not fetch data
-from the report builder, do not use an LLM as the forecast or reporting engine,
-and do not add control, dispatch, or activation behavior.
+Recommended next MVP audit/reporting step: keep PDF export manual/local for
+now and add an audit preview script before any audit-log persistence. Database
+persistence must be a separate reviewed module. Do not add automatic scheduled
+report generation, do not fetch data from the report builder, do not use an LLM
+as the forecast or reporting engine, and do not add control, dispatch, or
+activation behavior.
+
+## Audit Event Boundary
+
+`audit-event-v0` is not a backtest, forecast model, API endpoint, database
+reader, database writer, data ingester, or operational workflow. It is a
+deterministic in-memory audit event dictionary builder for future compliance
+and audit logging of read-only decision-support actions.
+
+The builder accepts caller-provided fields only, validates explicit event,
+actor, and outcome values, requires timezone-aware event time, rejects empty
+required fields, preserves safe JSON-compatible metadata, rejects secret-like
+metadata keys, and returns a deterministic `audit_evt_...` event id. It always
+includes safety fields for read-only decision support, no automatic control, no
+dispatch, no activation, no operational energy-system integration, and human
+review required.
+
+It does not persist audit logs yet, write files, expose an API, access a
+database, run SQL, call Energi Data Service, call DMI/weather APIs, use ML, use
+LLMs, add scheduling, add Azure infrastructure, add auth, add secrets, or
+perform automatic control, dispatch, activation, closed-loop workflows, asset
+connections, plant/device commands, live control signals, or autonomous
+decisions.
 
 ## Report Summary Boundary
 

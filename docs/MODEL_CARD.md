@@ -193,6 +193,31 @@ decisions. PDF export should remain manual/local for now. A future controlled
 read-only API/export flow can be considered only after separate review and only
 if the explicit read-only boundary is preserved.
 
+## Audit Event Foundation
+
+`audit-event-v0` is a pure Python in-memory audit event builder for future
+compliance and audit logging of read-only decision-support actions. It is not a
+forecasting model, not ML, not an LLM, and not a decision engine. It builds a
+deterministic event dictionary from caller-provided fields for events such as
+forecast preview requested, current risk viewed, report summary built, report
+Markdown rendered, and report PDF exported.
+
+The builder validates explicit event types, actor types, outcomes, timezone
+awareness, required resource/action fields, and JSON-compatible metadata. It
+rejects secret-like metadata keys and always includes a safety boundary for
+read-only decision support, no automatic control, no dispatch, no activation,
+no operational energy-system integration, and human review required.
+
+`audit-event-v0` does not persist audit logs yet, write files, expose an API,
+read from or write to a database, call Energi Data Service, call DMI/weather
+APIs, use ML, use LLMs, add scheduling, add Azure infrastructure, add auth, add
+secrets, or perform operational behavior. It must not be used for automatic
+control, dispatch, activation, closed-loop workflows, asset connections,
+plant/device commands, live control signals, or autonomous decisions.
+
+The next audit step should be a manual/local audit preview script. Any database
+persistence should be implemented later in a separate reviewed module.
+
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided current-risk and forecast-window data for
