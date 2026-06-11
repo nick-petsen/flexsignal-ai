@@ -62,9 +62,9 @@ Still preview / not production:
   frontend card does not change that validation status.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
-- A manual synthetic JSON preview script exists for `report-summary-v0`, and a
-  Markdown string renderer exists. No Markdown preview script, PDF generation,
-  or report export exists yet.
+- Manual synthetic JSON and Markdown preview scripts exist for
+  `report-summary-v0`, and a Markdown string renderer exists. No PDF
+  generation or report export exists yet.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.
@@ -73,9 +73,9 @@ Still preview / not production:
   operational workflow exists.
 
 Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while adding a Markdown preview script, followed later by
-PDF export. Do not fetch data from the report builder, do not use an LLM as
-the forecast or reporting engine, and do not add control, dispatch, or
+foundation read-only while validating the Markdown preview script, followed
+later by PDF export. Do not fetch data from the report builder, do not use an
+LLM as the forecast or reporting engine, and do not add control, dispatch, or
 activation behavior.
 
 ## Report Summary Boundary
@@ -102,6 +102,15 @@ use, caller-provided data only, no database read/write, and no live API calls.
 for this report payload. It uses fixed `generated_at_utc` output and
 in-script caller-provided current-risk and forecast-window data only. It does
 not establish model validity, statistical calibration, production readiness, or
+operational fitness.
+
+`scripts/report_markdown_preview.py` is a manual synthetic local Markdown
+preview for the same report payload. It uses fixed `generated_at_utc` output,
+in-script caller-provided current-risk and forecast-window data only, calls
+`build_report_summary(...)`, calls `render_report_summary_markdown(...)`, and
+prints Markdown to stdout. It does not write files, generate PDF files, fetch
+data, access a database, expose an API, use frontend code, use ML, use LLMs,
+or establish model validity, statistical calibration, production readiness, or
 operational fitness.
 
 ## Forecast Preview API Boundary
@@ -631,8 +640,76 @@ Interpretation:
 - It is read-only decision support only.
 - It must not be used for automatic control, dispatch, or activation.
 
-Next step: Markdown report rendering can be added after this. PDF export
-should come after Markdown/report rendering is stable.
+## Report Markdown Synthetic Preview Script
+
+`scripts/report_markdown_preview.py` provides a manual synthetic local
+Markdown preview of `report-summary-v0` using fixed `generated_at_utc` output
+and in-script caller-provided current-risk and forecast-window data only. It
+calls `build_report_summary(...)`, calls
+`render_report_summary_markdown(...)`, and prints Markdown to stdout.
+
+Run it manually:
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+The `standard` scenario includes current risk and three forecast windows. The
+`high-risk` scenario includes high current risk and a high forecast window.
+The missing-input scenarios demonstrate unavailable current-risk and
+forecast-window summaries without unsafe generation.
+
+This preview is not a historical backtest, not model validation, not
+statistical calibration, and not evidence of production performance. It does
+not require `DATABASE_URL`, generate PDF files, write files, read or write a
+database, run SQL, fetch Energi Data Service data, call DMI/weather APIs,
+expose an API endpoint, run frontend code, create ingestion jobs, use Azure,
+add secrets, add auth, train ML models, use LLMs, control assets, dispatch,
+activate, or perform operational functionality.
+
+### Observed Report Markdown Synthetic Preview Results
+
+The following local synthetic commands were run:
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+All four runs printed the synthetic-only warning to stderr, printed Markdown
+to stdout, and used `generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`.
+
+Observed compact summary:
+
+| Command | Price area | Current risk summary | Forecast summary | Markdown result |
+| --- | --- | --- | --- | --- |
+| `python3 scripts/report_markdown_preview.py` | DK1 | available, medium, score 45 | available, 3 windows | Rendered title, metadata, summaries, no high-risk forecast-window finding, safety notes, limitations, and source notes. |
+| `python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk` | DK2 | available, high, score 75 | available, 3 windows | Rendered high current risk, high-risk `24-48h` forecast window with `max_risk_score=80`, and human-review escalation actions. |
+| `python3 scripts/report_markdown_preview.py --scenario missing-current-risk` | DK1 | unavailable | available, 3 windows | Rendered current-risk summary as unavailable and kept the forecast-window summary available. |
+| `python3 scripts/report_markdown_preview.py --scenario missing-forecast` | DK1 | available, medium, score 45 | unavailable, 0 windows | Rendered forecast-window summary as unavailable and kept the current-risk summary available. |
+
+Interpretation:
+
+- `report-summary-v0` Markdown preview works locally with
+  synthetic/caller-provided data.
+- It prints Markdown to stdout only.
+- It does not write files or generate PDF files.
+- It does not fetch data.
+- It does not read or write a database.
+- It does not expose an API.
+- It does not use frontend code.
+- It does not use ML or LLMs.
+- It is read-only decision support only.
+- It must not be used for automatic control, dispatch, or activation.
+
+PDF export should come later after Markdown/report rendering is stable.
 
 ## Forecast Window Synthetic Preview Script
 

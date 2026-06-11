@@ -367,8 +367,64 @@ an API, use frontend code, use ML, or use LLMs. It is read-only decision
 support only and must not be used for automatic control, dispatch, or
 activation.
 
-Next step: add Markdown report rendering after the JSON report payload is
-stable. PDF export should come after Markdown/report rendering is stable.
+## Report Markdown Synthetic Preview
+
+`report_markdown_preview.py` is a manual synthetic local Markdown preview for
+`report-summary-v0`. It reuses the same scenario pattern as the JSON report
+preview, imports `build_report_summary(...)` and
+`render_report_summary_markdown(...)`, and prints Markdown to stdout.
+`generated_at_utc` is fixed for stable output.
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+Scenarios:
+
+- `standard`: includes current risk and a forecast summary with three windows.
+- `high-risk`: includes high current risk and a high forecast window so the
+  Markdown clearly shows high-risk findings and human-review actions.
+- `missing-current-risk`: renders the current-risk summary as unavailable
+  while keeping the forecast summary available.
+- `missing-forecast`: renders the forecast-window summary as unavailable
+  while keeping the current-risk summary available.
+
+The Markdown output includes a title, report metadata, current-risk summary,
+forecast-window summary, key findings, recommended human actions, safety
+notes, limitations, and source notes.
+
+This is synthetic/caller-provided local preview-only. It does not generate PDF
+files, write files, fetch data, access a database, run SQL, expose an API, run
+frontend code, call Energi Data Service, call DMI/weather APIs, create a
+scheduler, use Azure, add secrets, add auth, train ML models, use LLMs,
+control assets, dispatch, activate, or perform operational functionality. It
+is read-only decision support only, must not be used for automatic control,
+dispatch, or activation, and requires human review before planning.
+
+### Observed Report Markdown Preview Results
+
+The following commands were run locally against synthetic in-script data only:
+
+```bash
+python3 scripts/report_markdown_preview.py
+python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk
+python3 scripts/report_markdown_preview.py --scenario missing-current-risk
+python3 scripts/report_markdown_preview.py --scenario missing-forecast
+```
+
+All four runs printed the synthetic-only warning to stderr and printed Markdown
+to stdout. The rendered reports used
+`generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`. The standard, high-risk, missing-current-risk,
+and missing-forecast scenarios rendered the expected available or unavailable
+sections without writing files or generating PDFs.
+
+PDF export should come later, after Markdown/report rendering remains stable
+and the read-only boundary stays explicit.
 
 ### Observed Forecast Window Preview Results
 
