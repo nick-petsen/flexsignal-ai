@@ -445,9 +445,43 @@ Interpretation:
 - It is read-only decision support only.
 - It must not be used for automatic control, dispatch, or activation.
 
-PDF export v0 can now be built using the stable report-summary and Markdown
-rendering path. PDF export should still remain manual, local, and read-only
-first.
+## Report PDF Synthetic Preview
+
+`report_pdf_preview.py` is a manual synthetic local PDF preview for
+`report-summary-v0`. It reuses the report-summary scenario pattern, calls
+`build_report_summary(...)`, renders Markdown with
+`render_report_summary_markdown(...)`, then renders a simple deterministic PDF
+with `render_report_markdown_pdf_bytes(...)`.
+
+```bash
+python3 scripts/report_pdf_preview.py --output /tmp/flexsignal_report_preview.pdf
+python3 scripts/report_pdf_preview.py --price-area DK2 --scenario high-risk --output /tmp/flexsignal_report_high_risk.pdf
+python3 scripts/report_pdf_preview.py --scenario missing-current-risk --output /tmp/flexsignal_report_missing_current.pdf
+python3 scripts/report_pdf_preview.py --scenario missing-forecast --output /tmp/flexsignal_report_missing_forecast.pdf
+```
+
+The script requires an explicit `--output PATH` and refuses to run without it.
+It writes exactly one local PDF file to that path. If the file already exists,
+the script exits non-zero unless `--force` is provided; `--force` overwrites
+only the explicit output path.
+
+The PDF output includes title, report metadata, current-risk summary,
+forecast-window summary, key findings, recommended human actions, safety
+notes, limitations, and source notes. It uses built-in ReportLab fonts only
+and does not use browser or HTML rendering, external network resources, remote
+fonts, images, CSS, templates, charts, or custom font files.
+
+This is synthetic/caller-provided local preview-only. It does not expose an
+API, add frontend download behavior, fetch data, access a database, run SQL,
+call Energi Data Service, call DMI/weather APIs, create a scheduler, use
+Azure, add secrets, add auth, train ML models, use LLMs, control assets,
+dispatch, activate, or perform operational functionality. It is read-only
+decision support only, must not be used for automatic control, dispatch, or
+activation, and requires human review before planning.
+
+Future reporting steps can document PDF smoke-test results, then later add a
+controlled read-only API/export flow only if the explicit read-only boundary is
+preserved.
 
 ### Observed Forecast Window Preview Results
 

@@ -146,14 +146,14 @@ connections, plant/device commands, or live control signals.
 `report-summary-v0` is a pure Python data-structure builder for read-only
 decision-support reporting. It combines caller-provided current-risk output and
 caller-provided `forecast-window-v0` output into a deterministic structured
-payload that can later be used by Markdown rendering or PDF generation.
+payload used by Markdown rendering and manual local PDF preview generation.
 
-The report summary builder does not generate PDF files yet, fetch data, read
-from or write to a database, expose a FastAPI endpoint, call Energi Data
-Service, call DMI/weather APIs, train ML models, or use LLMs. It only
-normalizes supplied dictionaries or compatible objects into report fields,
-model-version metadata, deterministic key findings, required human-review
-actions, safety notes, limitations, and source notes.
+The report summary builder does not fetch data, read from or write to a
+database, expose a FastAPI endpoint, call Energi Data Service, call DMI/weather
+APIs, train ML models, or use LLMs. It only normalizes supplied dictionaries
+or compatible objects into report fields, model-version metadata,
+deterministic key findings, required human-review actions, safety notes,
+limitations, and source notes.
 
 `render_report_summary_markdown(...)` is the Markdown renderer for
 `report-summary-v0`. It accepts a caller-provided report dictionary and returns
@@ -163,18 +163,35 @@ notes, limitations, and source notes. Missing current-risk or forecast-window
 summaries render as clear unavailable sections, and optional missing fields use
 safe fallback text.
 
-The Markdown renderer does not generate PDF files yet, write files, fetch
-data, access a database, expose an API, use frontend code, use ML, or use
-LLMs. It is read-only decision support only, requires human review, and must
-not be used for automatic control, dispatch, activation, or autonomous
-decisions. The Markdown preview script now exercises this renderer locally
-with synthetic/caller-provided data only; PDF export should follow later.
+The Markdown renderer does not write files, fetch data, access a database,
+expose an API, use frontend code, use ML, or use LLMs. It is read-only
+decision support only, requires human review, and must not be used for
+automatic control, dispatch, activation, or autonomous decisions.
+
+`render_report_markdown_pdf_bytes(...)` is the manual PDF renderer for
+caller-provided Markdown report content. It returns PDF bytes and does not
+write files, fetch data, access a database, expose an API, use frontend code,
+use ML, or use LLMs. It uses simple ReportLab rendering with built-in fonts,
+headings, wrapped text, bullets, and page breaks only.
+
+`scripts/report_pdf_preview.py` is a manual synthetic local PDF preview. It
+uses fixed `generated_at_utc=2026-01-01T00:00:00Z`, in-script
+caller-provided data, `build_report_summary(...)`,
+`render_report_summary_markdown(...)`, and
+`render_report_markdown_pdf_bytes(...)`. It requires an explicit
+`--output PATH`, refuses overwrite unless `--force` is provided, and writes
+only that one local PDF file. It does not expose an API, add frontend download
+behavior, fetch data, access a database, run SQL, call Energi Data Service,
+call DMI/weather APIs, train ML models, use LLMs, add scheduler/auth/Azure
+behavior, or perform automatic control, dispatch, activation, or operational
+functionality.
 
 `report-summary-v0` is read-only decision support only. It must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, live control signals, or autonomous
-decisions. Future reporting steps can add PDF generation only after the data
-boundary remains explicit.
+decisions. Future reporting steps can document PDF smoke-test results, then
+later add a controlled read-only API/export flow only if the explicit
+read-only boundary is preserved.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
