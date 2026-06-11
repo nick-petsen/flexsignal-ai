@@ -60,18 +60,19 @@ Still preview / not production:
   frontend card does not change that validation status.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
-- No Markdown preview, PDF generation, or report export exists yet.
-- `report-summary-v0` does not fetch data, read or write a database, expose an
-  API, use ML, use LLMs, or validate production forecast performance.
+- A manual synthetic JSON preview script exists for `report-summary-v0`, but
+  no Markdown renderer, PDF generation, or report export exists yet.
+- `report-summary-v0` and its local preview script do not fetch data, read or
+  write a database, expose an API, use ML, use LLMs, or validate production
+  forecast performance.
 - No scheduled ingestion jobs, production database, Azure deployment, auth, ML
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
 Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while adding a Markdown/preview script first, followed
-later by PDF rendering. Do not fetch data from the report builder, do not use
-an LLM as the forecast or reporting engine, and do not add control, dispatch,
-or activation behavior.
+foundation read-only while adding Markdown rendering or report export later.
+Do not fetch data from the report builder, do not use an LLM as the forecast
+or reporting engine, and do not add control, dispatch, or activation behavior.
 
 ## Report Summary Boundary
 
@@ -85,6 +86,12 @@ review, includes safety notes against automatic control, dispatch, and
 activation, and records limitations including no production forecast
 validation, no outcome labels, no DMI/weather data yet, no ML training, no LLM
 use, caller-provided data only, no database read/write, and no live API calls.
+
+`scripts/report_summary_preview.py` is a manual synthetic local JSON preview
+for this report payload. It uses fixed `generated_at_utc` output and
+in-script caller-provided current-risk and forecast-window data only. It does
+not establish model validity, statistical calibration, production readiness, or
+operational fitness.
 
 ## Forecast Preview API Boundary
 
@@ -513,6 +520,36 @@ historical dataset and does not establish model validity.
 This preview is not a real historical backtest, not model validation, not
 statistical calibration, and not evidence of production performance. It is only
 a local smoke preview of existing deterministic aggregation behavior.
+
+## Report Summary Synthetic Preview Script
+
+`scripts/report_summary_preview.py` provides a manual synthetic local JSON
+preview of `report-summary-v0` using fixed `generated_at_utc` output and
+in-script caller-provided current-risk and forecast-window data only. It calls
+`build_report_summary(...)` and prints compact JSON by default.
+
+Run it manually:
+
+```bash
+python3 scripts/report_summary_preview.py
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+The `standard` scenario includes medium current risk and three forecast
+windows. The `high-risk` scenario includes high current risk and a high
+forecast window. The missing-input scenarios demonstrate unavailable
+current-risk and forecast-window summaries without unsafe generation.
+
+This preview is not a historical backtest, not model validation, not
+statistical calibration, and not evidence of production performance. It does
+not require `DATABASE_URL`, generate PDF files, read or write a database, run
+SQL, fetch Energi Data Service data, call DMI/weather APIs, expose an API
+endpoint, run frontend code, create ingestion jobs, use Azure, add secrets,
+add auth, train ML models, use LLMs, control assets, dispatch, activate, or
+perform operational functionality.
 
 ## Forecast Window Synthetic Preview Script
 

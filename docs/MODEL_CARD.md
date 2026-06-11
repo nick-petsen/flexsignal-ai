@@ -146,7 +146,7 @@ connections, plant/device commands, or live control signals.
 `report-summary-v0` is a pure Python data-structure builder for read-only
 decision-support reporting. It combines caller-provided current-risk output and
 caller-provided `forecast-window-v0` output into a deterministic structured
-payload that can later be used by a Markdown preview or PDF generation step.
+payload that can later be used by Markdown rendering or PDF generation.
 
 The report summary builder does not generate PDF files yet, fetch data, read
 from or write to a database, expose a FastAPI endpoint, call Energi Data
@@ -158,9 +158,29 @@ actions, safety notes, limitations, and source notes.
 `report-summary-v0` is read-only decision support only. It must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, live control signals, or autonomous
-decisions. The next reporting step should be a Markdown/preview script using
-this structure, followed later by PDF rendering after the data boundary remains
-explicit.
+decisions. Future reporting steps can add Markdown rendering or PDF generation
+after the data boundary remains explicit.
+
+`scripts/report_summary_preview.py` is a manual synthetic local JSON preview
+for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
+in-script caller-provided current-risk and forecast-window data for
+`standard`, `high-risk`, `missing-current-risk`, and `missing-forecast`
+scenarios. It calls `build_report_summary(...)` and prints compact JSON by
+default or indented JSON with `--pretty`.
+
+```bash
+python3 scripts/report_summary_preview.py
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+The report-summary preview script does not generate PDF files, fetch data,
+access a database, run SQL, expose a FastAPI endpoint, run frontend code, call
+Energi Data Service, call DMI/weather APIs, train ML models, use LLMs, add
+scheduler/auth/Azure behavior, or perform automatic control, dispatch,
+activation, or operational functionality.
 
 `scripts/forecast_window_preview.py` is a manual synthetic local preview for
 `forecast-window-v0`. It uses fixed `generated_at_utc` output and only
@@ -326,8 +346,9 @@ control signals.
 - A deterministic 24-72 hour caller-provided forecast-window aggregation
   foundation exists, but it is not production forecast validation and does not
   fetch, persist, or ingest forecast data.
-- No DMI/weather ingestion, PDF report export, auth, Azure deployment,
-  scheduled ingestion job, or production database exists yet.
+- No DMI/weather ingestion exists. A manual synthetic JSON preview script
+  exists for `report-summary-v0`, but no PDF report export, auth, Azure
+  deployment, scheduled ingestion job, or production database exists yet.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 

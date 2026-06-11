@@ -290,6 +290,47 @@ code, create ingestion jobs, use Azure, add secrets, add auth, train ML models,
 use LLMs, control assets, dispatch, activate, or perform operational
 functionality.
 
+## Report Summary Synthetic Preview
+
+`report_summary_preview.py` is a manual synthetic local preview for
+`report-summary-v0`. It uses only in-script caller-provided current-risk and
+forecast-window sample data, calls `build_report_summary(...)`, and prints the
+structured report payload as compact JSON by default. `generated_at_utc` is
+fixed for stable output.
+
+```bash
+python3 scripts/report_summary_preview.py
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+Scenarios:
+
+- `standard`: medium current risk with three forecast windows and one medium
+  forecast window.
+- `high-risk`: high current risk plus a high forecast window to demonstrate key
+  findings and recommended human actions.
+- `missing-current-risk`: incomplete current-risk input, which produces
+  `current_risk_summary.status=unavailable`.
+- `missing-forecast`: incomplete forecast input, which produces
+  `forecast_window_summary.status=unavailable`.
+
+The output includes `report_id`, `title`, `price_area`, `generated_at_utc`,
+`report_version=report-summary-v0`, `decision_support_only=true`,
+`human_review_required=true`, current-risk and forecast-window summaries,
+model versions, key findings, recommended human actions, safety notes,
+limitations, and source notes.
+
+This is synthetic/caller-provided local preview-only. It does not generate PDF
+files, fetch data, access a database, run SQL, expose an API, run frontend
+code, call Energi Data Service, call DMI/weather APIs, create a scheduler, use
+Azure, add secrets, add auth, train ML models, use LLMs, control assets,
+dispatch, activate, or perform operational functionality. It is read-only
+decision support only, must not be used for automatic control, dispatch, or
+activation, and requires human review before planning.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:
