@@ -2,6 +2,34 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed local results from the manual synthetic
+  `scripts/report_summary_preview.py` commands only:
+  `python3 scripts/report_summary_preview.py --pretty`,
+  `python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty`,
+  `python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty`,
+  and
+  `python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty`.
+  All runs printed the synthetic-only warning and reported
+  `generated_at_utc=2026-01-01T00:00:00Z`,
+  `report_version=report-summary-v0`, `decision_support_only=true`, and
+  `human_review_required=true`. The standard DK1 run returned available
+  medium current risk with score `45`, three forecast windows, no high-risk
+  forecast window, and recommended actions requiring human review and
+  prohibiting automatic control, dispatch, or activation. The high-risk DK2
+  run returned available high current risk with score `75`, a high-risk
+  `24-48h` forecast window with `max_risk_score=80`, high-risk key findings,
+  and human-review escalation actions. The missing-current-risk run marked
+  `current_risk_summary.status=unavailable`, added the limitation
+  `missing or incomplete current risk input`, and kept the forecast summary
+  available. The missing-forecast run marked
+  `forecast_window_summary.status=unavailable`, added the limitation
+  `missing or incomplete forecast input`, and kept the current-risk summary
+  available. Clarified that the preview creates deterministic report payloads
+  from synthetic/caller-provided data only; it does not generate PDF files,
+  fetch data, read or write a database, expose an API, use frontend code, use
+  ML, use LLMs, or perform automatic control, dispatch, activation, or
+  operational functionality. Documented the next step as Markdown report
+  rendering before later PDF export. This change is documentation only.
 - Added `scripts/report_summary_preview.py`, a manual synthetic local JSON
   preview for `report-summary-v0`. The script imports
   `build_report_summary(...)` directly from `backend/app/reporting/summary.py`,

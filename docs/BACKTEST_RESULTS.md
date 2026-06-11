@@ -551,6 +551,78 @@ endpoint, run frontend code, create ingestion jobs, use Azure, add secrets,
 add auth, train ML models, use LLMs, control assets, dispatch, activate, or
 perform operational functionality.
 
+### Observed Report Summary Synthetic Preview Results
+
+The following local synthetic commands were run:
+
+```bash
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+All four runs printed the synthetic-only warning, used
+`generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`. Each payload included safety notes and
+limitations. Safety notes prohibited automatic control, dispatch, and
+activation. Limitations documented caller-provided data only, no database
+read/write, no live API calls, no ML training in the report builder, and no
+LLM use in the report builder.
+
+Standard scenario, command
+`python3 scripts/report_summary_preview.py --pretty`, returned
+`price_area=DK1`. `current_risk_summary` was available with
+`risk_level=medium` and `risk_score=45`. `forecast_window_summary` was
+available with three windows. Key findings reported medium current risk, no
+high-risk forecast window, and caller-provided data only. Recommended human
+actions included reviewing local operating context, routine monitoring,
+reviewing the medium-risk window, required human review before operational
+planning, source-context verification, and no automatic control, dispatch, or
+activation.
+
+High-risk scenario, command
+`python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty`,
+returned `price_area=DK2`. `current_risk_summary` was available with
+`risk_level=high` and `risk_score=75`. The forecast summary was available
+with three windows, including `24-48h` as high risk with
+`max_risk_score=80`. Key findings mentioned both current high risk and a
+high-risk forecast window. Recommended actions required escalation and human
+review before planning, and safety notes still prohibited automatic control,
+dispatch, and activation.
+
+Missing-current-risk scenario, command
+`python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty`,
+returned `price_area=DK1`. `current_risk_summary.status` was `unavailable`.
+The forecast summary remained available with three windows. Limitations added
+`missing or incomplete current risk input`, and report generation remained
+safe with decision-support-only and human-review flags.
+
+Missing-forecast scenario, command
+`python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty`,
+returned `price_area=DK1`. `forecast_window_summary.status` was
+`unavailable` with zero windows. The current-risk summary remained available
+with `risk_level=medium` and `risk_score=45`. Limitations added
+`missing or incomplete forecast input`, and report generation remained safe
+with decision-support-only and human-review flags.
+
+Interpretation:
+
+- `report-summary-v0` preview works locally with synthetic/caller-provided data.
+- It creates deterministic report payloads.
+- It does not generate PDF files yet.
+- It does not fetch data.
+- It does not read or write a database.
+- It does not expose an API.
+- It does not use frontend code.
+- It does not use ML or LLMs.
+- It is read-only decision support only.
+- It must not be used for automatic control, dispatch, or activation.
+
+Next step: Markdown report rendering can be added after this. PDF export
+should come after Markdown/report rendering is stable.
+
 ## Forecast Window Synthetic Preview Script
 
 `scripts/forecast_window_preview.py` provides a manual synthetic local preview
