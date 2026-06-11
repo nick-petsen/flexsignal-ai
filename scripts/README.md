@@ -416,15 +416,38 @@ python3 scripts/report_markdown_preview.py --scenario missing-forecast
 ```
 
 All four runs printed the synthetic-only warning to stderr and printed Markdown
-to stdout. The rendered reports used
+to stdout only. The rendered reports used
 `generated_at_utc=2026-01-01T00:00:00Z`,
 `report_version=report-summary-v0`, `decision_support_only=true`, and
-`human_review_required=true`. The standard, high-risk, missing-current-risk,
-and missing-forecast scenarios rendered the expected available or unavailable
-sections without writing files or generating PDFs.
+`human_review_required=true`.
 
-PDF export should come later, after Markdown/report rendering remains stable
-and the read-only boundary stays explicit.
+Observed compact summary:
+
+| Command | Price area | Current risk summary | Forecast summary | Markdown result |
+| --- | --- | --- | --- | --- |
+| `python3 scripts/report_markdown_preview.py` | DK1 | available, medium, score `45` | available, 3 windows | Rendered title, report metadata, current risk, forecast windows, key findings, recommended human actions, safety notes, limitations, and source notes. |
+| `python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk` | DK2 | available, high, score `75` | available, 3 windows | Rendered high current risk, high-risk `24-48h` forecast finding with `max_risk_score=80`, human-review actions, and safety notes prohibiting automatic control, dispatch, and activation. |
+| `python3 scripts/report_markdown_preview.py --scenario missing-current-risk` | DK1 | unavailable | available, 3 windows | Rendered current risk as unavailable, kept the forecast summary available, included `missing or incomplete current risk input`, and did not crash. |
+| `python3 scripts/report_markdown_preview.py --scenario missing-forecast` | DK1 | available, medium, score `45` | unavailable | Rendered the forecast window summary as unavailable, kept the current-risk summary available, included `missing or incomplete forecast input`, and did not crash. |
+
+Interpretation:
+
+- Markdown preview works locally with synthetic/caller-provided data.
+- It renders `report-summary-v0` to readable Markdown.
+- It prints to stdout only.
+- It does not write files.
+- It does not generate PDF yet.
+- It does not fetch data.
+- It does not read or write a database.
+- It does not expose an API.
+- It does not use frontend code.
+- It does not use ML or LLMs.
+- It is read-only decision support only.
+- It must not be used for automatic control, dispatch, or activation.
+
+PDF export v0 can now be built using the stable report-summary and Markdown
+rendering path. PDF export should still remain manual, local, and read-only
+first.
 
 ### Observed Forecast Window Preview Results
 

@@ -220,14 +220,32 @@ python3 scripts/report_markdown_preview.py --scenario missing-forecast
 ```
 
 All four runs printed the synthetic-only warning to stderr and rendered
-Markdown to stdout. The reports included the title, metadata, current-risk
-summary, forecast-window summary, key findings, recommended human actions,
-safety notes, limitations, and source notes. The high-risk scenario rendered a
-high current risk and high-risk `24-48h` forecast finding with human-review
-actions. The missing-input scenarios rendered the unavailable section clearly
-while keeping the other summary available.
+Markdown to stdout only. All reports used
+`generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`. The rendered Markdown included the title, report
+metadata, current-risk summary, forecast-window summary, key findings,
+recommended human actions, safety notes, limitations, and source notes.
 
-PDF export should come later, after Markdown/report rendering is stable.
+Observed Markdown results:
+
+| Scenario | Command | Price area | Current risk summary | Forecast summary | Observed Markdown result |
+| --- | --- | --- | --- | --- | --- |
+| `standard` | `python3 scripts/report_markdown_preview.py` | DK1 | available, medium, score `45` | available, 3 windows | Rendered the report title, metadata, current risk, all three forecast windows, key findings, recommended human actions, safety notes, limitations, and source notes. |
+| `high-risk` | `python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk` | DK2 | available, high, score `75` | available, 3 windows | Rendered high current risk, a high-risk `24-48h` forecast finding with `max_risk_score=80`, human-review actions, and safety notes prohibiting automatic control, dispatch, and activation. |
+| `missing-current-risk` | `python3 scripts/report_markdown_preview.py --scenario missing-current-risk` | DK1 | unavailable | available, 3 windows | Rendered current risk as unavailable, kept the forecast summary available, included `missing or incomplete current risk input`, and did not crash. |
+| `missing-forecast` | `python3 scripts/report_markdown_preview.py --scenario missing-forecast` | DK1 | available, medium, score `45` | unavailable | Rendered the forecast window summary as unavailable, kept the current-risk summary available, included `missing or incomplete forecast input`, and did not crash. |
+
+Interpretation: Markdown preview works locally with synthetic/caller-provided
+data, renders `report-summary-v0` to readable Markdown, prints to stdout only,
+does not write files, does not generate PDF yet, does not fetch data, does not
+read or write a database, does not expose an API, does not use frontend code,
+and does not use ML or LLMs. It is read-only decision support only and must
+not be used for automatic control, dispatch, or activation.
+
+PDF export v0 can now be built using the stable report-summary and Markdown
+rendering path. PDF export should still remain manual, local, and read-only
+first.
 
 ## Forecast Preview API
 
