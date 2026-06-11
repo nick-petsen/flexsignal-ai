@@ -34,6 +34,8 @@ Working read-only core:
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
   caller-provided rows for 0-24h, 24-48h, and 48-72h windows.
+- `report-summary-v0` exists as pure backend Python data-structure logic over
+  caller-provided current-risk and forecast-window outputs.
 - `POST /api/forecast/preview` exposes `forecast-window-v0` for
   caller-provided JSON rows only.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
@@ -74,17 +76,37 @@ Still preview / not production:
   based yet, does not fetch EDS or DMI data, does not read or write a database,
   and is not production forecast validation. The frontend card is a manual
   preview surface for the same synthetic/caller-provided boundary only.
+- The report-summary foundation is a data structure only. It does not generate
+  PDF files yet, fetch data, read or write a database, expose an API, use ML,
+  use LLMs, or perform rendering.
 - No DMI/weather ingestion exists yet.
-- No PDF report export exists yet.
+- No Markdown report preview or PDF report export exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
-Recommended next MVP step: keep the deterministic forecast-window foundation
-read-only while adding explicit validation and caller-provided/local data
-composition before any production data path. Do not use an LLM as the forecast
-engine, and do not add control, dispatch, or activation behavior.
+Recommended next MVP reporting step: keep the deterministic report-summary
+foundation read-only while adding a Markdown/preview script first, then PDF
+rendering later. Do not fetch data in the report builder, do not use an LLM as
+the forecast or reporting engine, and do not add control, dispatch, or
+activation behavior.
+
+## Report Summary Foundation
+
+`report-summary-v0` builds a deterministic structured report payload from
+caller-provided current-risk output and caller-provided `forecast-window-v0`
+output. It returns report metadata, current-risk and forecast-window summaries,
+model versions, key findings, recommended human actions, safety notes,
+limitations, and source notes.
+
+This foundation is backend Python logic only. It does not generate PDF files
+yet, fetch data, read or write a database, expose an API, call Energi Data
+Service, call DMI/weather APIs, train ML models, use LLMs, add auth, add
+scheduler behavior, or add Azure infrastructure. It is read-only decision
+support only and must not be used for automatic control, dispatch, activation,
+closed-loop workflows, asset connections, plant/device commands, live control
+signals, or autonomous decisions.
 
 ## Forecast Preview API
 
