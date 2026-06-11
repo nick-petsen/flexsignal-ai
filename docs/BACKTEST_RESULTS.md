@@ -37,6 +37,8 @@ Current read-only foundation:
   caller-provided rows for `0-24h`, `24-48h`, and `48-72h` windows.
 - `report-summary-v0` exists as a deterministic pure Python data-structure
   builder over caller-provided current-risk and forecast-window outputs.
+- `report-summary-v0` Markdown rendering exists as deterministic pure Python
+  formatting over caller-provided report dictionaries.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -60,8 +62,9 @@ Still preview / not production:
   frontend card does not change that validation status.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
-- A manual synthetic JSON preview script exists for `report-summary-v0`, but
-  no Markdown renderer, PDF generation, or report export exists yet.
+- A manual synthetic JSON preview script exists for `report-summary-v0`, and a
+  Markdown string renderer exists. No Markdown preview script, PDF generation,
+  or report export exists yet.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.
@@ -70,16 +73,24 @@ Still preview / not production:
   operational workflow exists.
 
 Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while adding Markdown rendering or report export later.
-Do not fetch data from the report builder, do not use an LLM as the forecast
-or reporting engine, and do not add control, dispatch, or activation behavior.
+foundation read-only while adding a Markdown preview script, followed later by
+PDF export. Do not fetch data from the report builder, do not use an LLM as
+the forecast or reporting engine, and do not add control, dispatch, or
+activation behavior.
 
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database
-reader, database writer, Markdown renderer, or PDF generator. It is a
-deterministic payload builder that accepts caller-provided current-risk output
-and caller-provided `forecast-window-v0` output only.
+reader, database writer, API renderer, or PDF generator. It is a deterministic
+payload builder that accepts caller-provided current-risk output and
+caller-provided `forecast-window-v0` output only.
+
+`render_report_summary_markdown(...)` is the separate Markdown renderer for
+`report-summary-v0`. It converts a caller-provided report dictionary into a
+deterministic Markdown string and renders unavailable current-risk or forecast
+summaries clearly when the supplied mapping is incomplete. It does not generate
+PDF files, write files, fetch data, access a database, expose an API, use
+frontend code, use ML, or use LLMs.
 
 It always marks the output as read-only decision support, requires human
 review, includes safety notes against automatic control, dispatch, and

@@ -2,6 +2,22 @@
 
 ## v0.1.0 - TODO
 
+- Added `render_report_summary_markdown(...)`, a pure backend Python Markdown
+  renderer for caller-provided `report-summary-v0` dictionaries. It returns a
+  deterministic Markdown string with title, report metadata, current-risk
+  summary, forecast-window summary, key findings, recommended human actions,
+  safety notes, limitations, and source notes. Missing current-risk or forecast
+  summaries render as clear unavailable sections, and optional missing fields
+  use safe fallback text. Added tests covering title and metadata rendering,
+  current-risk fields, all three forecast windows, high-risk window output,
+  missing-summary handling, required safety wording, deterministic output, no
+  file writing, and absence of external runtime or document-generation
+  imports. Updated README, model card, and backtest notes to document that the
+  renderer does not generate PDF files, write files, fetch data, access a
+  database, expose an API, use frontend code, use ML, use LLMs, or add
+  automatic control, dispatch, activation, or operational functionality. The
+  next reporting step can be a Markdown preview script, followed later by PDF
+  export.
 - Documented observed local results from the manual synthetic
   `scripts/report_summary_preview.py` commands only:
   `python3 scripts/report_summary_preview.py --pretty`,
