@@ -17,6 +17,38 @@
   activation, or operational functionality. Updated `scripts/README.md`,
   `README.md`, `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md` with usage
   examples, safety boundaries, and observed local synthetic preview results.
+- Documented observed local results from the manual synthetic
+  `scripts/report_markdown_preview.py` commands only:
+  `python3 scripts/report_markdown_preview.py`,
+  `python3 scripts/report_markdown_preview.py --price-area DK2 --scenario high-risk`,
+  `python3 scripts/report_markdown_preview.py --scenario missing-current-risk`,
+  and
+  `python3 scripts/report_markdown_preview.py --scenario missing-forecast`.
+  All four runs printed the synthetic-only warning to stderr, rendered
+  Markdown to stdout only, used
+  `generated_at_utc=2026-01-01T00:00:00Z`,
+  `report_version=report-summary-v0`, `decision_support_only=true`, and
+  `human_review_required=true`, and included title, report metadata,
+  current-risk summary, forecast-window summary, key findings, recommended
+  human actions, safety notes, limitations, and source notes. The standard DK1
+  run rendered available medium current risk with score `45` and three
+  forecast windows. The high-risk DK2 run rendered available high current risk
+  with score `75`, a high-risk `24-48h` forecast window with
+  `max_risk_score=80`, human-review actions, and safety notes prohibiting
+  automatic control, dispatch, and activation. The missing-current-risk run
+  rendered current risk as unavailable, kept the forecast summary available,
+  included `missing or incomplete current risk input`, and did not crash. The
+  missing-forecast run rendered the forecast window summary as unavailable,
+  kept current risk available, included `missing or incomplete forecast input`,
+  and did not crash. Clarified that the Markdown preview works locally with
+  synthetic/caller-provided data, renders `report-summary-v0` to readable
+  Markdown, does not write files, does not generate PDF yet, does not fetch
+  data, does not read or write a database, does not expose an API, does not
+  use frontend code, does not use ML or LLMs, remains read-only decision
+  support only, and must not be used for automatic control, dispatch, or
+  activation. Documented the next step as PDF export v0 using the stable
+  report-summary and Markdown rendering path while remaining manual, local,
+  and read-only first. This change is documentation only.
 - Added `render_report_summary_markdown(...)`, a pure backend Python Markdown
   renderer for caller-provided `report-summary-v0` dictionaries. It returns a
   deterministic Markdown string with title, report metadata, current-risk

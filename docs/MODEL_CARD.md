@@ -283,15 +283,17 @@ Observed scenarios:
 | Scenario | Price area | Current risk | Forecast windows | Markdown result |
 | --- | --- | --- | ---: | --- |
 | `standard` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 3 | Markdown rendered medium current risk, no high-risk forecast-window finding, safety notes, limitations, and source notes. |
-| `high-risk` | DK2 | `status=available`, `risk_level=high`, `risk_score=75` | 3 | Markdown rendered high current risk, a high-risk `24-48h` forecast window with `max_risk_score=80`, and human-review escalation actions. |
-| `missing-current-risk` | DK1 | `status=unavailable` | 3 | Markdown rendered the current-risk summary as unavailable and kept the forecast-window summary available. |
-| `missing-forecast` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 0 | Markdown rendered the forecast-window summary as unavailable and kept the current-risk summary available. |
+| `high-risk` | DK2 | `status=available`, `risk_level=high`, `risk_score=75` | 3 | Markdown rendered high current risk, a high-risk `24-48h` forecast window with `max_risk_score=80`, human-review escalation actions, and safety notes prohibiting automatic control, dispatch, and activation. |
+| `missing-current-risk` | DK1 | `status=unavailable` | 3 | Markdown rendered the current-risk summary as unavailable, kept the forecast-window summary available, included the `missing or incomplete current risk input` limitation, and did not crash. |
+| `missing-forecast` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 0 | Markdown rendered the forecast-window summary as unavailable, kept the current-risk summary available, included the `missing or incomplete forecast input` limitation, and did not crash. |
 
 Interpretation: the Markdown preview uses synthetic/caller-provided data only.
 It does not generate PDF files, write files, fetch data, read or write a
 database, expose an API, use frontend code, use ML, or use LLMs. It is
 read-only decision support only and must not be used for automatic control,
-dispatch, or activation.
+dispatch, or activation. PDF export v0 can now be built using the stable
+report-summary and Markdown rendering path, but should remain manual, local,
+and read-only first.
 
 `scripts/forecast_window_preview.py` is a manual synthetic local preview for
 `forecast-window-v0`. It uses fixed `generated_at_utc` output and only

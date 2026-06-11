@@ -700,7 +700,8 @@ Interpretation:
 - `report-summary-v0` Markdown preview works locally with
   synthetic/caller-provided data.
 - It prints Markdown to stdout only.
-- It does not write files or generate PDF files.
+- It does not write files.
+- It does not generate PDF yet.
 - It does not fetch data.
 - It does not read or write a database.
 - It does not expose an API.
@@ -709,7 +710,9 @@ Interpretation:
 - It is read-only decision support only.
 - It must not be used for automatic control, dispatch, or activation.
 
-PDF export should come later after Markdown/report rendering is stable.
+PDF export v0 can now be built using the stable report-summary and Markdown
+rendering path. PDF export should still remain manual, local, and read-only
+first.
 
 ## Forecast Window Synthetic Preview Script
 
