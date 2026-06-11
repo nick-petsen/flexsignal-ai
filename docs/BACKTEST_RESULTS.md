@@ -39,6 +39,8 @@ Current read-only foundation:
   builder over caller-provided current-risk and forecast-window outputs.
 - `report-summary-v0` Markdown rendering exists as deterministic pure Python
   formatting over caller-provided report dictionaries.
+- Manual local PDF export v0 exists for synthetic/caller-provided report
+  previews through an explicit `--output` path only.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -62,9 +64,10 @@ Still preview / not production:
   frontend card does not change that validation status.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
-- Manual synthetic JSON and Markdown preview scripts exist for
-  `report-summary-v0`, and a Markdown string renderer exists. No PDF
-  generation or report export exists yet.
+- Manual synthetic JSON, Markdown, and PDF preview scripts exist for
+  `report-summary-v0`. The PDF preview writes one local file only when an
+  explicit `--output` path is provided and refuses overwrite without
+  `--force`.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.
@@ -72,17 +75,16 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while validating the Markdown preview script, followed
-later by PDF export. Do not fetch data from the report builder, do not use an
-LLM as the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+Recommended next MVP reporting step: document PDF smoke-test results, then
+later consider a controlled read-only API/export flow. Do not fetch data from
+the report builder, do not use an LLM as the forecast or reporting engine, and
+do not add control, dispatch, or activation behavior.
 
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database
-reader, database writer, API renderer, or PDF generator. It is a deterministic
-payload builder that accepts caller-provided current-risk output and
+reader, database writer, or API renderer. It is a deterministic payload
+builder that accepts caller-provided current-risk output and
 caller-provided `forecast-window-v0` output only.
 
 `render_report_summary_markdown(...)` is the separate Markdown renderer for
@@ -91,6 +93,11 @@ deterministic Markdown string and renders unavailable current-risk or forecast
 summaries clearly when the supplied mapping is incomplete. It does not generate
 PDF files, write files, fetch data, access a database, expose an API, use
 frontend code, use ML, or use LLMs.
+
+`render_report_markdown_pdf_bytes(...)` renders caller-provided Markdown into
+PDF bytes for manual local preview use. It does not write files, fetch data,
+access a database, expose an API, use frontend code, use ML, or use LLMs. It
+uses simple ReportLab rendering only.
 
 It always marks the output as read-only decision support, requires human
 review, includes safety notes against automatic control, dispatch, and
@@ -112,6 +119,16 @@ prints Markdown to stdout. It does not write files, generate PDF files, fetch
 data, access a database, expose an API, use frontend code, use ML, use LLMs,
 or establish model validity, statistical calibration, production readiness, or
 operational fitness.
+
+`scripts/report_pdf_preview.py` is a manual synthetic local PDF preview for
+the same report payload. It uses fixed `generated_at_utc` output, in-script
+caller-provided current-risk and forecast-window data only, builds
+`report-summary-v0`, renders Markdown, renders PDF bytes, and writes exactly
+one local PDF only to an explicit `--output PATH`. It refuses overwrite unless
+`--force` is provided. It does not fetch data, access a database, run SQL,
+expose an API, add frontend download behavior, use ML, use LLMs, or establish
+model validity, statistical calibration, production readiness, or operational
+fitness.
 
 ## Forecast Preview API Boundary
 

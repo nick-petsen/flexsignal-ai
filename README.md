@@ -38,6 +38,8 @@ Working read-only core:
   caller-provided current-risk and forecast-window outputs.
 - `report-summary-v0` Markdown rendering exists as pure backend Python logic
   that converts caller-provided report dictionaries into Markdown strings.
+- Manual local PDF export v0 exists for synthetic/caller-provided
+  `report-summary-v0` previews through an explicit `--output` path only.
 - `POST /api/forecast/preview` exposes `forecast-window-v0` for
   caller-provided JSON rows only.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
@@ -78,24 +80,20 @@ Still preview / not production:
   based yet, does not fetch EDS or DMI data, does not read or write a database,
   and is not production forecast validation. The frontend card is a manual
   preview surface for the same synthetic/caller-provided boundary only.
-- The report-summary foundation is a data structure only, with a manual
-  synthetic local JSON preview script, a pure Markdown string renderer, and a
-  manual synthetic local Markdown preview script. It does not generate PDF
-  files yet, write files, fetch data, read or write a database, expose an API,
-  use frontend code, use ML, or use LLMs.
+- The report-summary foundation now has manual synthetic local JSON, Markdown,
+  and PDF preview scripts. PDF export v0 writes a PDF only when an explicit
+  local `--output` path is provided. It does not fetch data, read or write a
+  database, expose an API, add frontend download behavior, use ML, or use LLMs.
 - No DMI/weather ingestion exists yet.
-- No PDF report export exists yet; the current manual report previews are
-  stdout-only JSON and Markdown.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
-Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while validating the Markdown preview script, followed
-later by PDF export. Do not fetch data in the report builder, do not use an
-LLM as the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+Recommended next MVP reporting step: document PDF smoke-test results, then
+later consider a controlled read-only API/export flow. Do not fetch data in
+the report builder, do not use an LLM as the forecast or reporting engine, and
+do not add control, dispatch, or activation behavior.
 
 ## Report Summary Foundation
 
@@ -105,9 +103,9 @@ output. It returns report metadata, current-risk and forecast-window summaries,
 model versions, key findings, recommended human actions, safety notes,
 limitations, and source notes.
 
-This foundation is backend Python logic only. It does not generate PDF files
-yet, fetch data, read or write a database, expose an API, call Energi Data
-Service, call DMI/weather APIs, train ML models, use LLMs, add auth, add
+This foundation is backend Python logic only. It does not fetch data, read or
+write a database, expose an API, call Energi Data Service, call DMI/weather
+APIs, train ML models, use LLMs, add auth, add
 scheduler behavior, or add Azure infrastructure. It is read-only decision
 support only and must not be used for automatic control, dispatch, activation,
 closed-loop workflows, asset connections, plant/device commands, live control
@@ -121,10 +119,10 @@ current-risk or forecast summaries are rendered as clear unavailable sections
 instead of crashing, and optional missing fields use safe fallback text.
 
 The Markdown renderer is pure backend Python formatting logic only. It does
-not generate PDF files, write files, fetch data, access a database, expose an
-API, use frontend code, use ML, or use LLMs. The rendered Markdown remains
-read-only decision support only, requires human review, and must not be used
-for automatic control, dispatch, activation, or autonomous decisions.
+not write files, fetch data, access a database, expose an API, use frontend
+code, use ML, or use LLMs. The rendered Markdown remains read-only decision
+support only, requires human review, and must not be used for automatic
+control, dispatch, activation, or autonomous decisions.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc=2026-01-01T00:00:00Z`
@@ -170,6 +168,39 @@ expose an API, use frontend code, use ML, use LLMs, or perform automatic
 control, dispatch, activation, or operational functionality. It is read-only
 decision support only, requires human review before planning, and must not be
 used for automatic control, dispatch, or activation.
+
+`render_report_markdown_pdf_bytes(...)` converts caller-provided Markdown into
+simple PDF bytes using ReportLab. The renderer returns bytes only; it does not
+write files, fetch data, access a database, expose an API, use frontend code,
+use ML, use LLMs, or perform automatic control, dispatch, activation, or
+operational functionality. The PDF layout is intentionally simple: headings,
+wrapped paragraphs, bullet/list-like lines, and page breaks as needed. It uses
+built-in fonts only and no images, charts, remote resources, HTML/browser
+rendering, CSS, templates, or custom font files.
+
+`scripts/report_pdf_preview.py` is a manual synthetic local PDF preview for
+`report-summary-v0`. It uses fixed
+`generated_at_utc=2026-01-01T00:00:00Z`, builds the report with
+`build_report_summary(...)`, renders Markdown with
+`render_report_summary_markdown(...)`, renders PDF bytes with
+`render_report_markdown_pdf_bytes(...)`, and writes exactly one local PDF file
+only when `--output PATH` is explicitly provided.
+
+```bash
+python3 scripts/report_pdf_preview.py --output /tmp/flexsignal_report_preview.pdf
+python3 scripts/report_pdf_preview.py --price-area DK2 --scenario high-risk --output /tmp/flexsignal_report_high_risk.pdf
+python3 scripts/report_pdf_preview.py --scenario missing-current-risk --output /tmp/flexsignal_report_missing_current.pdf
+python3 scripts/report_pdf_preview.py --scenario missing-forecast --output /tmp/flexsignal_report_missing_forecast.pdf
+```
+
+The PDF preview refuses to overwrite an existing output path unless `--force`
+is provided. It supports `standard`, `high-risk`, `missing-current-risk`, and
+`missing-forecast` scenarios. It prints a compact JSON summary to stdout and a
+safety warning to stderr. It does not expose an API, add frontend download
+behavior, fetch data, access the database, run SQL, call Energi Data Service,
+call DMI/weather APIs, use ML, use LLMs, or perform automatic control,
+dispatch, activation, or operational functionality. It is synthetic local
+preview only, read-only decision support only, and requires human review.
 
 ### Report Summary Preview Results
 
@@ -238,14 +269,12 @@ Observed Markdown results:
 
 Interpretation: Markdown preview works locally with synthetic/caller-provided
 data, renders `report-summary-v0` to readable Markdown, prints to stdout only,
-does not write files, does not generate PDF yet, does not fetch data, does not
-read or write a database, does not expose an API, does not use frontend code,
-and does not use ML or LLMs. It is read-only decision support only and must
-not be used for automatic control, dispatch, or activation.
-
-PDF export v0 can now be built using the stable report-summary and Markdown
-rendering path. PDF export should still remain manual, local, and read-only
-first.
+does not write files, does not fetch data, does not read or write a database,
+does not expose an API, does not use frontend code, and does not use ML or
+LLMs. PDF export v0 is now available only as a manual local explicit-output
+script over the same report-summary and Markdown rendering path. It remains
+read-only decision support only and must not be used for automatic control,
+dispatch, or activation.
 
 ## Forecast Preview API
 

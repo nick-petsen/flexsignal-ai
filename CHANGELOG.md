@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added manual local PDF export v0 for `report-summary-v0`. New
+  `backend/app/reporting/pdf.py` exposes
+  `render_report_markdown_pdf_bytes(...)`, which accepts caller-provided
+  Markdown and returns PDF bytes without writing files, fetching data, reading
+  or writing a database, exposing an API, using frontend code, using ML, using
+  LLMs, or adding operational behavior. New
+  `scripts/report_pdf_preview.py` builds synthetic/caller-provided
+  `report-summary-v0` data, renders Markdown, renders PDF bytes, requires
+  explicit `--output PATH`, refuses overwrite without `--force`, and prints a
+  compact JSON summary. Added focused PDF renderer and script tests, added
+  `reportlab` to backend dependencies, exported the renderer from
+  `app.reporting`, and updated README, scripts README, model card, and
+  backtest notes. This remains manual/local read-only decision support only
+  and must not be used for automatic control, dispatch, or activation.
 - Added `scripts/report_markdown_preview.py`, a manual synthetic local
   Markdown preview for `report-summary-v0`. The script imports
   `build_report_summary(...)` from `backend/app/reporting/summary.py`, imports
