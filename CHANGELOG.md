@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/report_summary_preview.py`, a manual synthetic local JSON
+  preview for `report-summary-v0`. The script imports
+  `build_report_summary(...)` directly from `backend/app/reporting/summary.py`,
+  uses fixed `generated_at_utc=2026-01-01T00:00:00Z`, supports compact JSON by
+  default plus `--pretty`, supports `--price-area DK1|DK2`, and includes
+  `standard`, `high-risk`, `missing-current-risk`, and `missing-forecast`
+  scenarios over in-script caller-provided sample data only. The high-risk
+  scenario demonstrates high-risk key findings and recommended human actions;
+  the missing-input scenarios keep generation safe by marking the relevant
+  summary unavailable. Documented usage in `scripts/README.md`, `README.md`,
+  `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. This script does not
+  generate PDF files, fetch data, access a database, run SQL, expose an API,
+  run frontend code, call Energi Data Service, call DMI/weather APIs, add a
+  scheduler, use Azure, add auth or secrets, train ML models, use LLMs, or add
+  automatic control, dispatch, activation, or operational functionality.
 - Added `report-summary-v0`, a pure backend Python deterministic
   data-structure builder for read-only decision-support reporting. It accepts
   caller-provided current-risk output and caller-provided `forecast-window-v0`

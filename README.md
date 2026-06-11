@@ -76,21 +76,22 @@ Still preview / not production:
   based yet, does not fetch EDS or DMI data, does not read or write a database,
   and is not production forecast validation. The frontend card is a manual
   preview surface for the same synthetic/caller-provided boundary only.
-- The report-summary foundation is a data structure only. It does not generate
-  PDF files yet, fetch data, read or write a database, expose an API, use ML,
-  use LLMs, or perform rendering.
+- The report-summary foundation is a data structure only, with a manual
+  synthetic local JSON preview script. It does not generate PDF files yet,
+  fetch data, read or write a database, expose an API, use ML, use LLMs, or
+  perform rendering.
 - No DMI/weather ingestion exists yet.
-- No Markdown report preview or PDF report export exists yet.
+- No Markdown report preview or PDF report export exists yet; the current
+  report preview is JSON only.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
 Recommended next MVP reporting step: keep the deterministic report-summary
-foundation read-only while adding a Markdown/preview script first, then PDF
-rendering later. Do not fetch data in the report builder, do not use an LLM as
-the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+foundation read-only while adding Markdown rendering or report export later.
+Do not fetch data in the report builder, do not use an LLM as the forecast or
+reporting engine, and do not add control, dispatch, or activation behavior.
 
 ## Report Summary Foundation
 
@@ -107,6 +108,23 @@ scheduler behavior, or add Azure infrastructure. It is read-only decision
 support only and must not be used for automatic control, dispatch, activation,
 closed-loop workflows, asset connections, plant/device commands, live control
 signals, or autonomous decisions.
+
+`scripts/report_summary_preview.py` is a manual synthetic local JSON preview
+for `report-summary-v0`. It uses fixed `generated_at_utc=2026-01-01T00:00:00Z`
+and in-script caller-provided current-risk and forecast-window data only.
+
+```bash
+python3 scripts/report_summary_preview.py
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+The script does not generate PDF files, fetch data, access the database, run
+SQL, expose an API, run frontend code, use ML, use LLMs, or perform automatic
+control, dispatch, activation, or operational functionality. It is synthetic
+read-only decision support only and requires human review before planning.
 
 ## Forecast Preview API
 
