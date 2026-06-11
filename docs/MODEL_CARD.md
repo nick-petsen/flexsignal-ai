@@ -189,9 +189,9 @@ functionality.
 `report-summary-v0` is read-only decision support only. It must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, live control signals, or autonomous
-decisions. Future reporting steps can document PDF smoke-test results, then
-later add a controlled read-only API/export flow only if the explicit
-read-only boundary is preserved.
+decisions. PDF export should remain manual/local for now. A future controlled
+read-only API/export flow can be considered only after separate review and only
+if the explicit read-only boundary is preserved.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
@@ -308,9 +308,51 @@ Interpretation: the Markdown preview uses synthetic/caller-provided data only.
 It does not generate PDF files, write files, fetch data, read or write a
 database, expose an API, use frontend code, use ML, or use LLMs. It is
 read-only decision support only and must not be used for automatic control,
-dispatch, or activation. PDF export v0 can now be built using the stable
-report-summary and Markdown rendering path, but should remain manual, local,
-and read-only first.
+dispatch, or activation. PDF export v0 now uses the stable report-summary and
+Markdown rendering path, and remains manual, local, and read-only only.
+
+### Report PDF Smoke-Test Results
+
+Manual/local PDF export v0 was validated after `report-summary-v0`, Markdown
+rendering, the Markdown preview script, and Markdown preview result
+documentation. It uses synthetic/caller-provided report data, builds
+`report-summary-v0`, renders Markdown, then renders local PDF bytes. It writes
+a PDF only when an explicit `--output` path is provided and requires `--force`
+before overwriting an existing output path. No API endpoint or frontend
+download exists.
+
+Observed validation:
+
+- Backend tests passed: `257 passed, 1 warning`.
+- `py_compile` passed.
+- `git diff --check` passed.
+- Manual PDF preview runs passed.
+- PDF byte/header check passed.
+- Temporary PDFs were removed.
+- Repository PDF check passed: no PDF files were left in the repository.
+- Grep found only required safety wording and no forbidden integration imports.
+
+Observed temporary PDF artifacts:
+
+| Scenario | Output path | Bytes |
+| --- | --- | ---: |
+| `standard` | `/tmp/flexsignal_report_preview.pdf` | 9697 |
+| `high-risk` | `/tmp/flexsignal_report_high_risk.pdf` | 9930 |
+| `missing-current-risk` | `/tmp/flexsignal_report_missing_current.pdf` | 9263 |
+| `missing-forecast` | `/tmp/flexsignal_report_missing_forecast.pdf` | 6918 |
+
+All generated files started with `%PDF`, were larger than `1000` bytes, were
+temporary validation artifacts, were removed after validation, and were not
+committed to the repository.
+
+Interpretation: PDF export v0 works for manual/local synthetic report
+previews and proves the `report-summary-v0` to Markdown to PDF path. It is not
+production report export, is not connected to live data or frontend, is not
+exposed as an API, is not scheduled, does not use ML or LLMs, does not read or
+write database data, and does not call Energi Data Service or DMI/weather
+APIs. It remains read-only decision support only, requires human review, and
+must not be used for automatic control, dispatch, activation, autonomous
+decisions, operational energy-system integration, or automatic report jobs.
 
 `scripts/forecast_window_preview.py` is a manual synthetic local preview for
 `forecast-window-v0`. It uses fixed `generated_at_utc` output and only
@@ -476,9 +518,10 @@ control signals.
 - A deterministic 24-72 hour caller-provided forecast-window aggregation
   foundation exists, but it is not production forecast validation and does not
   fetch, persist, or ingest forecast data.
-- No DMI/weather ingestion exists. A manual synthetic JSON preview script
-  exists for `report-summary-v0`, but no PDF report export, auth, Azure
-  deployment, scheduled ingestion job, or production database exists yet.
+- No DMI/weather ingestion exists. Manual synthetic JSON, Markdown, and PDF
+  preview scripts exist for `report-summary-v0`, but no production report
+  export, API export, frontend download, auth, Azure deployment, scheduled
+  ingestion job, or production database exists yet.
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
