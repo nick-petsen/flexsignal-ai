@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual/local PDF export v0 smoke-test results. The
+  validation covered `standard`, `high-risk`, `missing-current-risk`, and
+  `missing-forecast` synthetic/caller-provided scenarios through the
+  `report-summary-v0` to Markdown to PDF path. Observed temporary outputs were
+  `/tmp/flexsignal_report_preview.pdf` at `9697` bytes,
+  `/tmp/flexsignal_report_high_risk.pdf` at `9930` bytes,
+  `/tmp/flexsignal_report_missing_current.pdf` at `9263` bytes, and
+  `/tmp/flexsignal_report_missing_forecast.pdf` at `6918` bytes. All started
+  with `%PDF`, were larger than `1000` bytes, were removed after validation,
+  and were not committed. Documented that backend tests passed with
+  `257 passed, 1 warning`, `py_compile` passed, `git diff --check` passed,
+  manual PDF preview runs passed, PDF byte/header checks passed, repository PDF
+  checks passed, and grep found only required safety wording and no forbidden
+  integration imports. Clarified that PDF export v0 remains manual/local
+  read-only decision support only: no API endpoint, no frontend download, no
+  live data, no database read/write, no EDS or DMI/weather API calls, no
+  scheduler, no ML or LLM use, no automatic report jobs, and no automatic
+  control, dispatch, activation, autonomous decisions, or operational
+  energy-system integration. This change is documentation only.
 - Added manual local PDF export v0 for `report-summary-v0`. New
   `backend/app/reporting/pdf.py` exposes
   `render_report_markdown_pdf_bytes(...)`, which accepts caller-provided
@@ -56,7 +75,7 @@
   kept current risk available, included `missing or incomplete forecast input`,
   and did not crash. Clarified that the Markdown preview works locally with
   synthetic/caller-provided data, renders `report-summary-v0` to readable
-  Markdown, does not write files, does not generate PDF yet, does not fetch
+  Markdown, does not write files, does not generate PDF files, does not fetch
   data, does not read or write a database, does not expose an API, does not
   use frontend code, does not use ML or LLMs, remains read-only decision
   support only, and must not be used for automatic control, dispatch, or
@@ -514,11 +533,11 @@
   local DB backtest counts low/medium/high of 2/0/0, and average risk score
   `20.0`. Clarified that this remains preview/non-production work with a tiny
   dataset, no full historical backtest, no outcome labels, no 24-72 hour
-  forecast, no DMI/weather ingestion, no PDF report export, no auth, no Azure
-  deployment, no scheduled ingestion jobs, no production database, no human
-  approval workflow beyond documentation/disclaimers, no automatic control, no
-  dispatch, no activation, no operational energy system integration, no LLM as
-  decision engine, and no autonomous decisions.
+  forecast, no DMI/weather ingestion, no production report export, no auth, no
+  Azure deployment, no scheduled ingestion jobs, no production database, no
+  human approval workflow beyond documentation/disclaimers, no automatic
+  control, no dispatch, no activation, no operational energy system
+  integration, no LLM as decision engine, and no autonomous decisions.
 - Documented DK2 local Energi Data Service validation results only:
   `DayAheadPrices` DK2 and `ElectricityProdex5MinRealtime` DK2 both returned
   HTTP 200 in dry-run mode with 2 raw records, 2 normalized records, 2 SQL

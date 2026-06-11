@@ -75,10 +75,11 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP reporting step: document PDF smoke-test results, then
-later consider a controlled read-only API/export flow. Do not fetch data from
-the report builder, do not use an LLM as the forecast or reporting engine, and
-do not add control, dispatch, or activation behavior.
+Recommended next MVP reporting step: keep PDF export manual/local for now,
+then later consider a controlled read-only API/export flow only after separate
+review. Do not add automatic scheduled report generation, do not fetch data
+from the report builder, do not use an LLM as the forecast or reporting engine,
+and do not add control, dispatch, or activation behavior.
 
 ## Report Summary Boundary
 
@@ -718,7 +719,7 @@ Interpretation:
   synthetic/caller-provided data.
 - It prints Markdown to stdout only.
 - It does not write files.
-- It does not generate PDF yet.
+- It does not generate PDF files.
 - It does not fetch data.
 - It does not read or write a database.
 - It does not expose an API.
@@ -727,9 +728,51 @@ Interpretation:
 - It is read-only decision support only.
 - It must not be used for automatic control, dispatch, or activation.
 
-PDF export v0 can now be built using the stable report-summary and Markdown
-rendering path. PDF export should still remain manual, local, and read-only
-first.
+PDF export v0 now uses the stable report-summary and Markdown rendering path.
+It remains manual, local, and read-only only.
+
+### Report PDF Smoke-Test Results
+
+Manual/local PDF export v0 was validated after `report-summary-v0`, Markdown
+rendering, the Markdown preview script, and Markdown preview result
+documentation. It uses synthetic/caller-provided report data, builds
+`report-summary-v0`, renders Markdown, then renders local PDF bytes. It writes
+a PDF only when an explicit `--output` path is provided and requires `--force`
+before overwriting an existing output path. No API endpoint or frontend
+download exists.
+
+Observed validation:
+
+- Backend tests passed: `257 passed, 1 warning`.
+- `py_compile` passed.
+- `git diff --check` passed.
+- Manual PDF preview runs passed.
+- PDF byte/header check passed.
+- Temporary PDFs were removed.
+- Repository PDF check passed: no PDF files were left in the repository.
+- Grep found only required safety wording and no forbidden integration imports.
+
+Observed temporary PDF artifacts:
+
+| Scenario | Output path | Bytes |
+| --- | --- | ---: |
+| `standard` | `/tmp/flexsignal_report_preview.pdf` | 9697 |
+| `high-risk` | `/tmp/flexsignal_report_high_risk.pdf` | 9930 |
+| `missing-current-risk` | `/tmp/flexsignal_report_missing_current.pdf` | 9263 |
+| `missing-forecast` | `/tmp/flexsignal_report_missing_forecast.pdf` | 6918 |
+
+All generated files started with `%PDF`, were larger than `1000` bytes, were
+temporary validation artifacts, were removed after validation, and were not
+committed to the repository.
+
+Interpretation: PDF export v0 works for manual/local synthetic report
+previews and proves the `report-summary-v0` to Markdown to PDF path. It is not
+production report export, is not connected to live data or frontend, is not
+exposed as an API, is not scheduled, does not use ML or LLMs, does not read or
+write database data, and does not call Energi Data Service or DMI/weather
+APIs. It remains read-only decision support only, requires human review, and
+must not be used for automatic control, dispatch, activation, autonomous
+decisions, operational energy-system integration, or automatic report jobs.
 
 ## Forecast Window Synthetic Preview Script
 
