@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `report-summary-v0`, a pure backend Python deterministic
+  data-structure builder for read-only decision-support reporting. It accepts
+  caller-provided current-risk output and caller-provided `forecast-window-v0`
+  output only, validates `DK1`/`DK2` and timezone-aware `generated_at_utc`,
+  returns a deterministic report id based on price area, generated timestamp,
+  and report version, and includes current-risk summary, forecast-window
+  summary, model versions, key findings, deduplicated recommended human
+  actions, safety notes, limitations, and source notes. Missing or incomplete
+  current-risk or forecast input is handled as an unavailable summary with an
+  explicit limitation instead of crashing. Added focused tests for valid
+  reports, deterministic IDs, validation, unavailable summaries, high and
+  unknown forecast findings, action deduplication, decision-support flags,
+  safety notes, object inputs, and absence of DB/API/network/PDF dependencies.
+  Updated README, model card, and backtest notes to document that this is a
+  data structure only: it does not generate PDF files yet, fetch data, read or
+  write a database, expose an API, use ML, use LLMs, add scheduler/auth/Azure
+  behavior, or perform automatic control, dispatch, activation, or operational
+  functionality. The next reporting step should be a Markdown/preview script,
+  followed later by PDF rendering.
 - Documented manual frontend Forecast preview card smoke-test results after
   the local CORS preflight fix was merged. The backend was started without
   `DATABASE_URL`, the frontend was started locally, and only the Forecast

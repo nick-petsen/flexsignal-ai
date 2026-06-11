@@ -141,6 +141,27 @@ All outputs are read-only decision support only and must not be used for
 automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, or live control signals.
 
+## Report Summary Foundation
+
+`report-summary-v0` is a pure Python data-structure builder for read-only
+decision-support reporting. It combines caller-provided current-risk output and
+caller-provided `forecast-window-v0` output into a deterministic structured
+payload that can later be used by a Markdown preview or PDF generation step.
+
+The report summary builder does not generate PDF files yet, fetch data, read
+from or write to a database, expose a FastAPI endpoint, call Energi Data
+Service, call DMI/weather APIs, train ML models, or use LLMs. It only
+normalizes supplied dictionaries or compatible objects into report fields,
+model-version metadata, deterministic key findings, required human-review
+actions, safety notes, limitations, and source notes.
+
+`report-summary-v0` is read-only decision support only. It must not be used for
+automatic control, dispatch, activation, closed-loop workflows, asset
+connections, plant/device commands, live control signals, or autonomous
+decisions. The next reporting step should be a Markdown/preview script using
+this structure, followed later by PDF rendering after the data boundary remains
+explicit.
+
 `scripts/forecast_window_preview.py` is a manual synthetic local preview for
 `forecast-window-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided rows for `balanced`, `high-risk`, and `empty-window`

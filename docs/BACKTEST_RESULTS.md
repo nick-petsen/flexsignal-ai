@@ -35,6 +35,8 @@ Current read-only foundation:
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
 - `forecast-window-v0` exists as deterministic pure Python aggregation over
   caller-provided rows for `0-24h`, `24-48h`, and `48-72h` windows.
+- `report-summary-v0` exists as a deterministic pure Python data-structure
+  builder over caller-provided current-risk and forecast-window outputs.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -58,15 +60,31 @@ Still preview / not production:
   frontend card does not change that validation status.
 - No DMI/weather data is included.
 - No statistical calibration or predictive accuracy claim is made.
-- No PDF/report export exists yet.
+- No Markdown preview, PDF generation, or report export exists yet.
+- `report-summary-v0` does not fetch data, read or write a database, expose an
+  API, use ML, use LLMs, or validate production forecast performance.
 - No scheduled ingestion jobs, production database, Azure deployment, auth, ML
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP step: keep the deterministic forecast-window foundation
-read-only while adding explicit validation and caller-provided/local data
-composition before any production data path. Do not use an LLM as the forecast
-engine, and do not add control, dispatch, or activation behavior.
+Recommended next MVP reporting step: keep the deterministic report-summary
+foundation read-only while adding a Markdown/preview script first, followed
+later by PDF rendering. Do not fetch data from the report builder, do not use
+an LLM as the forecast or reporting engine, and do not add control, dispatch,
+or activation behavior.
+
+## Report Summary Boundary
+
+`report-summary-v0` is not a backtest, forecast model, API endpoint, database
+reader, database writer, Markdown renderer, or PDF generator. It is a
+deterministic payload builder that accepts caller-provided current-risk output
+and caller-provided `forecast-window-v0` output only.
+
+It always marks the output as read-only decision support, requires human
+review, includes safety notes against automatic control, dispatch, and
+activation, and records limitations including no production forecast
+validation, no outcome labels, no DMI/weather data yet, no ML training, no LLM
+use, caller-provided data only, no database read/write, and no live API calls.
 
 ## Forecast Preview API Boundary
 
