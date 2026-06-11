@@ -126,6 +126,46 @@ SQL, expose an API, run frontend code, use ML, use LLMs, or perform automatic
 control, dispatch, activation, or operational functionality. It is synthetic
 read-only decision support only and requires human review before planning.
 
+### Report Summary Preview Results
+
+The manual report-summary preview script was run locally with synthetic
+caller-provided data only:
+
+```bash
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+All four runs printed the synthetic-only warning, used
+`generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`. Safety notes were present in every payload and
+explicitly prohibited automatic control, dispatch, and activation. Limitations
+were present and included caller-provided data only, no database read/write,
+no live API calls, no ML training in the report builder, and no LLM use in the
+report builder.
+
+Observed synthetic results:
+
+| Scenario | Command | Price area | Current risk summary | Forecast summary | Key result |
+| --- | --- | --- | --- | --- | --- |
+| `standard` | `python3 scripts/report_summary_preview.py --pretty` | DK1 | available, medium, score 45 | available, 3 windows | Key findings reported medium current risk, no high-risk forecast window, and caller-provided data only; recommended actions included routine monitoring, review of the medium-risk window, required human review, source-context verification, and no control/dispatch/activation use. |
+| `high-risk` | `python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty` | DK2 | available, high, score 75 | available, 3 windows | Current risk was high and the `24-48h` forecast window was high risk with `max_risk_score=80`; key findings mentioned high risk and actions required human review before planning. |
+| `missing-current-risk` | `python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty` | DK1 | unavailable | available, 3 windows | The payload remained safe, added the limitation `missing or incomplete current risk input`, and still included the forecast-window summary. |
+| `missing-forecast` | `python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty` | DK1 | available, medium, score 45 | unavailable, 0 windows | The payload remained safe, added the limitation `missing or incomplete forecast input`, and still included the current-risk summary. |
+
+Interpretation: `report-summary-v0` preview works locally with synthetic
+caller-provided data and creates deterministic report payloads. It does not
+generate PDF files yet, fetch data, read or write a database, expose an API,
+use the frontend, use ML, or use LLMs. It remains read-only decision support
+only and must not be used for automatic control, dispatch, or activation.
+
+Recommended next reporting step: add Markdown report rendering after this
+documented JSON preview. PDF export should come later, after Markdown/report
+rendering is stable.
+
 ## Forecast Preview API
 
 `POST /api/forecast/preview` returns deterministic `0-24h`, `24-48h`, and

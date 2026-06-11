@@ -182,6 +182,42 @@ Energi Data Service, call DMI/weather APIs, train ML models, use LLMs, add
 scheduler/auth/Azure behavior, or perform automatic control, dispatch,
 activation, or operational functionality.
 
+### Report Summary Preview Results
+
+The manual synthetic report-summary preview was observed with:
+
+```bash
+python3 scripts/report_summary_preview.py --pretty
+python3 scripts/report_summary_preview.py --price-area DK2 --scenario high-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty
+python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty
+```
+
+All outputs used `generated_at_utc=2026-01-01T00:00:00Z`,
+`report_version=report-summary-v0`, `decision_support_only=true`, and
+`human_review_required=true`. Safety notes were present and explicitly stated
+that the report must not be used for automatic control, dispatch, or
+activation. Limitations were present and documented no production forecast
+validation, no outcome labels, no DMI/weather data yet, no ML training in the
+report builder, no LLM use in the report builder, caller-provided data only,
+no database read/write, and no live API calls.
+
+Observed scenarios:
+
+| Scenario | Price area | Current risk | Forecast windows | Finding |
+| --- | --- | --- | ---: | --- |
+| `standard` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 3 | Key findings reported medium current risk and no high-risk forecast window; recommended actions required human review and prohibited automatic control, dispatch, or activation. |
+| `high-risk` | DK2 | `status=available`, `risk_level=high`, `risk_score=75` | 3 | Key findings reported high current risk and a high-risk `24-48h` forecast window with `max_risk_score=80`; actions required escalation for human review. |
+| `missing-current-risk` | DK1 | `status=unavailable` | 3 | The report stayed safe, kept the forecast summary available, and added `missing or incomplete current risk input` to limitations. |
+| `missing-forecast` | DK1 | `status=available`, `risk_level=medium`, `risk_score=45` | 0 | The report stayed safe, marked the forecast summary unavailable, and added `missing or incomplete forecast input` to limitations. |
+
+Interpretation: the report-summary preview creates deterministic payloads from
+synthetic/caller-provided current-risk and forecast-window inputs. It does not
+generate PDF files yet, fetch data, read or write a database, expose an API,
+use frontend code, use ML, or use LLMs. Markdown report rendering can be added
+after this JSON report payload remains stable; PDF export should follow after
+Markdown/report rendering is stable.
+
 `scripts/forecast_window_preview.py` is a manual synthetic local preview for
 `forecast-window-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided rows for `balanced`, `high-risk`, and `empty-window`
