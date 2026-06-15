@@ -289,6 +289,39 @@ generate PDFs, call EDS/DMI, use ML, use LLMs, add scheduler or Azure
 infrastructure, add auth, add secrets, or add automatic audit logging. It does
 not change backtest validity or model performance claims.
 
+Observed dry-run validation:
+
+| Command/check | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_persistence_preview.py` | Passed. |
+| `python3 scripts/audit_persistence_preview.py` | Printed compact JSON. |
+| `python3 scripts/audit_persistence_preview.py --pretty` | Printed indented JSON. |
+| `python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty` | Dry-run passed. |
+| `python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty` | Dry-run passed. |
+| `python3 scripts/audit_persistence_preview.py --event-type invalid-event` | Failed safely with exit code `2` and argparse invalid-choice output. |
+| Forbidden-pattern grep on `scripts/audit_persistence_preview.py` | Returned no matches. |
+| `git diff --check` | Passed. |
+
+Observed output included `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, `event`, and
+`persistence_plan`. The event used `event_version=audit-event-v0`,
+deterministic `audit_evt_...` event id,
+`occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, `local_only=true`, and the read-only/no-control
+human-review safety boundary. The persistence plan included the
+`audit_events` table target, SQL/SQL preview, parameter keys/params,
+`event_id` idempotency key, and
+`ON CONFLICT (event_id) DO NOTHING` conflict behavior.
+
+Interpretation: the preview demonstrates how `audit-event-v0` can become a
+parameterized persistence plan, but it does not prove live DB persistence,
+perform database writes, run SQL, connect to a database, expose API/frontend
+behavior, integrate report/PDF flows, add automatic audit logging, or affect
+backtest results. A future controlled local write test must be a separate
+reviewed module.
+
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database

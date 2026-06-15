@@ -19,6 +19,36 @@
   LLMs, add scheduling, add Azure infrastructure, add auth, add secrets, add
   automatic audit logging, or add control, dispatch, activation, or
   operational functionality.
+- Documented observed manual audit persistence dry-run preview validation
+  results. The documented commands/checks were
+  `python3 -m py_compile scripts/audit_persistence_preview.py`,
+  `python3 scripts/audit_persistence_preview.py`,
+  `python3 scripts/audit_persistence_preview.py --pretty`,
+  `python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty`,
+  `python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty`,
+  `python3 scripts/audit_persistence_preview.py --event-type invalid-event`,
+  forbidden-pattern grep on `scripts/audit_persistence_preview.py`, and
+  `git diff --check`. Observed results: `py_compile` passed; the default
+  command printed compact JSON; `--pretty` printed indented JSON; both valid
+  single-event dry-runs passed; the invalid event type failed safely with exit
+  code `2` and argparse invalid-choice output; forbidden-pattern grep returned
+  no matches; and `git diff --check` passed. Documented output fields
+  `dry_run=true`, `database_write_performed=false`,
+  `requires_database_url=false`, `event`, and `persistence_plan`, including
+  `event_version=audit-event-v0`, deterministic `audit_evt_...` event id,
+  fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+  `actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+  `decision_support_only=true`, safe metadata only,
+  `synthetic_preview_only=true`, `local_only=true`, the full read-only
+  human-review safety boundary, the `audit_events` target, SQL/SQL preview,
+  parameter keys/params, `event_id` idempotency key, and
+  `ON CONFLICT (event_id) DO NOTHING`. Clarified that this works locally with
+  synthetic/caller-provided data and demonstrates persistence planning only;
+  it does not prove live DB persistence, perform database writes, run SQL,
+  connect to a database, expose API/frontend/report/PDF flows, generate PDFs,
+  call EDS/DMI, use ML/LLMs, add automatic audit logging, or add operational
+  functionality. Future controlled local audit persistence write testing must
+  be separate and reviewed. This change is documentation only.
 - Documented audit DB persistence foundation validation and CI resolution
   results for PR #87. Clarified that `audit-event-v0`, the manual audit-event
   preview script, and preview-result docs already existed before this step,

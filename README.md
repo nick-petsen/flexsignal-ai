@@ -318,6 +318,48 @@ read-only decision-support audit persistence preview only. Future controlled
 repository execution would require an explicit database connection and tests
 in a separate reviewed module.
 
+Observed manual audit persistence dry-run validation:
+
+| Command/check | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_persistence_preview.py` | Passed. |
+| `python3 scripts/audit_persistence_preview.py` | Printed compact JSON. |
+| `python3 scripts/audit_persistence_preview.py --pretty` | Printed indented JSON. |
+| `python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty` | Built a dry-run `forecast_preview_requested` audit event and persistence plan. |
+| `python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty` | Built a dry-run `report_pdf_exported` audit event and persistence plan. |
+| `python3 scripts/audit_persistence_preview.py --event-type invalid-event` | Failed safely with exit code `2` and argparse invalid-choice output. |
+| Forbidden-pattern grep on `scripts/audit_persistence_preview.py` | Returned no matches. |
+| `git diff --check` | Passed. |
+
+Observed output included `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, `event`, and
+`persistence_plan`. The event included
+`event_version=audit-event-v0`, a deterministic `audit_evt_...` event id,
+fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`. The event safety
+boundary preserved `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Observed `persistence_plan` output included the `audit_events` table target,
+SQL/SQL preview, parameter keys/params, `event_id` as the idempotency key, and
+`ON CONFLICT (event_id) DO NOTHING` conflict behavior.
+
+Interpretation: the audit persistence preview works locally with
+synthetic/caller-provided data and demonstrates how `audit-event-v0` can be
+transformed into a parameterized persistence plan. It does not prove live DB
+persistence, perform live database writes, run SQL, connect to a database,
+expose an API, use frontend code, integrate with report/PDF flows, generate
+PDFs, call EDS/DMI, use ML/LLM behavior, add scheduling/Azure/auth/secrets, or
+add control, dispatch, activation, automatic audit logging, or operational
+functionality. A future module may add a controlled local audit persistence
+write test against a local database, but that must be separate and reviewed.
+Do not connect report/PDF/frontend/API flows to audit persistence until
+explicit review.
+
 ## Report Summary Foundation
 
 `report-summary-v0` builds a deterministic structured report payload from
