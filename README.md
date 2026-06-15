@@ -210,6 +210,81 @@ read-only wiring can be considered next only as a separate reviewed module,
 without adding automatic control, dispatch, activation, scheduling, or
 operational functionality.
 
+### Audit DB Persistence Foundation Validation
+
+The `audit-event-v0` data-structure foundation, manual audit-event preview
+script, and preview-result documentation existed before the audit database
+persistence foundation was added in PR #87. PR #87 added schema/repository
+readiness only: an Alembic migration for `audit_events` and
+`backend/app/audit/repository.py`, without wiring audit persistence into API,
+frontend, report/PDF flows, automatic logging, or live execution paths.
+
+The migration defines `event_id` as the primary/idempotency key and stores
+`event_version`, `event_type`, `actor_type`, `actor_id`,
+`occurred_at_utc`, `resource_type`, `resource_id`, `action`, `outcome`,
+`decision_support_only`, JSONB `safety_boundary`, JSONB `metadata`, and
+`created_at_utc` with a database default. Indexes support lookup by
+`occurred_at_utc`, `event_type`, resource, and actor. The repository validates
+events before persistence planning, preserves the required read-only safety
+boundary, uses parameterized INSERT construction, and adds
+`ON CONFLICT (event_id) DO NOTHING`. Validation did not perform live database
+writes.
+
+Initial local validation before PR review documented:
+
+- Backend tests passed with `310 passed, 1 warning`.
+- `py_compile` passed for `backend/app/audit/events.py` and
+  `backend/app/audit/repository.py`.
+- Safety-boundary grep matched only expected terms:
+  `no_automatic_control`, `no_dispatch`, and `no_activation`.
+- `git diff --check` passed.
+
+GitHub backend-tests initially failed before merge because route exposure under
+the newer FastAPI/Starlette CI/test context did not list these concrete paths
+in `app.routes`: `/api/risk/current`, `/api/risk/preview`, and
+`/api/forecast/preview`. The observed failing tests were
+`tests/test_api_energy.py::test_app_exposes_no_mutating_write_methods` and
+`tests/test_api_risk.py::test_app_import_without_database_url_still_exposes_current_risk_route`.
+This was interpreted as a route-registration exposure issue in the test/import
+context, not as live database writes or audit persistence execution. The
+branch was not merged while backend-tests were red.
+
+The fix updated `backend/app/main.py` with a small route-registration helper
+so `app.routes` exposes concrete paths under the test environment.
+`DATABASE_URL` validation remains request-time only. Endpoint logic was not
+changed, and no new API behavior, DB writes, scheduler, frontend behavior,
+control behavior, or operational functionality was added.
+
+Post-fix validation documented:
+
+- Focused route tests passed with `2 passed, 1 warning`.
+- Full backend suite passed with `310 passed, 1 warning`.
+- `git diff --check` passed.
+- The PR diff was checked to ensure no `.pyc`, virtualenv, cache, or generated
+  files were included.
+- GitHub backend-tests were re-run and green before merge.
+- PR #87 was merged only after backend-tests were green.
+
+The final merged audit DB persistence PR included:
+
+- `backend/alembic/versions/0002_audit_events.py`
+- `backend/app/audit/repository.py`
+- `backend/app/main.py`
+- `backend/tests/test_audit_event_repository.py`
+- `README.md`
+- `docs/HUMAN_OVERSIGHT.md`
+- `docs/MODEL_CARD.md`
+- `docs/BACKTEST_RESULTS.md`
+- `CHANGELOG.md`
+
+Interpretation: the audit DB persistence foundation is schema/repository
+readiness for future explicit audited read-only flows. It does not yet prove
+production audit persistence, identify real users through Entra ID, or create
+runtime audit logs. Future wiring should remain manual and reviewed; a future
+module may add an audit persistence preview script using a fake executor or
+local dry-run. Do not add automatic audit logging yet, and do not connect
+frontend or report-download flows to persistence until explicit review.
+
 ## Report Summary Foundation
 
 `report-summary-v0` builds a deterministic structured report payload from
