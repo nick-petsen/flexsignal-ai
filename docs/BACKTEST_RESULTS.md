@@ -348,6 +348,39 @@ integrate report/PDF/API/frontend flows, schedule work, use Azure
 infrastructure, add auth or secrets, call EDS/DMI, use ML, use LLMs, or add
 control, dispatch, activation, or operational functionality.
 
+Observed audit DB write smoke validation:
+
+| Command/check | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_db_write_smoke.py backend/tests/test_audit_db_write_smoke.py` | Passed. |
+| `python -m pytest tests/test_audit_db_write_smoke.py -q` | Focused smoke tests passed: `7 passed`. |
+| `python -m pytest` | Full backend suite passed: `317 passed, 1 warning`. |
+| `python3 scripts/audit_db_write_smoke.py` | Default dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --pretty` | Pretty dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty` | `forecast_preview_requested` dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --execute` | Failed safely with exit code `2`. |
+| `python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://remote.example.com/flexsignal_ai` | Failed safely with exit code `2`. |
+| Forbidden-pattern grep on script and test | Returned no matches. |
+| `git diff --check` | Passed. |
+
+No live DB writes were performed during validation. Observed output includes
+`dry_run`, `execute_requested`, `database_write_performed`,
+`verify_read_performed`, `local_database_only`, `event_id`, `event_type`,
+`table: audit_events`, `inserted_attempts`, `conflict_behavior`,
+`safety_boundary`, and `warnings`. The raw `DATABASE_URL` is not printed, the
+`event_id` is deterministic, and the safety boundary preserves
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: dry-run behavior, execute guardrails, and remote DB rejection
+are validated, but actual live local DB write validation has not yet been
+performed and production audit persistence is not proven. This does not
+change backtest results, model validation, API/frontend behavior, report/PDF
+behavior, or automatic audit logging status. Future local write testing must
+be manual, local-only, and separately reviewed.
+
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database

@@ -404,6 +404,39 @@ PDF, API, or frontend flows; schedule work; use Azure infrastructure; add auth
 or secrets; call EDS/DMI; use ML; use LLMs; or add control, dispatch,
 activation, or operational functionality.
 
+Observed manual validation results for `audit_db_write_smoke.py`:
+
+| Command/check | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_db_write_smoke.py backend/tests/test_audit_db_write_smoke.py` | Passed. |
+| `python -m pytest tests/test_audit_db_write_smoke.py -q` | Focused smoke tests passed: `7 passed`. |
+| `python -m pytest` | Full backend suite passed: `317 passed, 1 warning`. |
+| `python3 scripts/audit_db_write_smoke.py` | Default dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --pretty` | Pretty dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty` | Event-specific dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --execute` | Failed safely with exit code `2` because an explicit `--database-url` is required. |
+| `python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://remote.example.com/flexsignal_ai` | Failed safely with exit code `2` because remote/cloud-style database URLs are rejected by default. |
+| Forbidden-pattern grep on script and test | Returned no matches. |
+| `git diff --check` | Passed. |
+
+No live DB writes were performed during validation. Output behavior includes
+`dry_run`, `execute_requested`, `database_write_performed`,
+`verify_read_performed`, `local_database_only`, `event_id`, `event_type`,
+`table: audit_events`, `inserted_attempts`, `conflict_behavior`,
+`safety_boundary`, and `warnings`. The raw `DATABASE_URL` is not printed, and
+the `event_id` is deterministic.
+
+The preserved safety boundary is `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: the smoke script validates local-only audit write guardrails,
+not model quality, forecast performance, or production audit persistence. A
+future controlled local DB write smoke may be run against a local Postgres
+database after separate review. API, frontend, report/PDF download flows, and
+automatic audit logging remain intentionally unwired.
+
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided current-risk and forecast-window data for

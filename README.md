@@ -396,6 +396,42 @@ or frontend flows; create a scheduler; use Azure infrastructure; add auth or
 secrets; call EDS/DMI; use ML or LLMs; or add control, dispatch, activation,
 or operational functionality.
 
+Observed manual audit DB write smoke validation:
+
+| Command/check | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_db_write_smoke.py backend/tests/test_audit_db_write_smoke.py` | Passed. |
+| `python -m pytest tests/test_audit_db_write_smoke.py -q` | Focused smoke tests passed: `7 passed`. |
+| `python -m pytest` | Full backend suite passed: `317 passed, 1 warning`. |
+| `python3 scripts/audit_db_write_smoke.py` | Default dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --pretty` | Pretty dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty` | `forecast_preview_requested` dry-run passed. |
+| `python3 scripts/audit_db_write_smoke.py --execute` | Failed safely with exit code `2` because no explicit `--database-url` was provided. |
+| `python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://remote.example.com/flexsignal_ai` | Failed safely with exit code `2` because remote/cloud-style URLs are rejected by default. |
+| Forbidden-pattern grep on script and test | Returned no matches. |
+| `git diff --check` | Passed. |
+
+No live DB writes were performed during validation. Observed output includes
+`dry_run`, `execute_requested`, `database_write_performed`,
+`verify_read_performed`, `local_database_only`, `event_id`, `event_type`,
+`table: audit_events`, `inserted_attempts`, `conflict_behavior`,
+`safety_boundary`, and `warnings`. The raw `DATABASE_URL` is not printed, the
+`event_id` is deterministic, and the safety boundary is preserved with
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: the local audit DB write smoke script is implemented and
+unit-tested; dry-run behavior, execute guardrails, and remote DB rejection are
+validated. Actual live local DB write validation has not yet been performed,
+production audit persistence is not proven yet, and no API, frontend,
+report/PDF flow, or automatic audit logging is wired to audit persistence.
+Future work may run a controlled local DB write smoke against a local
+Postgres database, but that step must remain manual, local-only, and
+separately reviewed. Do not connect API, frontend, or report downloads to
+audit persistence yet, and do not add automatic audit logging yet.
+
 ## Report Summary Foundation
 
 `report-summary-v0` builds a deterministic structured report payload from
