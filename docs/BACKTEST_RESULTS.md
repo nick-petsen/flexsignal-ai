@@ -198,6 +198,73 @@ provide production audit persistence. Explicit persistence wiring can be
 considered next, but only as a separate reviewed module. Do not add automatic
 control, dispatch, activation, scheduler, or operational functionality.
 
+### Audit DB Persistence PR Validation Results
+
+The audit DB persistence foundation was added in PR #87 after the
+`audit-event-v0` builder, manual preview script, and preview-result docs
+already existed. The PR added schema/repository readiness only: an Alembic
+`audit_events` migration and repository SQL builder using validated events and
+parameterized `ON CONFLICT (event_id) DO NOTHING` INSERT SQL. It did not add
+FastAPI audit endpoints, frontend behavior, automatic audit logging,
+report/PDF integration, scheduler behavior, auth/Entra integration, live
+EDS/DMI calls, ML/LLM behavior, live database writes, or control, dispatch,
+activation, or operational functionality.
+
+The schema records `event_id` as the primary/idempotency key,
+`event_version`, `event_type`, `actor_type`, `actor_id`,
+`occurred_at_utc`, `resource_type`, `resource_id`, `action`, `outcome`,
+`decision_support_only`, JSONB `safety_boundary`, JSONB `metadata`, and
+`created_at_utc` with a default. It adds indexes for occurrence time, event
+type, resource lookup, and actor lookup. Validation planned persistence only;
+it did not perform live database writes.
+
+Initial local validation before PR review documented:
+
+- Backend tests passed with `310 passed, 1 warning`.
+- `py_compile` passed for `backend/app/audit/events.py` and
+  `backend/app/audit/repository.py`.
+- Safety-boundary grep matched only expected terms:
+  `no_automatic_control`, `no_dispatch`, and `no_activation`.
+- `git diff --check` passed.
+
+GitHub backend-tests initially failed before merge because newer
+FastAPI/Starlette CI/test route exposure did not list `/api/risk/current`,
+`/api/risk/preview`, and `/api/forecast/preview` in `app.routes`. The failing
+tests were `tests/test_api_energy.py::test_app_exposes_no_mutating_write_methods`
+and
+`tests/test_api_risk.py::test_app_import_without_database_url_still_exposes_current_risk_route`.
+This was not caused by live database writes or audit persistence execution,
+and the branch was not merged while backend-tests were red.
+
+The fix updated `backend/app/main.py` with a small route-registration helper
+for concrete paths under the test environment. `DATABASE_URL` validation
+remains request-time only, endpoint logic was not changed, and no new API
+behavior, DB writes, scheduler, frontend behavior, or control behavior was
+added.
+
+Post-fix validation documented:
+
+- Focused route tests passed with `2 passed, 1 warning`.
+- Full backend suite passed with `310 passed, 1 warning`.
+- `git diff --check` passed.
+- The PR diff contained no `.pyc`, virtualenv, cache, or generated files.
+- GitHub backend-tests were re-run and green before merge.
+- PR #87 was merged only after backend-tests were green.
+
+Final merged files were
+`backend/alembic/versions/0002_audit_events.py`,
+`backend/app/audit/repository.py`, `backend/app/main.py`,
+`backend/tests/test_audit_event_repository.py`, `README.md`,
+`docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`,
+`docs/BACKTEST_RESULTS.md`, and `CHANGELOG.md`.
+
+Interpretation: the audit DB persistence foundation prepares for future
+explicit audited read-only flows. It does not prove production audit
+persistence, identify real users through Entra ID, or automatically write
+events. Future work may add an audit persistence preview script using a fake
+executor or local dry-run, but automatic audit logging and frontend/report
+download persistence wiring should remain deferred until explicit review.
+
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database

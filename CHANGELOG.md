@@ -2,6 +2,54 @@
 
 ## v0.1.0 - TODO
 
+- Documented audit DB persistence foundation validation and CI resolution
+  results for PR #87. Clarified that `audit-event-v0`, the manual audit-event
+  preview script, and preview-result docs already existed before this step,
+  and that PR #87 added schema/repository readiness only: Alembic migration
+  `backend/alembic/versions/0002_audit_events.py` and
+  `backend/app/audit/repository.py`. Documented the `audit_events` schema with
+  `event_id` as the primary/idempotency key, event version/type, actor,
+  occurrence time, resource, action, outcome, `decision_support_only`, JSONB
+  `safety_boundary`, JSONB `metadata`, `created_at_utc`, and indexes for
+  occurrence time, event type, resource lookup, and actor lookup. Documented
+  repository validation before persistence planning, parameterized INSERT SQL,
+  and `ON CONFLICT (event_id) DO NOTHING`, with no live database writes during
+  validation.
+- Documented initial PR validation for the audit DB persistence foundation:
+  backend tests passed with `310 passed, 1 warning`, `py_compile` passed for
+  `backend/app/audit/events.py` and `backend/app/audit/repository.py`,
+  safety-boundary grep matched only `no_automatic_control`, `no_dispatch`, and
+  `no_activation`, and `git diff --check` passed.
+- Documented the GitHub backend-tests issue and resolution before merge. The
+  initial CI failures were
+  `tests/test_api_energy.py::test_app_exposes_no_mutating_write_methods` and
+  `tests/test_api_risk.py::test_app_import_without_database_url_still_exposes_current_risk_route`;
+  CI/import context was missing exposed routes `/api/risk/current`,
+  `/api/risk/preview`, and `/api/forecast/preview`. The issue was interpreted
+  as route exposure under newer FastAPI/Starlette test behavior, not live
+  database writes or audit persistence execution. `backend/app/main.py` was
+  updated with a small route-registration helper so `app.routes` exposes
+  concrete paths in the test environment while keeping `DATABASE_URL`
+  validation request-time only. Endpoint logic was not changed. No new API
+  behavior, DB writes, scheduler, frontend, control, dispatch, activation, or
+  operational behavior was added. The branch was not merged while
+  backend-tests were red.
+- Documented post-fix validation: focused route tests passed with
+  `2 passed, 1 warning`, the full backend suite passed with
+  `310 passed, 1 warning`, `git diff --check` passed, the PR diff was checked
+  to exclude `.pyc`, virtualenv, cache, and generated files, GitHub
+  backend-tests were re-run and green before merge, and PR #87 was merged only
+  after backend-tests were green. Documented the final merged files:
+  `backend/alembic/versions/0002_audit_events.py`,
+  `backend/app/audit/repository.py`, `backend/app/main.py`,
+  `backend/tests/test_audit_event_repository.py`, `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`,
+  `docs/BACKTEST_RESULTS.md`, and `CHANGELOG.md`. Clarified that the audit DB
+  persistence foundation does not prove production audit persistence, identify
+  real users through Entra ID, or automatically write events. Future work may
+  add a fake-executor/local-dry-run persistence preview, but automatic audit
+  logging and frontend/report-download persistence wiring remain deferred
+  until explicit review. This change is documentation only.
 - Added audit-event database persistence foundation for `audit-event-v0`.
   New Alembic migration `0002_audit_events.py` defines an `audit_events`
   table with `event_id` as the primary/idempotency key, event version/type,
