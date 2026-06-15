@@ -154,6 +154,47 @@ decision-support audit structure only. Future audit work should first document
 audit preview results, then add database persistence only later as a separate
 reviewed module.
 
+Observed manual audit-event preview validation:
+
+- `python3 -m py_compile scripts/audit_event_preview.py` passed.
+- `python3 scripts/audit_event_preview.py` printed compact JSON with an
+  `events` array.
+- `python3 scripts/audit_event_preview.py --pretty` printed indented JSON.
+- `python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty`
+  printed one `report_pdf_exported` event.
+- `python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty`
+  printed one `forecast_preview_requested` event.
+- `python3 scripts/audit_event_preview.py --event-type invalid-event` failed
+  safely with exit code `2` and a clear argparse invalid-choice validation
+  error.
+- Forbidden-pattern grep on `scripts/audit_event_preview.py` returned no
+  matches.
+- `git diff --check` passed.
+
+Generated preview events covered `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, and `report_pdf_exported`. Observed events used
+`event_version=audit-event-v0`, deterministic `audit_evt_...` event ids,
+fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`.
+
+Each event included a `safety_boundary` with
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: the audit-event preview works locally with
+synthetic/caller-provided data and demonstrates the future audit-event shape
+for read-only decision-support actions. It does not persist events yet, prove
+database audit logging, connect to auth or actor identity providers, create
+operational logs, or provide production audit persistence. Audit persistence
+can be considered next only as a separate reviewed module, without adding
+automatic control, dispatch, activation, scheduling, or operational
+functionality.
+
 ## Report Summary Foundation
 
 `report-summary-v0` builds a deterministic structured report payload from

@@ -2,6 +2,37 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual audit-event preview validation results. The
+  documented checks were
+  `python3 -m py_compile scripts/audit_event_preview.py`,
+  `python3 scripts/audit_event_preview.py`,
+  `python3 scripts/audit_event_preview.py --pretty`,
+  `python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty`,
+  `python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty`,
+  `python3 scripts/audit_event_preview.py --event-type invalid-event`,
+  forbidden-pattern grep on `scripts/audit_event_preview.py`, and
+  `git diff --check`. Observed results: `py_compile` passed; the default
+  command printed compact JSON with an `events` array; `--pretty` printed
+  indented JSON; the two valid single-event commands each printed one event;
+  the invalid event type failed safely with exit code `2` and a clear argparse
+  invalid-choice validation error; forbidden-pattern grep returned no matches;
+  and `git diff --check` passed. Documented that preview events covered
+  `forecast_preview_requested`, `current_risk_viewed`,
+  `report_summary_built`, `report_markdown_rendered`, and
+  `report_pdf_exported`; included `event_version=audit-event-v0`,
+  deterministic `audit_evt_...` ids, fixed
+  `occurred_at_utc=2026-01-01T00:00:00Z`,
+  `actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+  `decision_support_only=true`, safe metadata only,
+  `synthetic_preview_only=true`, `local_only=true`, and the full
+  read-only/human-review `safety_boundary`. Clarified that audit preview works
+  locally with synthetic/caller-provided data and demonstrates future
+  read-only decision-support audit-event shape, but does not persist events,
+  prove database audit logging, connect auth or actor identity providers,
+  create operational logs, or provide production audit persistence. Audit
+  persistence can be considered next only as a separate reviewed module, with
+  no automatic control, dispatch, activation, scheduler, or operational
+  functionality. This change is documentation only.
 - Added `scripts/audit_event_preview.py`, a manual synthetic local JSON
   preview for `audit-event-v0`. The script imports `build_audit_event(...)`
   from `backend/app/audit/events.py`, uses fixed
