@@ -1550,6 +1550,47 @@ actions. It is outside the backtest path and does not change backtest behavior,
 scoring, forecasting, reporting, PDF generation, API behavior, or frontend
 behavior.
 
-The factory does not access a database, does not write audit events, does not
-call the audit writer service, does not expose an endpoint, and does not add
-automatic audit logging. Runtime integration remains deferred.
+The implemented factory functions are
+`build_current_risk_viewed_event`,
+`build_forecast_preview_requested_event`,
+`build_report_summary_built_event`,
+`build_report_markdown_rendered_event`, and
+`build_report_pdf_exported_event`. They delegate to
+`build_audit_event(...)`, use explicit primitive inputs, and standardize these
+runtime mappings:
+
+| Event type | Action | Resource type | Resource id includes |
+| --- | --- | --- | --- |
+| `current_risk_viewed` | `view_current_risk` | `risk_snapshot` | `price_area` |
+| `forecast_preview_requested` | `preview_forecast` | `forecast_preview` | `price_area`, `forecast-window-v0` |
+| `report_summary_built` | `build_report_summary` | `report_summary` | `price_area`, `report-summary-v0` |
+| `report_markdown_rendered` | `render_report_markdown` | `report_markdown` | `price_area`, `report-summary-v0` |
+| `report_pdf_exported` | `preview_report_pdf_export` | `report_pdf` | `price_area`, `report-summary-v0` |
+
+Metadata remains minimal and safe: `price_area`, optional `request_id`,
+optional `source`, relevant `forecast_window_version`, relevant
+`report_version`, relevant `output_format`, optional forecast `model_version`,
+and `runtime_factory_version=audit-runtime-event-factory-v0`. It must not
+include raw `DATABASE_URL`, secrets, tokens, raw user claims, full request
+headers, or full request bodies.
+
+Every event preserves `event_version=audit-event-v0`,
+`decision_support_only=true`, `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Observed validation documented focused runtime event tests passing with
+`30 passed`, the full backend suite passing with `361 passed, 1 warning`,
+`py_compile` passing for `runtime_events` and tests, forbidden-pattern grep
+returning no matches, and `git diff --check` passing. The tests were pure unit
+tests only and performed no live DB writes.
+
+Interpretation: the factory does not access a database, write audit events,
+call the audit writer service, expose an endpoint, add automatic audit
+logging, modify API routes, modify frontend behavior, add report/PDF runtime
+wiring, call EDS/DMI, use ML/LLMs, add scheduler/auth/Azure infrastructure,
+or add control, dispatch, activation, or operational functionality. Runtime
+integration remains deferred. This validation does not change any backtest
+result, model-performance claim, forecast-validation status, or production
+readiness assessment.
