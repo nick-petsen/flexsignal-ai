@@ -419,23 +419,66 @@ Observed manual validation results for `audit_db_write_smoke.py`:
 | Forbidden-pattern grep on script and test | Returned no matches. |
 | `git diff --check` | Passed. |
 
-No live DB writes were performed during validation. Output behavior includes
-`dry_run`, `execute_requested`, `database_write_performed`,
-`verify_read_performed`, `local_database_only`, `event_id`, `event_type`,
-`table: audit_events`, `inserted_attempts`, `conflict_behavior`,
-`safety_boundary`, and `warnings`. The raw `DATABASE_URL` is not printed, and
-the `event_id` is deterministic.
+No live DB writes were performed during those earlier guardrail checks. Output
+behavior includes `dry_run`, `execute_requested`,
+`database_write_performed`, `verify_read_performed`, `local_database_only`,
+`event_id`, `event_type`, `table: audit_events`, `inserted_attempts`,
+`conflict_behavior`, `safety_boundary`, and `warnings`. The raw
+`DATABASE_URL` is not printed, and the `event_id` is deterministic.
 
 The preserved safety boundary is `read_only_decision_support=true`,
 `no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
 `no_operational_energy_system_integration=true`, and
 `human_review_required=true`.
 
-Interpretation: the smoke script validates local-only audit write guardrails,
-not model quality, forecast performance, or production audit persistence. A
-future controlled local DB write smoke may be run against a local Postgres
-database after separate review. API, frontend, report/PDF download flows, and
-automatic audit logging remain intentionally unwired.
+Later manual local Postgres validation documented the first actual
+`audit_events` write:
+
+```bash
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+```
+
+Alembic used `PostgresqlImpl`, assumed transactional DDL, migrated
+`0001_initial_schema` to `0002_audit_events`, added the audit-event-v0
+persistence foundation, and succeeded.
+
+The first write smoke used
+`event_id=audit_evt_f8ea1513efa7fa0067b0ca04`,
+`event_type=report_pdf_exported`, `dry_run=false`,
+`execute_requested=true`, `database_write_performed=true`,
+`local_database_only=true`, `table=audit_events`,
+`inserted_attempts=2`, `rowcount_first_insert=1`,
+`rowcount_second_insert=0`,
+`conflict_behavior=ON CONFLICT (event_id) DO NOTHING`,
+`verify_read_performed=true`, `warnings=[]`, and returned `verified_row` by
+`event_id`. The second run used the same event id and event type, returned
+`rowcount_first_insert=0` and `rowcount_second_insert=0`, and verified the row
+again, confirming idempotency across repeated script executions.
+
+The verified row included `event_version=audit-event-v0`,
+`action=preview_report_pdf_export`, `actor_type=local_developer`,
+`actor_id=local-dev`, `outcome=success`, `decision_support_only=true`,
+`resource_type=report_pdf`,
+`resource_id=report-summary-v0:DK1:synthetic-pdf`, and metadata
+`local_only=true`, `output_format=pdf`, `price_area=DK1`,
+`report_version=report-summary-v0`, and `synthetic_preview_only=true`.
+`occurred_at_utc` was returned as `2026-01-01T01:00:00+01:00`, interpreted as
+database/session timezone rendering of the stored `timestamptz` instant. This
+is not a blocker; future code may normalize read-back display to UTC if
+needed.
+
+Interpretation: the local audit DB write is manually verified for the
+repository insert path, idempotency via
+`ON CONFLICT (event_id) DO NOTHING`, and verify-read by `event_id`. This does
+not affect model quality, forecast performance, or production readiness. It
+does not enable production audit persistence, automatic audit logging, API,
+frontend, report/PDF integration, scheduler, Azure infrastructure, auth/Entra
+integration, live EDS/DMI calls, ML/LLM use, control, dispatch, activation, or
+operational functionality. Future work may add a read-only API-side audit
+logging design or manual API audit dry-run, but automatic audit persistence
+must not be wired into runtime flows yet.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only

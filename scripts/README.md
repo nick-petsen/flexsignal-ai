@@ -783,24 +783,80 @@ Observed compact summary:
 | Forbidden-pattern grep on script and test | Returned no matches. |
 | `git diff --check` | Passed. |
 
-No live DB writes were performed during validation. Observed output included
-`dry_run`, `execute_requested`, `database_write_performed`,
-`verify_read_performed`, `local_database_only`, `event_id`, `event_type`,
-`table: audit_events`, `inserted_attempts`, `conflict_behavior`,
-`safety_boundary`, and `warnings`. The raw `DATABASE_URL` was not printed, the
-`event_id` was deterministic, and the safety boundary preserved
+No live DB writes were performed during those earlier guardrail checks.
+
+### Observed Manual Local Audit DB Write Smoke Result
+
+After the `audit-event-v0` foundation, `audit_events` schema/repository,
+dry-run preview script, manual local DB write smoke script, and prior full
+backend unit validation existed, a human manually ran:
+
+```bash
+DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+```
+
+Alembic used `PostgresqlImpl`, assumed transactional DDL, migrated
+`0001_initial_schema` to `0002_audit_events`, added the audit-event-v0
+persistence foundation, and succeeded.
+
+First smoke output:
+
+- `conflict_behavior`: `ON CONFLICT (event_id) DO NOTHING`
+- `database_write_performed`: `true`
+- `dry_run`: `false`
+- `execute_requested`: `true`
+- `event_id`: `audit_evt_f8ea1513efa7fa0067b0ca04`
+- `event_type`: `report_pdf_exported`
+- `inserted_attempts`: `2`
+- `local_database_only`: `true`
+- `rowcount_first_insert`: `1`
+- `rowcount_second_insert`: `0`
+- `table`: `audit_events`
+- `verify_read_performed`: `true`
+- `warnings`: `[]`
+- `verified_row` was returned by `event_id`
+
+Second smoke output used the same
+`event_id=audit_evt_f8ea1513efa7fa0067b0ca04` and
+`event_type=report_pdf_exported`. It reported
+`database_write_performed=true`, `rowcount_first_insert=0`,
+`rowcount_second_insert=0`, `verify_read_performed=true`, and returned
+`verified_row`, confirming idempotency across repeated script executions.
+
+The verified row included `event_version=audit-event-v0`,
+`event_type=report_pdf_exported`, `action=preview_report_pdf_export`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, `resource_type=report_pdf`,
+`resource_id=report-summary-v0:DK1:synthetic-pdf`, and metadata
+`local_only=true`, `output_format=pdf`, `price_area=DK1`,
+`report_version=report-summary-v0`, and `synthetic_preview_only=true`.
+
+The event was constructed deterministically. The verified row returned
+`occurred_at_utc` as `2026-01-01T01:00:00+01:00`; this is interpreted as
+database/session timezone rendering of the stored `timestamptz` instant, not a
+blocker for the smoke result. Future code may normalize read-back display to
+UTC if needed.
+
+The raw `DATABASE_URL` was not printed. Output preserved
 `read_only_decision_support=true`, `no_automatic_control=true`,
 `no_dispatch=true`, `no_activation=true`,
 `no_operational_energy_system_integration=true`, and
 `human_review_required=true`.
 
-Interpretation: the script is implemented and unit-tested, dry-run behavior is
-validated, execute guardrails are validated, and remote DB rejection is
-validated. Actual live local DB write validation has not yet been performed,
-production audit persistence is not proven yet, no API/frontend/report/PDF
-flow is wired to audit persistence, and no automatic audit logging exists. A
-future controlled local DB write smoke against local Postgres must be manual,
-local-only, and separately reviewed.
+Interpretation: local `audit_events` DB write is now manually verified. The
+repository insert path works against local Postgres, idempotency works via
+`ON CONFLICT (event_id) DO NOTHING`, and verify-read by `event_id` works.
+This does not mean production audit persistence is enabled, does not add
+automatic audit logging, and does not connect audit persistence to API,
+frontend, report, or PDF flows. No FastAPI endpoint, frontend behavior,
+automatic audit logging, report/PDF integration, scheduler, Azure
+infrastructure, auth/Entra integration, live EDS/DMI calls, ML/LLM use,
+control, dispatch, activation, or operational functionality was added. A
+future module may add a read-only API-side audit logging design or manual API
+audit dry-run, but automatic audit persistence must not be wired into runtime
+flows yet and production DB writes require explicit review.
 
 ### Observed Forecast Window Preview Results
 

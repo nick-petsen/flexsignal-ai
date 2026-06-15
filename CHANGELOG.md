@@ -2,6 +2,45 @@
 
 ## v0.1.0 - TODO
 
+- Documented the manually executed local audit DB write smoke result for the
+  first actual local Postgres `audit_events` write. A human ran
+  `DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head`,
+  then ran
+  `python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty`
+  twice. Alembic used `PostgresqlImpl`, assumed transactional DDL, migrated
+  `0001_initial_schema` to `0002_audit_events`, added the audit-event-v0
+  persistence foundation, and succeeded. The first smoke reported
+  `event_id=audit_evt_f8ea1513efa7fa0067b0ca04`,
+  `event_type=report_pdf_exported`, `database_write_performed=true`,
+  `dry_run=false`, `execute_requested=true`, `inserted_attempts=2`,
+  `local_database_only=true`, `rowcount_first_insert=1`,
+  `rowcount_second_insert=0`, `table=audit_events`,
+  `verify_read_performed=true`, `warnings=[]`, and
+  `conflict_behavior=ON CONFLICT (event_id) DO NOTHING`; `verified_row` was
+  returned by `event_id`. The second smoke used the same event id and event
+  type, returned `rowcount_first_insert=0` and `rowcount_second_insert=0`,
+  and returned `verified_row`, confirming idempotency across repeated script
+  executions. Documented that the verified row included
+  `event_version=audit-event-v0`, `action=preview_report_pdf_export`,
+  `actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+  `decision_support_only=true`, `resource_type=report_pdf`,
+  `resource_id=report-summary-v0:DK1:synthetic-pdf`, and metadata
+  `local_only=true`, `output_format=pdf`, `price_area=DK1`,
+  `report_version=report-summary-v0`, and `synthetic_preview_only=true`.
+  Documented the timezone note that the deterministic event read back
+  `occurred_at_utc` as `2026-01-01T01:00:00+01:00`, interpreted as
+  database/session timezone rendering of the stored `timestamptz` instant and
+  not a smoke blocker. Documented that the raw `DATABASE_URL` was not printed
+  and the safety boundary preserved read-only decision support, no automatic
+  control, no dispatch, no activation, no operational energy-system
+  integration, and human review required. Clarified that local audit DB write,
+  idempotency, and verify-read are now manually verified, but production audit
+  persistence is not enabled, automatic audit logging was not added, and API,
+  frontend, report, and PDF flows remain unwired. No code, backend behavior,
+  frontend behavior, database writes, migrations, endpoints, scheduler, Azure
+  infrastructure, auth, secrets, EDS/DMI calls, ML/LLM, control, dispatch,
+  activation, or operational functionality was added by this documentation
+  change.
 - Added `scripts/audit_db_write_smoke.py`, a manual local-only audit DB write
   smoke script for one deterministic synthetic `audit-event-v0`. The script
   imports `build_audit_event(...)` and the audit repository SQL builder, uses
@@ -36,17 +75,17 @@
   `--database-url` failed safely with exit code `2`; the remote database URL
   command failed safely with exit code `2`; forbidden-pattern grep returned no
   matches; and `git diff --check` passed. Documented that no live DB writes
-  were performed during validation, the raw `DATABASE_URL` is not printed,
-  `event_id` is deterministic, output includes `dry_run`,
+  were performed during those guardrail checks, the raw `DATABASE_URL` is not
+  printed, `event_id` is deterministic, output includes `dry_run`,
   `execute_requested`, `database_write_performed`, `verify_read_performed`,
   `local_database_only`, `event_id`, `event_type`, `table: audit_events`,
   `inserted_attempts`, `conflict_behavior`, `safety_boundary`, and `warnings`,
-  and the full read-only/human-review safety boundary is preserved. Clarified
-  that actual live local DB write validation has not yet been performed,
-  production audit persistence is not proven, no API/frontend/report/PDF flow
-  is wired to audit persistence, and no automatic audit logging exists. Future
-  controlled local DB write smoke testing must be manual, local-only, and
-  separately reviewed. This change is documentation only.
+  and the full read-only/human-review safety boundary is preserved. A later
+  documentation-only entry records the first actual manual local Postgres
+  write smoke. Production audit persistence is not enabled, no
+  API/frontend/report/PDF flow is wired to audit persistence, and no automatic
+  audit logging exists. Future production DB writes require explicit review.
+  This change is documentation only.
 - Added `scripts/audit_persistence_preview.py`, a manual local audit
   persistence dry-run preview. The script imports `build_audit_event(...)` and
   the audit repository SQL builder, uses fixed
