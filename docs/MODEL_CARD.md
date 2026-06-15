@@ -208,12 +208,19 @@ rejects secret-like metadata keys and always includes a safety boundary for
 read-only decision support, no automatic control, no dispatch, no activation,
 no operational energy-system integration, and human review required.
 
-`audit-event-v0` does not persist audit logs yet, write files, expose an API,
-read from or write to a database, call Energi Data Service, call DMI/weather
-APIs, use ML, use LLMs, add scheduling, add Azure infrastructure, add auth, add
-secrets, or perform operational behavior. It must not be used for automatic
-control, dispatch, activation, closed-loop workflows, asset connections,
-plant/device commands, live control signals, or autonomous decisions.
+An audit-event database persistence foundation now exists for future explicit
+read-only wiring. The Alembic schema defines `audit_events`; the repository
+validates `build_audit_event(...)` dictionaries, preserves the full read-only
+safety boundary, serializes JSONB fields as parameters, and builds
+parameterized `ON CONFLICT (event_id) DO NOTHING` insert SQL.
+
+This foundation does not automatically persist audit logs, write files, expose
+an API, add frontend UI, connect report/PDF flows, run scheduled logging,
+connect to auth/Entra, call Energi Data Service, call DMI/weather APIs, use
+ML, use LLMs, add Azure infrastructure, add auth, add secrets, or perform
+operational behavior. It must not be used for automatic control, dispatch,
+activation, closed-loop workflows, asset connections, plant/device commands,
+live control signals, or autonomous decisions.
 
 `scripts/audit_event_preview.py` is a manual synthetic local JSON preview for
 `audit-event-v0`. It imports `build_audit_event(...)`, uses fixed
@@ -239,11 +246,11 @@ only, such as `price_area=DK1`, relevant
 `synthetic_preview_only=true`.
 
 The audit preview is not model training, not forecasting, not an LLM workflow,
-not persistence, and not an operational integration. It does not write files,
-access a database, expose an API, use frontend code, call EDS/DMI, use ML, use
-LLMs, or perform automatic control, dispatch, or activation. Future audit work
-should first document audit preview results; database persistence should be
-implemented later only in a separate reviewed module.
+not persistence execution, and not an operational integration. It does not
+write files, access a database, expose an API, use frontend code, call
+EDS/DMI, use ML, use LLMs, or perform automatic control, dispatch, or
+activation. Future audit work can wire explicit read-only flows to the audit
+persistence foundation only in a separate reviewed module.
 
 Observed manual audit-event preview validation:
 

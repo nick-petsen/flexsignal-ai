@@ -22,10 +22,20 @@ Every event includes a safety boundary:
 - `no_operational_energy_system_integration: true`
 - `human_review_required: true`
 
-`audit-event-v0` does not persist audit logs yet, write files, expose an API,
-read from or write to a database, run SQL, call Energi Data Service, call
-DMI/weather APIs, use ML, use LLMs, add scheduling, add Azure infrastructure,
-add auth, add secrets, or perform operational behavior.
+An audit-event database persistence foundation now exists for later explicit
+read-only flows. Alembic migration `0002_audit_events.py` defines an
+`audit_events` table with `event_id` as the primary/idempotency key, event
+version/type, actor, occurrence time, resource, action, outcome,
+`decision_support_only`, JSONB `safety_boundary`, JSONB `metadata`, and
+indexes for occurrence time, event type, resource, and actor. The repository
+module builds parameterized `ON CONFLICT (event_id) DO NOTHING` insert SQL and
+does not interpolate user values into SQL.
+
+This foundation is not wired into runtime behavior yet. It does not
+automatically persist audit logs, write files, expose an API, add frontend UI,
+connect report/PDF flows, run scheduled logging, connect to auth/Entra, call
+Energi Data Service, call DMI/weather APIs, use ML, use LLMs, add Azure
+infrastructure, add auth, add secrets, or perform operational behavior.
 
 The audit foundation is designed to support later reviewability and
 traceability while preserving the `v0.1` read-only decision-support boundary.
@@ -51,7 +61,7 @@ event type prints an `event` object. Supported event types are
 `report_summary_built`, `report_markdown_rendered`, and
 `report_pdf_exported`.
 
-The preview is synthetic/local only. It does not persist audit logs yet, write
+The preview is synthetic/local only. It does not persist audit logs, write
 files, access a database, run SQL, expose an API, use frontend code, call
 Energi Data Service, call DMI/weather APIs, use ML, use LLMs, create a
 scheduler, add Azure infrastructure, add auth or secrets, or perform automatic
@@ -99,10 +109,12 @@ support, no automatic control, no dispatch, no activation, no operational
 energy-system integration, and human review required all set to `true`.
 
 Interpretation: audit-event preview works locally with
-synthetic/caller-provided data and demonstrates a future audit-event shape for
-read-only decision-support actions. It does not persist events yet, prove
-database audit logging, connect to auth or actor identity providers, create
-operational logs, or provide production audit persistence.
+synthetic/caller-provided data and demonstrates the audit-event shape for
+read-only decision-support actions. The schema/repository persistence
+foundation now exists, but no API, frontend, report/PDF, scheduled logging, or
+auth flow automatically writes events yet. It does not connect to auth or
+actor identity providers, create operational logs, or provide production audit
+persistence.
 
-Future audit work should first document audit preview results. Database
-persistence can follow only later as a separate reviewed module.
+Future audit work can wire explicit read-only flows to audit persistence only
+as a separate reviewed module.
