@@ -19,6 +19,34 @@
   report/PDF/API/frontend integration, scheduler behavior, Azure
   infrastructure, auth, secrets, EDS/DMI calls, ML, LLMs, control, dispatch,
   activation, or operational functionality.
+- Documented observed manual local audit DB write smoke script validation
+  results. The documented commands/checks were
+  `python3 -m py_compile scripts/audit_db_write_smoke.py backend/tests/test_audit_db_write_smoke.py`,
+  `python -m pytest tests/test_audit_db_write_smoke.py -q`,
+  `python -m pytest`, `python3 scripts/audit_db_write_smoke.py`,
+  `python3 scripts/audit_db_write_smoke.py --pretty`,
+  `python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty`,
+  `python3 scripts/audit_db_write_smoke.py --execute`,
+  `python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://remote.example.com/flexsignal_ai`,
+  forbidden-pattern grep on the script and test, and `git diff --check`.
+  Observed results: `py_compile` passed; focused smoke tests passed with
+  `7 passed`; the full backend suite passed with `317 passed, 1 warning`;
+  default dry-run, `--pretty` dry-run, and
+  `forecast_preview_requested` dry-run passed; `--execute` without
+  `--database-url` failed safely with exit code `2`; the remote database URL
+  command failed safely with exit code `2`; forbidden-pattern grep returned no
+  matches; and `git diff --check` passed. Documented that no live DB writes
+  were performed during validation, the raw `DATABASE_URL` is not printed,
+  `event_id` is deterministic, output includes `dry_run`,
+  `execute_requested`, `database_write_performed`, `verify_read_performed`,
+  `local_database_only`, `event_id`, `event_type`, `table: audit_events`,
+  `inserted_attempts`, `conflict_behavior`, `safety_boundary`, and `warnings`,
+  and the full read-only/human-review safety boundary is preserved. Clarified
+  that actual live local DB write validation has not yet been performed,
+  production audit persistence is not proven, no API/frontend/report/PDF flow
+  is wired to audit persistence, and no automatic audit logging exists. Future
+  controlled local DB write smoke testing must be manual, local-only, and
+  separately reviewed. This change is documentation only.
 - Added `scripts/audit_persistence_preview.py`, a manual local audit
   persistence dry-run preview. The script imports `build_audit_event(...)` and
   the audit repository SQL builder, uses fixed

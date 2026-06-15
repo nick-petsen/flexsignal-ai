@@ -753,6 +753,55 @@ flows, create a scheduler, use Azure infrastructure, add auth or secrets, call
 Energi Data Service, call DMI/weather APIs, use ML, use LLMs, or add control,
 dispatch, activation, or operational functionality.
 
+### Observed Audit DB Write Smoke Results
+
+The following commands/checks were observed:
+
+```bash
+python3 -m py_compile scripts/audit_db_write_smoke.py backend/tests/test_audit_db_write_smoke.py
+python -m pytest tests/test_audit_db_write_smoke.py -q
+python -m pytest
+python3 scripts/audit_db_write_smoke.py
+python3 scripts/audit_db_write_smoke.py --pretty
+python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_db_write_smoke.py --execute
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://remote.example.com/flexsignal_ai
+```
+
+Observed compact summary:
+
+| Check | Result |
+| --- | --- |
+| `py_compile` | Passed. |
+| Focused smoke tests | `7 passed`. |
+| Full backend suite | `317 passed, 1 warning`. |
+| Default dry-run | Passed. |
+| `--pretty` dry-run | Passed. |
+| `forecast_preview_requested` dry-run | Passed. |
+| `--execute` without `--database-url` | Failed safely with exit code `2`. |
+| Remote database URL | Failed safely with exit code `2`. |
+| Forbidden-pattern grep on script and test | Returned no matches. |
+| `git diff --check` | Passed. |
+
+No live DB writes were performed during validation. Observed output included
+`dry_run`, `execute_requested`, `database_write_performed`,
+`verify_read_performed`, `local_database_only`, `event_id`, `event_type`,
+`table: audit_events`, `inserted_attempts`, `conflict_behavior`,
+`safety_boundary`, and `warnings`. The raw `DATABASE_URL` was not printed, the
+`event_id` was deterministic, and the safety boundary preserved
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: the script is implemented and unit-tested, dry-run behavior is
+validated, execute guardrails are validated, and remote DB rejection is
+validated. Actual live local DB write validation has not yet been performed,
+production audit persistence is not proven yet, no API/frontend/report/PDF
+flow is wired to audit persistence, and no automatic audit logging exists. A
+future controlled local DB write smoke against local Postgres must be manual,
+local-only, and separately reviewed.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:
