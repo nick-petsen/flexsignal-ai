@@ -981,3 +981,17 @@ API/frontend/report/PDF integration, scheduler, Azure infrastructure,
 auth/Entra integration, live EDS/DMI behavior, ML/LLM behavior, control,
 dispatch, activation, or operational functionality. Runtime integration
 remains intentionally deferred.
+
+## Runtime Audit Event Factory
+
+`backend/app/audit/runtime_events.py` standardizes future read-only runtime
+audit event mapping for `audit-event-v0`. It is not a forecasting model, not an
+LLM workflow, not a decision engine, and not operational automation.
+
+The factory only constructs audit dictionaries through `build_audit_event(...)`
+for current-risk views, forecast-preview requests, report-summary builds,
+report Markdown rendering, and report PDF export previews. It does not write to
+the database, does not call the audit writer service, does not expose an API,
+does not modify frontend behavior, and is not integrated with report, PDF, API,
+scheduler, auth, Azure, EDS, DMI, control, dispatch, activation, or operational
+flows. Runtime wiring remains deferred.

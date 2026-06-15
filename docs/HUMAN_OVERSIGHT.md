@@ -471,3 +471,17 @@ activation, or operational functionality. A future module may add an API
 audit dry-run design or a manually invoked API-side audit logging wrapper.
 Do not wire automatic audit persistence into runtime flows yet, and do not add
 production DB writes without explicit review.
+
+## Runtime Audit Event Factory
+
+`backend/app/audit/runtime_events.py` adds a pure backend factory for
+standardized future runtime `audit-event-v0` dictionaries. It constructs
+events for current-risk views, forecast-preview requests, report-summary
+builds, report Markdown rendering, and report PDF export previews.
+
+The factory only returns dictionaries built through `build_audit_event(...)`.
+It does not write to the database, does not call the audit writer service,
+does not expose an API, does not modify frontend behavior, and is not wired
+into report, PDF, API, scheduler, auth, Azure, EDS, DMI, ML, LLM, control,
+dispatch, activation, or operational workflows. Runtime integration remains
+deferred and requires a separate explicit review.

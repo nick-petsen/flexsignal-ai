@@ -1541,3 +1541,15 @@ flows.
 
 Writer unit tests use fake connection and cursor objects only. No live database
 writes are performed by those tests.
+
+## Runtime Audit Event Factory Boundary
+
+`backend/app/audit/runtime_events.py` now provides pure constructors for
+standardized `audit-event-v0` dictionaries for future runtime read-only
+actions. It is outside the backtest path and does not change backtest behavior,
+scoring, forecasting, reporting, PDF generation, API behavior, or frontend
+behavior.
+
+The factory does not access a database, does not write audit events, does not
+call the audit writer service, does not expose an endpoint, and does not add
+automatic audit logging. Runtime integration remains deferred.

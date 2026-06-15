@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added `backend/app/audit/runtime_events.py`, a pure backend runtime audit
+  event factory for standardized `audit-event-v0` dictionaries, plus
+  `backend/tests/test_audit_runtime_events.py`. The factory delegates to
+  `build_audit_event(...)` and covers current-risk views, forecast-preview
+  requests, report-summary builds, report Markdown rendering, and report PDF
+  export previews. It uses explicit primitive inputs, safe defaults,
+  deterministic timestamp injection when supplied, minimal metadata with
+  `runtime_factory_version=audit-runtime-event-factory-v0`, and preserves the
+  full read-only human-review safety boundary. It does not add FastAPI
+  endpoints, modify routes or frontend code, write to a database, call the
+  audit writer service, create database connections, read `DATABASE_URL`, add
+  migrations, integrate with report/PDF/API/frontend flows, add scheduler,
+  Azure, auth, EDS/DMI, ML/LLM, control, dispatch, activation, or operational
+  functionality. Runtime integration remains deferred.
 - Documented audit writer service foundation validation results. The writer
   exposes `write_audit_event(conn, event)` plus the
   `execute_audit_event_insert` alias, requires an explicit caller-provided
