@@ -131,6 +131,60 @@ ML, use LLMs, perform operational integration, or add automatic control,
 dispatch, or activation. Future audit work should document preview results
 first; database persistence remains a separate reviewed module.
 
+### Audit Event Preview Validation Results
+
+The manual audit-event preview was validated locally with
+synthetic/caller-provided data only. It did not persist events, write files,
+access a database, run SQL, expose an API, use frontend code, call Energi Data
+Service, call DMI/weather APIs, use ML, use LLMs, or create operational logs.
+
+Commands observed:
+
+```bash
+python3 -m py_compile scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_event_preview.py --event-type invalid-event
+```
+
+Observed compact summary:
+
+| Check | Result |
+| --- | --- |
+| `py_compile` | Passed. |
+| Default preview | Printed compact JSON with an `events` array. |
+| `--pretty` | Printed indented JSON. |
+| `report_pdf_exported` event type | Printed one event. |
+| `forecast_preview_requested` event type | Printed one event. |
+| Invalid event type | Failed safely with exit code `2` and a clear argparse invalid-choice validation error. |
+| Forbidden-pattern grep | Returned no matches. |
+| `git diff --check` | Passed. |
+
+Covered event types were `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, and `report_pdf_exported`. Generated events
+included `event_version=audit-event-v0`, deterministic `audit_evt_...` event
+ids, fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`.
+
+Each event included a `safety_boundary` with
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: audit-event preview works locally and demonstrates the future
+audit-event shape for read-only decision-support actions. It does not prove
+database audit logging, connect to auth or actor identity providers, create
+operational logs, or provide production audit persistence. Audit persistence
+can be considered next, but only as a separate reviewed module. Do not add
+automatic control, dispatch, activation, scheduler, or operational
+functionality.
+
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database

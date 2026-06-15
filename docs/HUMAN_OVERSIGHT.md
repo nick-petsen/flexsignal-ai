@@ -59,5 +59,50 @@ control, dispatch, activation, or operational functionality. It is read-only
 decision-support audit structure only and must not be used for automatic
 control, dispatch, or activation.
 
+## Observed Audit Event Preview Results
+
+Manual local validation covered these commands:
+
+```bash
+python3 -m py_compile scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_event_preview.py --event-type invalid-event
+```
+
+Observed results:
+
+- `py_compile` passed.
+- The default command printed compact JSON with an `events` array.
+- `--pretty` printed indented JSON.
+- `--event-type report_pdf_exported` printed one event.
+- `--event-type forecast_preview_requested` printed one event.
+- `--event-type invalid-event` failed safely with exit code `2` and a clear
+  argparse invalid-choice validation error.
+- Forbidden-pattern grep on `scripts/audit_event_preview.py` returned no
+  matches.
+- `git diff --check` passed.
+
+The preview covered `forecast_preview_requested`, `current_risk_viewed`,
+`report_summary_built`, `report_markdown_rendered`, and
+`report_pdf_exported`. Generated events included
+`event_version=audit-event-v0`, deterministic `audit_evt_...` event ids,
+fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`.
+
+Each generated event included a `safety_boundary` with read-only decision
+support, no automatic control, no dispatch, no activation, no operational
+energy-system integration, and human review required all set to `true`.
+
+Interpretation: audit-event preview works locally with
+synthetic/caller-provided data and demonstrates a future audit-event shape for
+read-only decision-support actions. It does not persist events yet, prove
+database audit logging, connect to auth or actor identity providers, create
+operational logs, or provide production audit persistence.
+
 Future audit work should first document audit preview results. Database
 persistence can follow only later as a separate reviewed module.

@@ -568,6 +568,54 @@ dispatch, activate, or perform operational functionality. It is read-only
 decision-support audit structure only and must not be used for automatic
 control, dispatch, or activation.
 
+### Observed Audit Event Preview Results
+
+The following commands were observed locally against synthetic/caller-provided
+preview data only:
+
+```bash
+python3 -m py_compile scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_event_preview.py --event-type invalid-event
+```
+
+Observed compact summary:
+
+| Command or check | Result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_event_preview.py` | Passed. |
+| `python3 scripts/audit_event_preview.py` | Printed compact JSON with an `events` array. |
+| `python3 scripts/audit_event_preview.py --pretty` | Printed indented JSON. |
+| `python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty` | Printed one `report_pdf_exported` event. |
+| `python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty` | Printed one `forecast_preview_requested` event. |
+| `python3 scripts/audit_event_preview.py --event-type invalid-event` | Failed safely with exit code `2` and a clear argparse invalid-choice validation error. |
+| Forbidden-pattern grep on `scripts/audit_event_preview.py` | Returned no matches. |
+| `git diff --check` | Passed. |
+
+Observed generated events covered `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, and `report_pdf_exported`. Event content included
+`event_version=audit-event-v0`, deterministic `audit_evt_...` ids, fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`.
+
+Every generated event included `safety_boundary` values:
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: audit-event preview works locally with
+synthetic/caller-provided data and demonstrates the future audit-event shape
+for read-only decision-support actions. It does not persist events yet, prove
+database audit logging, connect to auth or actor identity providers, create
+operational logs, or provide production audit persistence.
+
 Future audit work should first document audit preview results, then add
 database persistence only later in a separate reviewed module.
 

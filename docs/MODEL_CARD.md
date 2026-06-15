@@ -245,6 +245,41 @@ LLMs, or perform automatic control, dispatch, or activation. Future audit work
 should first document audit preview results; database persistence should be
 implemented later only in a separate reviewed module.
 
+Observed manual audit-event preview validation:
+
+| Command | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_event_preview.py` | Passed. |
+| `python3 scripts/audit_event_preview.py` | Printed compact JSON with an `events` array. |
+| `python3 scripts/audit_event_preview.py --pretty` | Printed indented JSON. |
+| `python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty` | Printed one `report_pdf_exported` event. |
+| `python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty` | Printed one `forecast_preview_requested` event. |
+| `python3 scripts/audit_event_preview.py --event-type invalid-event` | Failed safely with exit code `2` and a clear argparse invalid-choice validation error. |
+| Forbidden-pattern grep on `scripts/audit_event_preview.py` | Returned no matches. |
+| `git diff --check` | Passed. |
+
+The preview covered `forecast_preview_requested`, `current_risk_viewed`,
+`report_summary_built`, `report_markdown_rendered`, and
+`report_pdf_exported`. Generated events included
+`event_version=audit-event-v0`, deterministic `audit_evt_...` event ids,
+fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`.
+
+Every observed event included a `safety_boundary` with
+`read_only_decision_support=true`, `no_automatic_control=true`,
+`no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Interpretation: the audit preview demonstrates local synthetic event shape
+only. It does not persist events, prove database audit logging, connect to
+auth or actor identity providers, create operational logs, or provide
+production audit persistence. Audit persistence can be considered next only as
+a separate reviewed module, without automatic control, dispatch, activation,
+scheduler, or operational functionality.
+
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided current-risk and forecast-window data for
