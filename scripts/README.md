@@ -526,6 +526,51 @@ Keep PDF export manual/local for now. A future module may add a controlled
 read-only report API or frontend download, but only after separate review. Do
 not add automatic scheduled report generation yet.
 
+## Audit Event Synthetic Preview
+
+`audit_event_preview.py` is a manual synthetic local preview for
+`audit-event-v0`. It uses fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`, imports
+`build_audit_event(...)`, and prints deterministic audit event structures for
+read-only decision-support actions. Compact JSON is printed by default, and
+`--pretty` prints indented JSON.
+
+```bash
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+```
+
+Supported `--event-type` values are `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, `report_pdf_exported`, and `all`. The default is
+`all`, which prints one object with an `events` array. A single event type
+prints one object with an `event` field. Unknown event types are rejected by
+CLI validation before any preview is built.
+
+The preview uses synthetic/caller-provided fields only, including safe metadata
+such as `price_area=DK1`, `report_version=report-summary-v0` where relevant,
+`output_format=json|markdown|pdf` where relevant, `synthetic_preview_only=true`,
+and `local_only=true`. It uses `actor_type=local_developer`,
+`actor_id=local-dev` by default, `outcome=success`, and
+`decision_support_only=true`.
+
+Every generated event includes the `audit-event-v0` safety boundary:
+read-only decision support, no automatic control, no dispatch, no activation,
+no operational energy-system integration, and human review required.
+
+This is synthetic/caller-provided local preview-only. It does not persist audit
+logs yet, write files, access a database, run SQL, expose an API, run frontend
+code, call Energi Data Service, call DMI/weather APIs, create a scheduler, use
+Azure, add secrets, add auth, train ML models, use LLMs, control assets,
+dispatch, activate, or perform operational functionality. It is read-only
+decision-support audit structure only and must not be used for automatic
+control, dispatch, or activation.
+
+Future audit work should first document audit preview results, then add
+database persistence only later in a separate reviewed module.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:

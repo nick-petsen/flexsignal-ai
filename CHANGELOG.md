@@ -2,6 +2,29 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/audit_event_preview.py`, a manual synthetic local JSON
+  preview for `audit-event-v0`. The script imports `build_audit_event(...)`
+  from `backend/app/audit/events.py`, uses fixed
+  `occurred_at_utc=2026-01-01T00:00:00Z`, supports compact JSON by default
+  plus `--pretty`, supports `--event-type` values
+  `forecast_preview_requested`, `current_risk_viewed`,
+  `report_summary_built`, `report_markdown_rendered`,
+  `report_pdf_exported`, and `all`, defaults to `all`, and uses
+  `actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`, and
+  `decision_support_only=true`. The `all` mode prints an `events` array; a
+  single event type prints one `event` object. Metadata is synthetic and safe
+  only, including `price_area`, relevant `report_version`, relevant
+  `output_format`, `synthetic_preview_only`, and `local_only`. Updated
+  `scripts/README.md`, `README.md`, `docs/HUMAN_OVERSIGHT.md`,
+  `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md` with usage examples,
+  safety boundaries, and deferred persistence guidance. This does not persist
+  audit logs yet, write files, access a database, run SQL, expose an API, use
+  frontend code, call EDS or DMI/weather APIs, use ML, use LLMs, add a
+  scheduler, add Azure infrastructure, add auth or secrets, or perform
+  automatic control, dispatch, activation, closed-loop workflows, live control
+  signals, autonomous decisions, or operational energy-system integration.
+  Future audit work should document audit preview results first; database
+  persistence remains a separate reviewed module.
 - Added `audit-event-v0`, a pure backend Python in-memory audit event
   foundation for read-only decision-support actions. New
   `backend/app/audit/events.py` exposes `build_audit_event(...)`, validates
@@ -13,9 +36,9 @@
   or write a database, call EDS or DMI/weather APIs, use ML, use LLMs, add
   scheduling, add Azure infrastructure, add auth or secrets, or perform
   automatic control, dispatch, activation, closed-loop workflows, live control
-  signals, autonomous decisions, or operational energy-system integration. The
-  next audit step should be a manual/local audit preview script, followed later
-  by database persistence only in a separate reviewed module.
+  signals, autonomous decisions, or operational energy-system integration.
+  Manual/local audit preview is documented separately; database persistence
+  should follow later only in a separate reviewed module.
 - Documented observed manual/local PDF export v0 smoke-test results. The
   validation covered `standard`, `high-risk`, `missing-current-risk`, and
   `missing-forecast` synthetic/caller-provided scenarios through the

@@ -215,8 +215,35 @@ secrets, or perform operational behavior. It must not be used for automatic
 control, dispatch, activation, closed-loop workflows, asset connections,
 plant/device commands, live control signals, or autonomous decisions.
 
-The next audit step should be a manual/local audit preview script. Any database
-persistence should be implemented later in a separate reviewed module.
+`scripts/audit_event_preview.py` is a manual synthetic local JSON preview for
+`audit-event-v0`. It imports `build_audit_event(...)`, uses fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`, uses
+`actor_type=local_developer`, defaults `actor_id` to `local-dev`, uses
+`outcome=success`, sets `decision_support_only=true`, and prints compact JSON
+by default or indented JSON with `--pretty`.
+
+```bash
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+```
+
+Supported event types are `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, `report_pdf_exported`, and `all`. The default
+`all` prints one object with an `events` array; a single event type prints one
+object with an `event` field. The preview metadata is safe synthetic metadata
+only, such as `price_area=DK1`, relevant
+`report_version=report-summary-v0`, relevant `output_format`, and
+`synthetic_preview_only=true`.
+
+The audit preview is not model training, not forecasting, not an LLM workflow,
+not persistence, and not an operational integration. It does not write files,
+access a database, expose an API, use frontend code, call EDS/DMI, use ML, use
+LLMs, or perform automatic control, dispatch, or activation. Future audit work
+should first document audit preview results; database persistence should be
+implemented later only in a separate reviewed module.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
