@@ -45,6 +45,9 @@ Working read-only core:
 - An audit-event database persistence foundation exists: Alembic defines an
   `audit_events` table and `backend/app/audit/repository.py` builds
   parameterized idempotent insert SQL for explicit future use.
+- Manual local audit persistence dry-run preview exists for building one
+  synthetic `audit-event-v0` and repository SQL plan without database access
+  or execution.
 - `POST /api/forecast/preview` exposes `forecast-window-v0` for
   caller-provided JSON rows only.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
@@ -94,7 +97,8 @@ Still preview / not production:
   logging, or live database write path is wired to it yet. It does not call
   Energi Data Service, call DMI/weather APIs, use ML, use LLMs, or perform
   automatic control, dispatch, activation, or operational energy-system
-  integration.
+  integration. The manual audit persistence preview only prints a dry-run SQL
+  plan and does not persist audit events.
 - No DMI/weather ingestion exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
@@ -281,9 +285,38 @@ Interpretation: the audit DB persistence foundation is schema/repository
 readiness for future explicit audited read-only flows. It does not yet prove
 production audit persistence, identify real users through Entra ID, or create
 runtime audit logs. Future wiring should remain manual and reviewed; a future
-module may add an audit persistence preview script using a fake executor or
-local dry-run. Do not add automatic audit logging yet, and do not connect
-frontend or report-download flows to persistence until explicit review.
+module may add controlled repository execution with an explicit database
+connection and tests. Do not add automatic audit logging yet, and do not
+connect frontend or report-download flows to persistence until explicit
+review.
+
+### Audit Persistence Dry-Run Preview
+
+`scripts/audit_persistence_preview.py` is a manual local dry-run preview for
+audit persistence planning. It imports `build_audit_event(...)` and
+`build_audit_event_insert_sql(...)`, uses synthetic/caller-provided fields
+only, and prints compact JSON by default or indented JSON with `--pretty`.
+
+```bash
+python3 scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py --pretty
+python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty
+```
+
+The default event type is `report_pdf_exported`. The output includes
+`dry_run=true`, `database_write_performed=false`,
+`requires_database_url=false`, the `audit-event-v0` dictionary, and a
+repository-built persistence plan for the `audit_events` table with
+`ON CONFLICT (event_id) DO NOTHING`.
+
+The script does not persist audit events, access a database, require
+`DATABASE_URL`, run SQL, expose an API, use frontend code, write files,
+generate PDFs, call EDS/DMI, use ML, use LLMs, add scheduling, add Azure
+infrastructure, add auth, add secrets, or add automatic audit logging. It is
+read-only decision-support audit persistence preview only. Future controlled
+repository execution would require an explicit database connection and tests
+in a separate reviewed module.
 
 ## Report Summary Foundation
 

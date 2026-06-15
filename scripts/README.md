@@ -619,6 +619,42 @@ operational logs, or provide production audit persistence.
 Future audit work should first document audit preview results, then add
 database persistence only later in a separate reviewed module.
 
+## Audit Persistence Dry-Run Preview
+
+`audit_persistence_preview.py` is a manual local dry-run preview for
+`audit-event-v0` persistence planning. It imports `build_audit_event(...)` and
+the audit repository SQL builder, uses fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`, builds one synthetic/caller-provided
+audit event, and prints a JSON object containing the event and the
+parameterized persistence plan.
+
+```bash
+python3 scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py --pretty
+python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty
+```
+
+Supported `--event-type` values are `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, and `report_pdf_exported`. The default is
+`report_pdf_exported`. Unknown event types are rejected by CLI validation.
+
+The output includes `dry_run=true`, `database_write_performed=false`,
+`requires_database_url=false`, `event`, and `persistence_plan`. The
+`persistence_plan` shows the target `audit_events` table, SQL preview,
+parameter keys and safe params, idempotency key/event id, and repository
+conflict behavior `ON CONFLICT (event_id) DO NOTHING`.
+
+This is dry-run only. It does not persist audit events, access a database,
+require `DATABASE_URL`, run SQL, expose an API, use frontend code, write
+files, generate PDFs, call Energi Data Service, call DMI/weather APIs, use ML,
+use LLMs, create a scheduler, use Azure infrastructure, add auth, add
+secrets, or add automatic audit logging. It is read-only decision-support
+audit persistence preview only. A future module may add controlled repository
+execution with an explicit database connection and tests after separate
+review.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:

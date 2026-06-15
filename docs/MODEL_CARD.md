@@ -333,10 +333,20 @@ merged files were the migration, audit repository, `backend/app/main.py`,
 
 Interpretation: audit DB persistence is schema/repository readiness only. It
 does not prove production audit persistence, identify real users through Entra
-ID, or create runtime audit logs. Future reviewed modules may add a fake
-executor or local dry-run persistence preview, but automatic audit logging and
-frontend/report-download persistence wiring remain out of scope until explicit
-review.
+ID, or create runtime audit logs. Future reviewed modules may add controlled
+repository execution with an explicit database connection and tests, but
+automatic audit logging and frontend/report-download persistence wiring remain
+out of scope until explicit review.
+
+`scripts/audit_persistence_preview.py` is now available as that manual local
+dry-run persistence preview. It builds one synthetic `audit-event-v0`, calls
+the repository SQL builder, and prints the dry-run event plus `audit_events`
+SQL plan. It does not connect to a database, require `DATABASE_URL`, execute
+SQL, persist events, expose an API, use frontend code, write files, generate
+PDFs, call EDS/DMI, use ML, use LLMs, add auth, add secrets, schedule work, or
+add automatic audit logging. It is read-only decision-support audit
+persistence preview only; future controlled execution would require explicit
+database connection handling and tests.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
