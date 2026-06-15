@@ -48,6 +48,9 @@ Working read-only core:
 - Manual local audit persistence dry-run preview exists for building one
   synthetic `audit-event-v0` and repository SQL plan without database access
   or execution.
+- Manual local audit DB write smoke exists for one deterministic synthetic
+  `audit-event-v0`, defaults to dry-run, and writes only to `audit_events`
+  when `--execute` and an explicit local `--database-url` are provided.
 - `POST /api/forecast/preview` exposes `forecast-window-v0` for
   caller-provided JSON rows only.
 - `GET /api/risk/current` works for DK1 and DK2 from existing local rows.
@@ -92,13 +95,15 @@ Still preview / not production:
   and PDF preview scripts. PDF export v0 writes a PDF only when an explicit
   local `--output` path is provided. It does not fetch data, read or write a
   database, expose an API, add frontend download behavior, use ML, or use LLMs.
-- `audit-event-v0` now has a schema/repository persistence foundation, but no
-  API, frontend, report/PDF flow, scheduler, auth/Entra integration, automatic
-  logging, or live database write path is wired to it yet. It does not call
-  Energi Data Service, call DMI/weather APIs, use ML, use LLMs, or perform
-  automatic control, dispatch, activation, or operational energy-system
-  integration. The manual audit persistence preview only prints a dry-run SQL
-  plan and does not persist audit events.
+- `audit-event-v0` now has a schema/repository persistence foundation and a
+  manual local DB write smoke script, but no API, frontend, report/PDF flow,
+  scheduler, auth/Entra integration, automatic logging, or runtime database
+  write path is wired to it. It does not call Energi Data Service, call
+  DMI/weather APIs, use ML, use LLMs, or perform automatic control, dispatch,
+  activation, or operational energy-system integration. The manual audit
+  persistence preview only prints a dry-run SQL plan. The write smoke script
+  defaults to dry-run and only writes one synthetic event to a local
+  `audit_events` table when explicitly executed with a local database URL.
 - No DMI/weather ingestion exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
@@ -359,6 +364,37 @@ functionality. A future module may add a controlled local audit persistence
 write test against a local database, but that must be separate and reviewed.
 Do not connect report/PDF/frontend/API flows to audit persistence until
 explicit review.
+
+### Audit DB Write Smoke
+
+`scripts/audit_db_write_smoke.py` is a manual local-only smoke script for one
+deterministic synthetic `audit-event-v0` write. It imports
+`build_audit_event(...)` and the audit repository SQL builder, uses fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`, safe metadata only, and defaults to
+dry-run without connecting to a database.
+
+```bash
+python3 scripts/audit_db_write_smoke.py --pretty
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty
+```
+
+Real writes require both `--execute` and an explicit local `--database-url`.
+Accepted local URL examples include `postgresql://localhost/flexsignal_ai`,
+`postgresql://127.0.0.1/flexsignal_ai`, and
+`postgresql:///flexsignal_ai`. Remote/cloud-style URLs are refused by default,
+and the raw database URL is not printed.
+
+When executed, the script writes only to `audit_events`, runs the same
+parameterized `ON CONFLICT (event_id) DO NOTHING` insert twice to confirm
+idempotency, commits, and can read the row back by `event_id` with
+`--verify-read`.
+
+This smoke script does not write energy, forecast, or report data; expose an
+API; add frontend code; add automatic audit logging; integrate report/PDF/API
+or frontend flows; create a scheduler; use Azure infrastructure; add auth or
+secrets; call EDS/DMI; use ML or LLMs; or add control, dispatch, activation,
+or operational functionality.
 
 ## Report Summary Foundation
 

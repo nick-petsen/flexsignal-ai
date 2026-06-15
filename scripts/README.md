@@ -706,6 +706,53 @@ EDS/DMI, use ML/LLMs, add scheduling/Azure/auth/secrets, add automatic audit
 logging, or add control, dispatch, activation, or operational functionality.
 Future controlled local write testing must be separate and reviewed.
 
+## Audit DB Write Smoke
+
+`audit_db_write_smoke.py` is a manual local-only smoke script for one
+deterministic synthetic `audit-event-v0` write to the `audit_events` table. It
+imports `build_audit_event(...)` and the audit repository SQL builder, uses
+fixed `occurred_at_utc=2026-01-01T00:00:00Z`, and defaults to dry-run output
+without opening a database connection.
+
+Dry-run:
+
+```bash
+python3 scripts/audit_db_write_smoke.py --pretty
+```
+
+Local write, only against an explicit local database:
+
+```bash
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+```
+
+Event type example:
+
+```bash
+python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty
+```
+
+Supported `--event-type` values are `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, and `report_pdf_exported`. The default is
+`report_pdf_exported`.
+
+Real writes require both `--execute` and an explicit `--database-url`. The URL
+must be local by default: `localhost`, `127.0.0.1`, or local Unix-socket style
+such as `postgresql:///flexsignal_ai`. Obvious remote hosts, public IPs, and
+cloud-style URLs are rejected. The script never prints the raw database URL.
+
+When executed, the script runs the same parameterized
+`ON CONFLICT (event_id) DO NOTHING` insert twice to confirm idempotency, then
+commits. With `--verify-read`, it reads back the row by `event_id` only.
+
+This is manual/local smoke only. It writes only to `audit_events` and does not
+write energy, forecast, or report data. It does not expose an API, add
+frontend code, add automatic audit logging, integrate report/PDF/API/frontend
+flows, create a scheduler, use Azure infrastructure, add auth or secrets, call
+Energi Data Service, call DMI/weather APIs, use ML, use LLMs, or add control,
+dispatch, activation, or operational functionality.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:

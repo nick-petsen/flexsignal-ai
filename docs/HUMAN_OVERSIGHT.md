@@ -252,3 +252,35 @@ expose API/frontend/report/PDF flows, or add automatic audit logging. Future
 controlled local audit persistence write testing must be a separate reviewed
 module, and report/PDF/frontend/API flows should not be connected to audit
 persistence until explicit review.
+
+## Audit DB Write Smoke
+
+`scripts/audit_db_write_smoke.py` is a manual local-only smoke script for one
+deterministic synthetic `audit-event-v0` database write. It defaults to
+dry-run and does not connect to a database unless a human passes both
+`--execute` and an explicit local `--database-url`.
+
+```bash
+python3 scripts/audit_db_write_smoke.py --pretty
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty
+```
+
+The script accepts only local database URLs by default, such as
+`postgresql://localhost/flexsignal_ai`,
+`postgresql://127.0.0.1/flexsignal_ai`, or
+`postgresql:///flexsignal_ai`. It refuses obvious remote/cloud database URLs
+and does not print the raw database URL.
+
+When explicitly executed, the script writes only to `audit_events`, performs
+the same idempotent repository insert twice with
+`ON CONFLICT (event_id) DO NOTHING`, commits, and optionally reads the row
+back by `event_id` only. The event preserves the human-review safety boundary:
+read-only decision support, no automatic control, no dispatch, no activation,
+no operational energy-system integration, and human review required.
+
+This smoke script does not write energy, forecast, or report data; expose an
+API; add frontend code; add automatic audit logging; connect report/PDF/API or
+frontend flows; run a scheduler; use Azure infrastructure; add auth or
+secrets; call Energi Data Service; call DMI/weather APIs; use ML; use LLMs; or
+add control, dispatch, activation, or operational functionality.

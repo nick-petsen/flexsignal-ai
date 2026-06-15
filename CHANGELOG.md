@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/audit_db_write_smoke.py`, a manual local-only audit DB write
+  smoke script for one deterministic synthetic `audit-event-v0`. The script
+  imports `build_audit_event(...)` and the audit repository SQL builder, uses
+  fixed `occurred_at_utc=2026-01-01T00:00:00Z`, supports `--pretty`,
+  `--event-type`, `--database-url`, `--execute`, and `--verify-read`, and
+  defaults to dry-run without connecting to a database. Real writes require
+  both `--execute` and an explicit local `--database-url`; localhost,
+  127.0.0.1, and local socket-style URLs are accepted, while obvious
+  remote/cloud URLs are refused. Executed smoke writes only target
+  `audit_events`, run the same parameterized
+  `ON CONFLICT (event_id) DO NOTHING` insert twice, commit, and optionally
+  verify-read by `event_id`. Added focused unit tests and updated README,
+  scripts README, human oversight, model card, and backtest docs. This does
+  not add FastAPI endpoints, frontend code, automatic audit logging,
+  report/PDF/API/frontend integration, scheduler behavior, Azure
+  infrastructure, auth, secrets, EDS/DMI calls, ML, LLMs, control, dispatch,
+  activation, or operational functionality.
 - Added `scripts/audit_persistence_preview.py`, a manual local audit
   persistence dry-run preview. The script imports `build_audit_event(...)` and
   the audit repository SQL builder, uses fixed
