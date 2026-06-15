@@ -348,6 +348,36 @@ add automatic audit logging. It is read-only decision-support audit
 persistence preview only; future controlled execution would require explicit
 database connection handling and tests.
 
+Observed audit persistence dry-run validation:
+
+| Command/check | Observed result |
+| --- | --- |
+| `python3 -m py_compile scripts/audit_persistence_preview.py` | Passed. |
+| `python3 scripts/audit_persistence_preview.py` | Printed compact JSON. |
+| `python3 scripts/audit_persistence_preview.py --pretty` | Printed indented JSON. |
+| `python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty` | Passed as a dry-run preview. |
+| `python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty` | Passed as a dry-run preview. |
+| `python3 scripts/audit_persistence_preview.py --event-type invalid-event` | Failed safely with exit code `2` and argparse invalid-choice output. |
+| Forbidden-pattern grep on `scripts/audit_persistence_preview.py` | Returned no matches. |
+| `git diff --check` | Passed. |
+
+Observed output included `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, `event`, and
+`persistence_plan`. The event had `event_version=audit-event-v0`, a
+deterministic `audit_evt_...` id, fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, `local_only=true`, and the full read-only human
+review safety boundary. The persistence plan showed the `audit_events` target,
+SQL/SQL preview, parameter keys/params, `event_id` idempotency key, and
+`ON CONFLICT (event_id) DO NOTHING`.
+
+Interpretation: the preview demonstrates persistence planning only. It is not
+model validation, forecasting validation, live DB persistence, SQL execution,
+API/frontend/report/PDF integration, automatic audit logging, or operational
+functionality. Future local write testing must be separate and reviewed.
+
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided current-risk and forecast-window data for

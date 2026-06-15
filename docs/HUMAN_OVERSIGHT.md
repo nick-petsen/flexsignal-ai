@@ -208,3 +208,47 @@ generate PDFs, call EDS/DMI, use ML, use LLMs, add scheduling, add Azure
 infrastructure, add auth, add secrets, or add automatic audit logging. Future
 controlled repository execution would require an explicit database connection
 and tests in a separate reviewed module.
+
+Observed manual validation covered these commands/checks:
+
+```bash
+python3 -m py_compile scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py --pretty
+python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_persistence_preview.py --event-type invalid-event
+```
+
+Observed results:
+
+- `py_compile` passed.
+- The default command printed compact JSON.
+- `--pretty` printed indented JSON.
+- `forecast_preview_requested` dry-run passed.
+- `report_pdf_exported` dry-run passed.
+- `invalid-event` failed safely with exit code `2` and argparse
+  invalid-choice output.
+- Forbidden-pattern grep on `scripts/audit_persistence_preview.py` returned
+  no matches.
+- `git diff --check` passed.
+
+The output included `dry_run=true`, `database_write_performed=false`,
+`requires_database_url=false`, `event`, and `persistence_plan`. The event
+included `event_version=audit-event-v0`, a deterministic `audit_evt_...`
+event id, fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`. The persistence plan
+included the `audit_events` table target, SQL/SQL preview, parameter
+keys/params, `event_id` as the idempotency key, and
+`ON CONFLICT (event_id) DO NOTHING` conflict behavior.
+
+Interpretation: this dry-run preview works locally with
+synthetic/caller-provided data and demonstrates transformation from
+`audit-event-v0` to a parameterized persistence plan. It does not prove live
+DB persistence, perform live database writes, run SQL, connect to a database,
+expose API/frontend/report/PDF flows, or add automatic audit logging. Future
+controlled local audit persistence write testing must be a separate reviewed
+module, and report/PDF/frontend/API flows should not be connected to audit
+persistence until explicit review.

@@ -655,6 +655,57 @@ audit persistence preview only. A future module may add controlled repository
 execution with an explicit database connection and tests after separate
 review.
 
+### Observed Audit Persistence Preview Results
+
+The following commands/checks were observed:
+
+```bash
+python3 -m py_compile scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py --pretty
+python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_persistence_preview.py --event-type invalid-event
+```
+
+Observed compact summary:
+
+| Check | Result |
+| --- | --- |
+| `py_compile` | Passed. |
+| Default preview | Printed compact JSON. |
+| `--pretty` | Printed indented JSON. |
+| `forecast_preview_requested` | Dry-run passed. |
+| `report_pdf_exported` | Dry-run passed. |
+| Invalid event type | Failed safely with exit code `2` and argparse invalid-choice output. |
+| Forbidden-pattern grep | Returned no matches. |
+| `git diff --check` | Passed. |
+
+Observed output included `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, `event`, and
+`persistence_plan`. The event included
+`event_version=audit-event-v0`, deterministic `audit_evt_...` event id,
+fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+`actor_type=local_developer`, `actor_id=local-dev`, `outcome=success`,
+`decision_support_only=true`, safe metadata only,
+`synthetic_preview_only=true`, and `local_only=true`.
+
+The event safety boundary preserved `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`. The persistence plan included the
+`audit_events` table target, SQL/SQL preview, parameter keys/params,
+`event_id` as the idempotency key, and
+`ON CONFLICT (event_id) DO NOTHING` conflict behavior.
+
+Interpretation: the preview works locally with synthetic/caller-provided data
+and demonstrates parameterized persistence planning only. It does not connect
+to a database, execute SQL, persist audit events, require `DATABASE_URL`,
+expose API/frontend/report/PDF flows, generate PDFs, write files, call
+EDS/DMI, use ML/LLMs, add scheduling/Azure/auth/secrets, add automatic audit
+logging, or add control, dispatch, activation, or operational functionality.
+Future controlled local write testing must be separate and reviewed.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:
