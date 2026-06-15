@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added `backend/app/audit/writer.py`, an explicit audit writer service
+  foundation for `audit-event-v0`, plus `backend/tests/test_audit_writer.py`.
+  The writer requires a caller-provided database connection, validates
+  `event_version=audit-event-v0`, `decision_support_only=true`, required event
+  identity fields, and the full read-only human-review safety boundary before
+  executing SQL. It uses the existing audit repository parameterized insert SQL
+  builder and returns a structured result with event id, event type, table,
+  row count, conflict behavior, write-performed flag,
+  safety-boundary-preserved flag, and warnings. It does not create database
+  connections, does not read `DATABASE_URL`, does not add FastAPI endpoints,
+  and is not wired into API, frontend, report, PDF, scheduler, auth, external
+  data, automatic audit logging, control, dispatch, activation, or operational
+  flows. Unit tests use fake connection/cursor objects only and perform no live
+  database writes.
 - Documented the manually executed local audit DB write smoke result for the
   first actual local Postgres `audit_events` write. A human ran
   `DATABASE_URL="postgresql+psycopg://localhost/flexsignal_ai" alembic upgrade head`,

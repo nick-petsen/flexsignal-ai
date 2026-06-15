@@ -1474,3 +1474,20 @@ Service APIs, does not poll external services, does not add FastAPI endpoints,
 does not modify backend startup, does not add frontend code, does not create
 ingestion jobs, and does not perform control, dispatch, activation, or
 operational workflows.
+
+## Audit Writer Service Boundary
+
+An audit writer service foundation now exists at `backend/app/audit/writer.py`
+for explicit `audit-event-v0` inserts. It is outside the backtest path and does
+not change backtest behavior, scoring, forecasting, report generation, or
+frontend behavior.
+
+The writer requires an explicit database connection, does not create database
+connections, does not read `DATABASE_URL`, and validates
+`decision_support_only` plus the full read-only human-review safety boundary
+before executing the existing repository-built parameterized insert. It is not
+wired to API, frontend, report, PDF, scheduler, or automatic audit logging
+flows.
+
+Writer unit tests use fake connection and cursor objects only. No live database
+writes are performed by those tests.
