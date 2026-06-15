@@ -378,6 +378,32 @@ model validation, forecasting validation, live DB persistence, SQL execution,
 API/frontend/report/PDF integration, automatic audit logging, or operational
 functionality. Future local write testing must be separate and reviewed.
 
+`scripts/audit_db_write_smoke.py` is a manual local-only audit DB write smoke
+script for one deterministic synthetic `audit-event-v0`. It is not a model,
+forecasting engine, LLM, decision engine, production audit logger, or runtime
+integration. It defaults to dry-run and requires both `--execute` and an
+explicit local `--database-url` before it opens a database connection.
+
+```bash
+python3 scripts/audit_db_write_smoke.py --pretty
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty
+```
+
+The script accepts local database URLs such as
+`postgresql://localhost/flexsignal_ai`,
+`postgresql://127.0.0.1/flexsignal_ai`, and
+`postgresql:///flexsignal_ai`, refuses obvious remote/cloud URLs by default,
+and never prints the raw database URL. When explicitly executed, it writes
+only to `audit_events`, runs the same parameterized idempotent insert twice,
+commits, and optionally verifies the row by `event_id`.
+
+This smoke script does not write energy, forecast, or report data; expose an
+API; add frontend code; add automatic audit logging; integrate with report,
+PDF, API, or frontend flows; schedule work; use Azure infrastructure; add auth
+or secrets; call EDS/DMI; use ML; use LLMs; or add control, dispatch,
+activation, or operational functionality.
+
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc` output and only
 in-script caller-provided current-risk and forecast-window data for

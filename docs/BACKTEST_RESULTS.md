@@ -322,6 +322,32 @@ behavior, integrate report/PDF flows, add automatic audit logging, or affect
 backtest results. A future controlled local write test must be a separate
 reviewed module.
 
+### Audit DB Write Smoke
+
+`scripts/audit_db_write_smoke.py` is a manual local-only write smoke for one
+deterministic synthetic `audit-event-v0`. It is not a backtest, forecasting
+model, calibration step, or production audit system. It defaults to dry-run
+and does not connect to a database unless `--execute` and an explicit local
+`--database-url` are provided.
+
+```bash
+python3 scripts/audit_db_write_smoke.py --pretty
+python3 scripts/audit_db_write_smoke.py --execute --database-url postgresql://localhost/flexsignal_ai --verify-read --pretty
+python3 scripts/audit_db_write_smoke.py --event-type forecast_preview_requested --pretty
+```
+
+The script writes only to `audit_events` when explicitly executed. It does not
+write energy, forecast, backtest, or report data, and it does not change any
+documented backtest result. It accepts only local database URLs by default,
+refuses obvious remote/cloud URLs, does not print the raw database URL, runs
+the idempotent repository insert twice, commits, and can verify the row by
+`event_id`.
+
+It does not expose an API, add frontend code, add automatic audit logging,
+integrate report/PDF/API/frontend flows, schedule work, use Azure
+infrastructure, add auth or secrets, call EDS/DMI, use ML, use LLMs, or add
+control, dispatch, activation, or operational functionality.
+
 ## Report Summary Boundary
 
 `report-summary-v0` is not a backtest, forecast model, API endpoint, database
