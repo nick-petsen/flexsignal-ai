@@ -16,6 +16,29 @@
   migrations, integrate with report/PDF/API/frontend flows, add scheduler,
   Azure, auth, EDS/DMI, ML/LLM, control, dispatch, activation, or operational
   functionality. Runtime integration remains deferred.
+- Documented audit writer service foundation validation results. The writer
+  exposes `write_audit_event(conn, event)` plus the
+  `execute_audit_event_insert` alias, requires an explicit caller-provided
+  database connection object, does not create connections, does not read
+  `DATABASE_URL`, uses the existing audit repository insert SQL builder, and
+  validates `audit-event-v0`, `decision_support_only=true`, and the full
+  read-only human-review safety boundary before executing SQL. Invalid events
+  raise `ValueError` and execute no SQL. Valid events return `event_id`,
+  `event_type`, `table`, `database_write_performed`, `rowcount`,
+  `conflict_behavior`, `safety_boundary_preserved`, and `warnings`.
+  Documented observed validation: focused audit writer tests passed with
+  `14 passed`; the full backend suite passed with `331 passed, 1 warning`;
+  `py_compile` passed for `backend/app/audit/writer.py` and
+  `backend/tests/test_audit_writer.py`; grep matched only safety-boundary
+  strings and negative/static assertions; `git diff --check` passed; tests
+  used fake connection/cursor objects only; and no live DB writes were
+  performed. Clarified that the writer is a backend foundation only, does not
+  enable production audit persistence, does not add automatic audit logging,
+  does not expose API/frontend/report/PDF flows, and remains intentionally
+  unwired from runtime flows. No code, backend behavior, frontend behavior,
+  database writes, migrations, endpoints, scheduler, Azure infrastructure,
+  auth, secrets, EDS/DMI calls, ML/LLM, control, dispatch, activation, or
+  operational functionality was added by this documentation change.
 - Added `backend/app/audit/writer.py`, an explicit audit writer service
   foundation for `audit-event-v0`, plus `backend/tests/test_audit_writer.py`.
   The writer requires a caller-provided database connection, validates

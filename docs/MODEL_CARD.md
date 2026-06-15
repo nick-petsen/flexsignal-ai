@@ -951,6 +951,37 @@ does not expose an endpoint, and is not wired to API, frontend, report, PDF, or
 automatic audit logging flows. Its unit tests use fake connections only, so the
 test suite performs no live audit database writes.
 
+The public function is `write_audit_event(conn, event)`;
+`execute_audit_event_insert` is an alias. The writer uses the existing audit
+repository insert SQL builder and validates `audit-event-v0`,
+`decision_support_only=true`, and the complete safety boundary before SQL is
+executed:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Invalid events raise `ValueError` and execute no SQL. Valid events return
+`event_id`, `event_type`, `table`, `database_write_performed`, `rowcount`,
+`conflict_behavior`, `safety_boundary_preserved`, and `warnings`.
+
+Observed audit writer validation recorded focused tests passing with
+`14 passed`, the full backend suite passing with `331 passed, 1 warning`,
+`py_compile` passing for the writer and tests, safety-boundary grep matching
+only expected strings and negative/static assertions, and `git diff --check`
+passing. The writer tests used fake connection/cursor objects only and
+performed no live database writes.
+
+Interpretation: this is a backend audit foundation, not model validation,
+forecasting validation, runtime audit persistence, automatic audit logging,
+API/frontend/report/PDF integration, scheduler, Azure infrastructure,
+auth/Entra integration, live EDS/DMI behavior, ML/LLM behavior, control,
+dispatch, activation, or operational functionality. Runtime integration
+remains intentionally deferred.
+
 ## Runtime Audit Event Factory
 
 `backend/app/audit/runtime_events.py` standardizes future read-only runtime

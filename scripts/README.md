@@ -858,6 +858,47 @@ future module may add a read-only API-side audit logging design or manual API
 audit dry-run, but automatic audit persistence must not be wired into runtime
 flows yet and production DB writes require explicit review.
 
+## Audit Writer Service Foundation
+
+`backend/app/audit/writer.py` provides `write_audit_event(conn, event)` and
+the `execute_audit_event_insert` alias for explicitly writing validated
+`audit-event-v0` records through a caller-provided connection. It uses the
+existing audit repository insert SQL builder and does not create database
+connections or read `DATABASE_URL`.
+
+The writer validates `audit-event-v0`, `decision_support_only=true`, and the
+full read-only safety boundary before executing SQL:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Invalid events raise `ValueError` and execute no SQL. Valid events return
+`event_id`, `event_type`, `table`, `database_write_performed`, `rowcount`,
+`conflict_behavior`, `safety_boundary_preserved`, and `warnings`.
+
+Observed validation:
+
+| Check | Result |
+| --- | --- |
+| Focused audit writer tests | `14 passed` |
+| Full backend suite | `331 passed, 1 warning` |
+| `py_compile` for writer and tests | Passed |
+| Safety-boundary grep | Matched only safety-boundary strings and negative/static assertions |
+| `git diff --check` | Passed |
+
+The writer tests used fake connection/cursor objects only, and no live
+database writes were performed.
+
+This is a backend foundation only. It does not expose a FastAPI endpoint, add
+frontend behavior, add automatic audit logging, integrate report/PDF flows,
+create a scheduler, use Azure infrastructure, add auth/Entra integration, call
+live EDS/DMI APIs, use ML/LLMs, or add control, dispatch, activation, or
+operational functionality. Runtime integration remains intentionally deferred.
+
 ### Observed Forecast Window Preview Results
 
 The following commands were run locally against synthetic in-script rows only:
