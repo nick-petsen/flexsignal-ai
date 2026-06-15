@@ -175,7 +175,36 @@ The final merged files were
 Interpretation: this is schema/repository readiness only. It prepares for
 future explicit audited read-only flows, but it does not yet prove production
 audit persistence or identify real users through Entra ID. Future wiring
-should remain manual and reviewed. A future module may add an audit
-persistence preview script using a fake executor or local dry-run, but
-automatic audit logging and frontend/report-download persistence wiring should
-not be added until explicit review.
+should remain manual and reviewed. Future controlled repository execution
+would require an explicit database connection and tests, and automatic audit
+logging and frontend/report-download persistence wiring should not be added
+until explicit review.
+
+## Audit Persistence Dry-Run Preview
+
+`scripts/audit_persistence_preview.py` is a manual local dry-run preview for
+the audit persistence plan. It builds one synthetic/caller-provided
+`audit-event-v0` with fixed `occurred_at_utc=2026-01-01T00:00:00Z`, then calls
+the repository SQL builder to preview the parameterized insert plan for
+`audit_events`.
+
+```bash
+python3 scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py --pretty
+python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty
+```
+
+The output explicitly includes `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`,
+`decision_support_only=true`, `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+This preview does not persist audit events, access a database, require
+`DATABASE_URL`, run SQL, expose an API, use frontend code, write files,
+generate PDFs, call EDS/DMI, use ML, use LLMs, add scheduling, add Azure
+infrastructure, add auth, add secrets, or add automatic audit logging. Future
+controlled repository execution would require an explicit database connection
+and tests in a separate reviewed module.

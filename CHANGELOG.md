@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/audit_persistence_preview.py`, a manual local audit
+  persistence dry-run preview. The script imports `build_audit_event(...)` and
+  the audit repository SQL builder, uses fixed
+  `occurred_at_utc=2026-01-01T00:00:00Z`, supports `--pretty`, supports
+  `--event-type` values `forecast_preview_requested`,
+  `current_risk_viewed`, `report_summary_built`,
+  `report_markdown_rendered`, and `report_pdf_exported`, and defaults to
+  `report_pdf_exported`. It prints JSON with `dry_run=true`,
+  `database_write_performed=false`, `requires_database_url=false`, the event,
+  and a repository-built `audit_events` persistence plan with idempotency key
+  and `ON CONFLICT (event_id) DO NOTHING`. Updated README, scripts README,
+  human oversight, model card, and backtest docs. This does not persist audit
+  events, access a database, require `DATABASE_URL`, run SQL, expose an API,
+  use frontend code, write files, generate PDFs, call EDS/DMI, use ML, use
+  LLMs, add scheduling, add Azure infrastructure, add auth, add secrets, add
+  automatic audit logging, or add control, dispatch, activation, or
+  operational functionality.
 - Documented audit DB persistence foundation validation and CI resolution
   results for PR #87. Clarified that `audit-event-v0`, the manual audit-event
   preview script, and preview-result docs already existed before this step,

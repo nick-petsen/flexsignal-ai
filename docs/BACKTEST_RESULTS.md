@@ -48,6 +48,8 @@ Current read-only foundation:
 - Audit-event database persistence foundation exists through an Alembic
   `audit_events` schema and pure repository SQL builder, but no runtime flow
   automatically writes audit events yet.
+- Manual local audit persistence dry-run preview exists for one synthetic
+  audit event and repository SQL plan without database access or execution.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -261,9 +263,31 @@ Final merged files were
 Interpretation: the audit DB persistence foundation prepares for future
 explicit audited read-only flows. It does not prove production audit
 persistence, identify real users through Entra ID, or automatically write
-events. Future work may add an audit persistence preview script using a fake
-executor or local dry-run, but automatic audit logging and frontend/report
+events. Future work may add controlled repository execution with an explicit
+database connection and tests, but automatic audit logging and frontend/report
 download persistence wiring should remain deferred until explicit review.
+
+### Audit Persistence Dry-Run Preview
+
+`scripts/audit_persistence_preview.py` is a manual local dry-run preview for
+audit persistence planning. It builds one synthetic/caller-provided
+`audit-event-v0`, calls the repository SQL builder, and prints JSON containing
+`dry_run=true`, `database_write_performed=false`,
+`requires_database_url=false`, the event, and a persistence plan for
+`audit_events` with `ON CONFLICT (event_id) DO NOTHING`.
+
+```bash
+python3 scripts/audit_persistence_preview.py
+python3 scripts/audit_persistence_preview.py --pretty
+python3 scripts/audit_persistence_preview.py --event-type forecast_preview_requested --pretty
+python3 scripts/audit_persistence_preview.py --event-type report_pdf_exported --pretty
+```
+
+The preview does not persist audit events, access a database, require
+`DATABASE_URL`, run SQL, expose an API, use frontend code, write files,
+generate PDFs, call EDS/DMI, use ML, use LLMs, add scheduler or Azure
+infrastructure, add auth, add secrets, or add automatic audit logging. It does
+not change backtest validity or model performance claims.
 
 ## Report Summary Boundary
 
