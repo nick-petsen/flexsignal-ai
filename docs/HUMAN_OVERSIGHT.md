@@ -33,5 +33,31 @@ It must not be used for automatic control, dispatch, activation, closed-loop
 workflows, live control signals, autonomous decisions, or operational
 energy-system integration.
 
-The next audit step should be a manual/local audit preview script. Database
-persistence can follow only as a separate reviewed module.
+`scripts/audit_event_preview.py` is a manual synthetic local preview for
+`audit-event-v0`. It imports `build_audit_event(...)`, uses fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`, uses synthetic/caller-provided fields
+only, and prints compact JSON by default or indented JSON with `--pretty`.
+
+```bash
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+```
+
+The default `--event-type` is `all`, which prints an `events` array. A single
+event type prints an `event` object. Supported event types are
+`forecast_preview_requested`, `current_risk_viewed`,
+`report_summary_built`, `report_markdown_rendered`, and
+`report_pdf_exported`.
+
+The preview is synthetic/local only. It does not persist audit logs yet, write
+files, access a database, run SQL, expose an API, use frontend code, call
+Energi Data Service, call DMI/weather APIs, use ML, use LLMs, create a
+scheduler, add Azure infrastructure, add auth or secrets, or perform automatic
+control, dispatch, activation, or operational functionality. It is read-only
+decision-support audit structure only and must not be used for automatic
+control, dispatch, or activation.
+
+Future audit work should first document audit preview results. Database
+persistence can follow only later as a separate reviewed module.

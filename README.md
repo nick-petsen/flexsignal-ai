@@ -96,12 +96,12 @@ Still preview / not production:
 - No monitoring or observability setup exists yet.
 - No human approval workflow exists beyond documentation and disclaimers.
 
-Recommended next MVP audit/reporting step: keep PDF export manual/local for
-now and add an audit preview script before any audit-log persistence. Database
-persistence must be a separate reviewed module. Do not add automatic scheduled
-report generation, do not fetch data in the report builder, do not use an LLM
-as the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+Recommended next MVP audit/reporting step: keep PDF export and audit-event
+preview manual/local for now, document audit preview results, and defer
+audit-log persistence to a separate reviewed module. Do not add automatic
+scheduled report generation, do not fetch data in the report builder, do not
+use an LLM as the forecast or reporting engine, and do not add control,
+dispatch, or activation behavior.
 
 ## Audit Event Foundation
 
@@ -127,8 +127,32 @@ read-only decision-support boundary. It must not be used for automatic
 control, dispatch, activation, closed-loop workflows, live control signals, or
 operational energy-system integration.
 
-The next audit step should be a manual/local audit preview script. Database
-persistence can follow later only as a separate reviewed module.
+`scripts/audit_event_preview.py` is a manual synthetic local JSON preview for
+`audit-event-v0`. It uses fixed `occurred_at_utc=2026-01-01T00:00:00Z`,
+imports `build_audit_event(...)`, uses synthetic/caller-provided fields only,
+and prints compact JSON by default or indented JSON with `--pretty`.
+
+```bash
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+```
+
+Supported event types are `forecast_preview_requested`,
+`current_risk_viewed`, `report_summary_built`,
+`report_markdown_rendered`, `report_pdf_exported`, and `all`. The default is
+`all`, which prints an `events` array. Single-event previews print one `event`
+object. The preview uses safe metadata only, such as `price_area`, relevant
+`report_version`, relevant `output_format`, `synthetic_preview_only=true`, and
+`local_only=true`.
+
+The audit preview does not persist audit logs yet, write files, access a
+database, expose an API, use frontend code, call EDS/DMI, use ML, use LLMs, or
+perform automatic control, dispatch, or activation. It is read-only
+decision-support audit structure only. Future audit work should first document
+audit preview results, then add database persistence only later as a separate
+reviewed module.
 
 ## Report Summary Foundation
 

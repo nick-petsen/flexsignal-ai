@@ -43,6 +43,8 @@ Current read-only foundation:
   previews through an explicit `--output` path only.
 - `audit-event-v0` exists as a deterministic pure Python in-memory
   data-structure foundation for read-only decision-support audit events.
+- Manual local audit-event preview exists for synthetic/caller-provided
+  `audit-event-v0` structures and prints JSON only.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -70,9 +72,10 @@ Still preview / not production:
   `report-summary-v0`. The PDF preview writes one local file only when an
   explicit `--output` path is provided and refuses overwrite without
   `--force`.
-- `audit-event-v0` does not persist audit logs yet, write files, expose an
-  API, read or write a database, call EDS or DMI/weather APIs, use ML, use
-  LLMs, or validate production forecast performance.
+- `audit-event-v0` and the manual audit-event preview do not persist audit
+  logs yet, write files, expose an API, read or write a database, call EDS or
+  DMI/weather APIs, use ML, use LLMs, or validate production forecast
+  performance.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.
@@ -80,12 +83,12 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP audit/reporting step: keep PDF export manual/local for
-now and add an audit preview script before any audit-log persistence. Database
-persistence must be a separate reviewed module. Do not add automatic scheduled
-report generation, do not fetch data from the report builder, do not use an LLM
-as the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+Recommended next MVP audit/reporting step: keep PDF export and audit-event
+preview manual/local for now, document audit preview results, and defer
+audit-log persistence to a separate reviewed module. Do not add automatic
+scheduled report generation, do not fetch data from the report builder, do not
+use an LLM as the forecast or reporting engine, and do not add control,
+dispatch, or activation behavior.
 
 ## Audit Event Boundary
 
@@ -108,6 +111,25 @@ LLMs, add scheduling, add Azure infrastructure, add auth, add secrets, or
 perform automatic control, dispatch, activation, closed-loop workflows, asset
 connections, plant/device commands, live control signals, or autonomous
 decisions.
+
+`scripts/audit_event_preview.py` is a manual synthetic local preview for the
+same audit event structure. It imports `build_audit_event(...)`, uses fixed
+`occurred_at_utc=2026-01-01T00:00:00Z`, safe synthetic metadata only, and
+prints compact JSON by default or indented JSON with `--pretty`.
+
+```bash
+python3 scripts/audit_event_preview.py
+python3 scripts/audit_event_preview.py --pretty
+python3 scripts/audit_event_preview.py --event-type report_pdf_exported --pretty
+python3 scripts/audit_event_preview.py --event-type forecast_preview_requested --pretty
+```
+
+The default `--event-type all` prints an `events` array. Single event types
+print one `event` object. This preview does not persist audit logs, write
+files, access a database, expose an API, use frontend code, call EDS/DMI, use
+ML, use LLMs, perform operational integration, or add automatic control,
+dispatch, or activation. Future audit work should document preview results
+first; database persistence remains a separate reviewed module.
 
 ## Report Summary Boundary
 
