@@ -45,6 +45,9 @@ Working read-only core:
 - An audit-event database persistence foundation exists: Alembic defines an
   `audit_events` table and `backend/app/audit/repository.py` builds
   parameterized idempotent insert SQL for explicit future use.
+- An audit writer service foundation exists in `backend/app/audit/writer.py`
+  for explicitly executing validated `audit-event-v0` inserts through a
+  caller-provided database connection.
 - Manual local audit persistence dry-run preview exists for building one
   synthetic `audit-event-v0` and repository SQL plan without database access
   or execution.
@@ -97,17 +100,19 @@ Still preview / not production:
   local `--output` path is provided. It does not fetch data, read or write a
   database, expose an API, add frontend download behavior, use ML, or use LLMs.
 - `audit-event-v0` now has a schema/repository persistence foundation and a
-  manual local DB write smoke script, but no API, frontend, report/PDF flow,
-  scheduler, auth/Entra integration, automatic logging, or runtime database
-  write path is wired to it. It does not call Energi Data Service, call
-  DMI/weather APIs, use ML, use LLMs, or perform automatic control, dispatch,
-  activation, or operational energy-system integration. The manual audit
-  persistence preview only prints a dry-run SQL plan. The write smoke script
-  defaults to dry-run and only writes one synthetic event to a local
-  `audit_events` table when explicitly executed with a local database URL. A
-  manual local Postgres write smoke has verified repository insert,
-  idempotency, and verify-read by `event_id` locally; this does not enable
-  production audit persistence or automatic audit logging.
+  manual local DB write smoke script and a backend writer service foundation,
+  but no API, frontend, report/PDF flow, scheduler, auth/Entra integration,
+  automatic logging, or runtime database write path is wired to it. It does
+  not call Energi Data Service, call DMI/weather APIs, use ML, use LLMs, or
+  perform automatic control, dispatch, activation, or operational
+  energy-system integration. The manual audit persistence preview only prints
+  a dry-run SQL plan. The write smoke script defaults to dry-run and only
+  writes one synthetic event to a local `audit_events` table when explicitly
+  executed with a local database URL. A manual local Postgres write smoke has
+  verified repository insert, idempotency, and verify-read by `event_id`
+  locally. The writer service validates and executes through a supplied
+  connection only; this does not enable production audit persistence or
+  automatic audit logging.
 - No DMI/weather ingestion exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
@@ -488,6 +493,52 @@ control, dispatch, activation, or operational functionality was added. A
 future module may add a read-only API-side audit logging design or manual API
 audit dry-run, but automatic audit persistence must not be wired into runtime
 flows yet and production DB writes require explicit review.
+
+### Audit Writer Service Foundation Validation
+
+`backend/app/audit/writer.py` adds a backend foundation for explicitly writing
+validated `audit-event-v0` records through the existing repository insert
+path. It provides `write_audit_event(conn, event)` and the
+`execute_audit_event_insert` alias. Both require an explicit caller-provided
+database connection object. The service does not create database connections,
+does not read `DATABASE_URL`, and is not wired into FastAPI, frontend,
+report/PDF, scheduler, auth, or automatic audit logging flows.
+
+Before executing SQL, the writer validates the event as `audit-event-v0`,
+requires `decision_support_only=true`, and preserves the full read-only safety
+boundary:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+The writer uses the existing audit repository insert SQL builder. Invalid
+events raise `ValueError` and execute no SQL. Valid events return a structured
+result containing `event_id`, `event_type`, `table`,
+`database_write_performed`, `rowcount`, `conflict_behavior`,
+`safety_boundary_preserved`, and `warnings`.
+
+Observed audit writer validation:
+
+- Focused audit writer tests passed: `14 passed`.
+- Full backend suite passed: `331 passed, 1 warning`.
+- `py_compile` passed for the writer and tests.
+- Grep matched only safety-boundary strings and negative/static assertions.
+- `git diff --check` passed.
+- Tests used fake connection/cursor objects only.
+- No live database writes were performed.
+
+Interpretation: the audit writer service is a backend foundation only. It
+proves a testable write boundary around the repository insert path, but it
+does not enable production audit persistence, add automatic audit logging,
+expose an API, modify frontend behavior, or connect report/PDF flows to audit
+persistence. Runtime integration remains intentionally deferred. A future
+module may add an API audit dry-run design or a manually invoked API-side
+audit logging wrapper. Do not wire automatic audit persistence into runtime
+flows yet, and do not add production DB writes without explicit review.
 
 ## Report Summary Foundation
 

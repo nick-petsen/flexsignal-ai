@@ -427,5 +427,47 @@ PDF, scheduler, auth, or automatic audit logging flows. It returns a structured
 result with the event id, event type, table, row count, conflict behavior,
 write-performed flag, safety-boundary-preserved flag, and warnings.
 
-Unit tests for the writer use fake connection and cursor objects only. No live
-database writes are performed by those tests.
+The public writer entry point is `write_audit_event(conn, event)`.
+`execute_audit_event_insert` is an alias for the same behavior. The explicit
+connection object is required so the service does not create database
+connections and does not read `DATABASE_URL`.
+
+Before executing SQL, the writer validates `audit-event-v0`,
+`decision_support_only=true`, and the complete safety boundary:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Invalid events raise `ValueError` and execute no SQL. Valid events return a
+structured result containing `event_id`, `event_type`, `table`,
+`database_write_performed`, `rowcount`, `conflict_behavior`,
+`safety_boundary_preserved`, and `warnings`.
+
+Observed audit writer validation:
+
+- Focused audit writer tests passed: `14 passed`.
+- Full backend suite passed: `331 passed, 1 warning`.
+- `py_compile` passed for `backend/app/audit/writer.py` and
+  `backend/tests/test_audit_writer.py`.
+- Grep matched only safety-boundary strings and negative/static assertions.
+- `git diff --check` passed.
+- Tests used fake connection and cursor objects only.
+- No live database writes were performed.
+
+Interpretation: the writer is a backend foundation only. It proves a testable
+write boundary around the repository insert path, but it does not enable
+production audit persistence, add automatic audit logging, expose an API,
+modify frontend behavior, connect report/PDF flows to audit persistence, or
+create runtime integration.
+
+Non-goals remain unchanged: no FastAPI endpoint, frontend behavior, automatic
+audit logging, report/PDF flow integration, scheduler, Azure infrastructure,
+auth/Entra integration, live EDS/DMI calls, ML/LLM use, control, dispatch,
+activation, or operational functionality. A future module may add an API
+audit dry-run design or a manually invoked API-side audit logging wrapper.
+Do not wire automatic audit persistence into runtime flows yet, and do not add
+production DB writes without explicit review.

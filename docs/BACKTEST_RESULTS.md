@@ -50,6 +50,9 @@ Current read-only foundation:
   automatically writes audit events yet.
 - Manual local audit persistence dry-run preview exists for one synthetic
   audit event and repository SQL plan without database access or execution.
+- Audit writer service foundation exists for explicitly executing validated
+  `audit-event-v0` inserts through a caller-provided connection, but no
+  runtime flow is wired to it.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -416,6 +419,53 @@ EDS/DMI calls, ML/LLM use, control, dispatch, activation, or operational
 functionality. A future module may add a read-only API-side audit logging
 design or manual API audit dry-run, but automatic audit persistence must not
 be wired into runtime flows yet.
+
+### Audit Writer Service Foundation Validation
+
+`backend/app/audit/writer.py` is not a backtest, forecasting model,
+calibration step, production audit system, or runtime integration. It is a
+backend foundation that exposes `write_audit_event(conn, event)` and the
+`execute_audit_event_insert` alias for explicitly writing validated
+`audit-event-v0` records with a caller-provided connection.
+
+The writer does not create database connections, does not read
+`DATABASE_URL`, and does not expose API, frontend, report/PDF, scheduler,
+auth, or automatic audit logging behavior. It uses the existing audit
+repository insert SQL builder and validates `decision_support_only=true` plus
+the full read-only safety boundary before executing SQL:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Invalid events raise `ValueError` and execute no SQL. Valid events return
+`event_id`, `event_type`, `table`, `database_write_performed`, `rowcount`,
+`conflict_behavior`, `safety_boundary_preserved`, and `warnings`.
+
+Observed validation:
+
+| Check | Result |
+| --- | --- |
+| Focused audit writer tests | `14 passed` |
+| Full backend suite | `331 passed, 1 warning` |
+| `py_compile` for writer and tests | Passed |
+| Safety-boundary grep | Matched only safety-boundary strings and negative/static assertions |
+| `git diff --check` | Passed |
+
+The tests used fake connection/cursor objects only, and no live database
+writes were performed.
+
+Interpretation: the writer proves a testable write boundary around the
+repository insert path. It does not change backtest results, model validation,
+production readiness, API/frontend behavior, report/PDF behavior, or
+automatic audit logging status. It does not enable production audit
+persistence or add live EDS/DMI calls, ML/LLM use, scheduler, Azure
+infrastructure, auth/Entra integration, control, dispatch, activation, or
+operational functionality. Runtime integration remains intentionally deferred,
+and production DB writes require explicit review.
 
 ## Report Summary Boundary
 
