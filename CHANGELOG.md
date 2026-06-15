@@ -2,6 +2,44 @@
 
 ## v0.1.0 - TODO
 
+- Documented runtime audit event factory validation results. Recorded that
+  `backend/app/audit/runtime_events.py` now provides pure constructors
+  `build_current_risk_viewed_event`,
+  `build_forecast_preview_requested_event`,
+  `build_report_summary_built_event`,
+  `build_report_markdown_rendered_event`, and
+  `build_report_pdf_exported_event` for standardized `audit-event-v0`
+  dictionaries using existing `build_audit_event(...)`, explicit primitive
+  inputs, standardized event/action/resource mappings, minimal safe metadata,
+  and `runtime_factory_version=audit-runtime-event-factory-v0`. Documented
+  mappings for `current_risk_viewed`/`view_current_risk`/`risk_snapshot`,
+  `forecast_preview_requested`/`preview_forecast`/`forecast_preview`,
+  `report_summary_built`/`build_report_summary`/`report_summary`,
+  `report_markdown_rendered`/`render_report_markdown`/`report_markdown`, and
+  `report_pdf_exported`/`preview_report_pdf_export`/`report_pdf`; resource ids
+  include `price_area` plus `forecast-window-v0` or `report-summary-v0` where
+  relevant. Documented metadata boundaries: allowed minimal fields include
+  `price_area`, optional `request_id`, optional `source`,
+  `forecast_window_version`, `report_version`, `output_format`, optional
+  forecast `model_version`, and `runtime_factory_version`; forbidden metadata
+  includes raw `DATABASE_URL`, secrets, tokens, raw user claims, full request
+  headers, and full request bodies. Documented that every event preserves
+  `event_version=audit-event-v0`, `decision_support_only=true`, and the full
+  read-only human-review safety boundary. Recorded observed validation:
+  focused runtime event tests passed with `30 passed`; the full backend suite
+  passed with `361 passed, 1 warning`; `py_compile` passed for
+  `runtime_events` and tests; forbidden-pattern grep returned no matches;
+  `git diff --check` passed; tests were pure unit tests only; and no live DB
+  writes were performed. Clarified that the factory is a backend foundation
+  only and does not enable production audit persistence, automatic audit
+  logging, audit writer calls, database connections, `DATABASE_URL` handling,
+  migrations, FastAPI endpoints, API route changes, frontend behavior,
+  report/PDF runtime wiring, scheduler, Azure infrastructure, auth/Entra
+  integration, live EDS/DMI calls, ML/LLM behavior, control, dispatch,
+  activation, or operational functionality. Future work may add an API audit
+  dry-run wrapper/design after review, but automatic audit persistence remains
+  deferred and production DB writes require explicit review. This change is
+  documentation only.
 - Added `backend/app/audit/runtime_events.py`, a pure backend runtime audit
   event factory for standardized `audit-event-v0` dictionaries, plus
   `backend/tests/test_audit_runtime_events.py`. The factory delegates to

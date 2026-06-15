@@ -479,9 +479,79 @@ standardized future runtime `audit-event-v0` dictionaries. It constructs
 events for current-risk views, forecast-preview requests, report-summary
 builds, report Markdown rendering, and report PDF export previews.
 
+The implemented factory functions are:
+
+- `build_current_risk_viewed_event`
+- `build_forecast_preview_requested_event`
+- `build_report_summary_built_event`
+- `build_report_markdown_rendered_event`
+- `build_report_pdf_exported_event`
+
 The factory only returns dictionaries built through `build_audit_event(...)`.
-It does not write to the database, does not call the audit writer service,
-does not expose an API, does not modify frontend behavior, and is not wired
-into report, PDF, API, scheduler, auth, Azure, EDS, DMI, ML, LLM, control,
-dispatch, activation, or operational workflows. Runtime integration remains
-deferred and requires a separate explicit review.
+It accepts explicit primitive inputs, standardizes event/action/resource
+mapping, and adds minimal safe metadata with
+`runtime_factory_version=audit-runtime-event-factory-v0`.
+
+Standardized mappings:
+
+| Event type | Action | Resource type | Resource id includes |
+| --- | --- | --- | --- |
+| `current_risk_viewed` | `view_current_risk` | `risk_snapshot` | `price_area` |
+| `forecast_preview_requested` | `preview_forecast` | `forecast_preview` | `price_area`, `forecast-window-v0` |
+| `report_summary_built` | `build_report_summary` | `report_summary` | `price_area`, `report-summary-v0` |
+| `report_markdown_rendered` | `render_report_markdown` | `report_markdown` | `price_area`, `report-summary-v0` |
+| `report_pdf_exported` | `preview_report_pdf_export` | `report_pdf` | `price_area`, `report-summary-v0` |
+
+Metadata may include:
+
+- `price_area`
+- `request_id` if provided
+- `source` if provided
+- `forecast_window_version` where relevant
+- `report_version` where relevant
+- `output_format` where relevant
+- optional forecast `model_version` if provided
+- `runtime_factory_version`
+
+Metadata must not include raw `DATABASE_URL`, secrets, tokens, raw user
+claims, full request headers, or full request bodies.
+
+Every generated event preserves:
+
+- `event_version: audit-event-v0`
+- `decision_support_only: true`
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Observed validation:
+
+- Focused runtime event tests passed: `30 passed`.
+- Full backend suite passed: `361 passed, 1 warning`.
+- `py_compile` passed for `runtime_events` and tests.
+- Forbidden-pattern grep returned no matches.
+- `git diff --check` passed.
+- Tests were pure unit tests only.
+- No live DB writes were performed.
+
+Interpretation: the runtime audit event factory is a backend foundation only.
+It standardizes future runtime audit-event-v0 construction, but it does not
+enable production audit persistence, add automatic audit logging, call the
+audit writer, create database connections, read `DATABASE_URL`, write files,
+perform API calls, expose FastAPI routes, import FastAPI/APIRouter, modify
+frontend behavior, or connect report/PDF/API/frontend flows.
+
+Non-goals remain unchanged: no FastAPI endpoint, no `backend/app/main.py`
+change, no API route modification, no frontend behavior, no automatic audit
+logging, no audit writer call, no database write, no database connection, no
+`DATABASE_URL` handling, no migrations, no report/PDF runtime wiring, no
+scheduler, no Azure infrastructure, no auth/Entra integration, no live
+EDS/DMI calls, no ML/LLM use, and no control, dispatch, activation, or
+operational functionality.
+
+A future reviewed module may add an API audit dry-run wrapper/design. Do not
+wire automatic audit persistence into runtime flows yet, and do not add
+production DB writes without explicit review.

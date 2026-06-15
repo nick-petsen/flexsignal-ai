@@ -48,6 +48,9 @@ Working read-only core:
 - An audit writer service foundation exists in `backend/app/audit/writer.py`
   for explicitly executing validated `audit-event-v0` inserts through a
   caller-provided database connection.
+- A runtime audit event factory foundation exists in
+  `backend/app/audit/runtime_events.py` for constructing standardized
+  `audit-event-v0` dictionaries for future read-only runtime actions.
 - Manual local audit persistence dry-run preview exists for building one
   synthetic `audit-event-v0` and repository SQL plan without database access
   or execution.
@@ -101,18 +104,19 @@ Still preview / not production:
   database, expose an API, add frontend download behavior, use ML, or use LLMs.
 - `audit-event-v0` now has a schema/repository persistence foundation and a
   manual local DB write smoke script and a backend writer service foundation,
-  but no API, frontend, report/PDF flow, scheduler, auth/Entra integration,
-  automatic logging, or runtime database write path is wired to it. It does
-  not call Energi Data Service, call DMI/weather APIs, use ML, use LLMs, or
-  perform automatic control, dispatch, activation, or operational
-  energy-system integration. The manual audit persistence preview only prints
-  a dry-run SQL plan. The write smoke script defaults to dry-run and only
-  writes one synthetic event to a local `audit_events` table when explicitly
-  executed with a local database URL. A manual local Postgres write smoke has
-  verified repository insert, idempotency, and verify-read by `event_id`
-  locally. The writer service validates and executes through a supplied
-  connection only; this does not enable production audit persistence or
-  automatic audit logging.
+  plus a runtime event factory foundation, but no API, frontend, report/PDF
+  flow, scheduler, auth/Entra integration, automatic logging, or runtime
+  database write path is wired to it. It does not call Energi Data Service,
+  call DMI/weather APIs, use ML, use LLMs, or perform automatic control,
+  dispatch, activation, or operational energy-system integration. The manual
+  audit persistence preview only prints a dry-run SQL plan. The write smoke
+  script defaults to dry-run and only writes one synthetic event to a local
+  `audit_events` table when explicitly executed with a local database URL. A
+  manual local Postgres write smoke has verified repository insert,
+  idempotency, and verify-read by `event_id` locally. The writer service
+  validates and executes through a supplied connection only. The runtime
+  factory only returns dictionaries; neither foundation enables production
+  audit persistence or automatic audit logging.
 - No DMI/weather ingestion exists yet.
 - No auth, Azure deployment, scheduled ingestion jobs, or production database
   exist.
@@ -539,6 +543,60 @@ persistence. Runtime integration remains intentionally deferred. A future
 module may add an API audit dry-run design or a manually invoked API-side
 audit logging wrapper. Do not wire automatic audit persistence into runtime
 flows yet, and do not add production DB writes without explicit review.
+
+### Runtime Audit Event Factory Validation
+
+`backend/app/audit/runtime_events.py` adds a pure backend factory for
+standardized future runtime `audit-event-v0` dictionaries. It uses existing
+`build_audit_event(...)`, explicit primitive inputs, minimal safe metadata,
+and `runtime_factory_version=audit-runtime-event-factory-v0`.
+
+Implemented factory functions:
+
+- `build_current_risk_viewed_event`
+- `build_forecast_preview_requested_event`
+- `build_report_summary_built_event`
+- `build_report_markdown_rendered_event`
+- `build_report_pdf_exported_event`
+
+Standardized mappings:
+
+| Event type | Action | Resource type | Resource id includes |
+| --- | --- | --- | --- |
+| `current_risk_viewed` | `view_current_risk` | `risk_snapshot` | `price_area` |
+| `forecast_preview_requested` | `preview_forecast` | `forecast_preview` | `price_area`, `forecast-window-v0` |
+| `report_summary_built` | `build_report_summary` | `report_summary` | `price_area`, `report-summary-v0` |
+| `report_markdown_rendered` | `render_report_markdown` | `report_markdown` | `price_area`, `report-summary-v0` |
+| `report_pdf_exported` | `preview_report_pdf_export` | `report_pdf` | `price_area`, `report-summary-v0` |
+
+Runtime factory metadata may include `price_area`, `request_id`, `source`,
+`forecast_window_version`, `report_version`, `output_format`, optional
+forecast `model_version`, and `runtime_factory_version`. It must not include
+raw `DATABASE_URL`, secrets, tokens, raw user claims, full request headers, or
+full request bodies.
+
+Each generated event preserves `event_version=audit-event-v0`,
+`decision_support_only=true`, `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`, and
+`human_review_required=true`.
+
+Observed validation documented focused runtime event tests passing with
+`30 passed`, the full backend suite passing with `361 passed, 1 warning`,
+`py_compile` passing for `runtime_events` and tests, forbidden-pattern grep
+returning no matches, and `git diff --check` passing. Tests were pure unit
+tests only, and no live database writes were performed.
+
+Interpretation: the runtime audit event factory is a backend foundation only.
+It standardizes future runtime audit-event construction but does not enable
+production audit persistence, add automatic audit logging, call the audit
+writer, create database connections, read `DATABASE_URL`, expose an API,
+modify frontend behavior, write files, call EDS/DMI, use ML/LLMs, connect
+report/PDF flows, add scheduler/auth/Azure infrastructure, or add control,
+dispatch, activation, or operational functionality. Runtime integration
+remains intentionally deferred. A future reviewed module may add an API audit
+dry-run wrapper/design, but automatic audit persistence must not be wired into
+runtime flows yet and production DB writes require explicit review.
 
 ## Report Summary Foundation
 
