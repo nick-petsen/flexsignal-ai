@@ -935,3 +935,18 @@ were performed, no live EDS polling was performed, no startup migrations were
 run, no Azure resources were used, no production database was used, no LLM or
 ML model was used, and no automatic control, dispatch, activation, or
 operational functionality exists.
+
+## Audit Writer Service Foundation
+
+`backend/app/audit/writer.py` is a backend service foundation for explicitly
+writing validated `audit-event-v0` records. It is not a model, not a
+forecasting component, not an LLM decision component, and not operational
+automation. The writer requires an explicit database connection from its
+caller, uses the existing audit repository parameterized insert SQL builder,
+and validates that `decision_support_only` and the full human-review safety
+boundary are true before executing SQL.
+
+The writer does not create database connections, does not read `DATABASE_URL`,
+does not expose an endpoint, and is not wired to API, frontend, report, PDF, or
+automatic audit logging flows. Its unit tests use fake connections only, so the
+test suite performs no live audit database writes.

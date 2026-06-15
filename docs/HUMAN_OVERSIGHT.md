@@ -412,3 +412,20 @@ activation, or operational functionality. A future module may add a read-only
 API-side audit logging design or manual API audit dry-run. Do not wire
 automatic audit persistence into runtime flows yet, and do not add production
 DB writes without explicit review.
+
+## Audit Writer Service Foundation
+
+`backend/app/audit/writer.py` adds an explicit audit writer service foundation
+for `audit-event-v0`. The service requires a caller-provided database
+connection object, uses the existing audit repository insert SQL builder, and
+executes one parameterized `audit_events` insert only after validating the
+decision-support safety boundary.
+
+The writer does not create database connections, does not read `DATABASE_URL`,
+does not add FastAPI endpoints, and is not wired into API, frontend, report,
+PDF, scheduler, auth, or automatic audit logging flows. It returns a structured
+result with the event id, event type, table, row count, conflict behavior,
+write-performed flag, safety-boundary-preserved flag, and warnings.
+
+Unit tests for the writer use fake connection and cursor objects only. No live
+database writes are performed by those tests.
