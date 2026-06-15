@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Added audit-event database persistence foundation for `audit-event-v0`.
+  New Alembic migration `0002_audit_events.py` defines an `audit_events`
+  table with `event_id` as the primary/idempotency key, event version/type,
+  actor, occurrence time, resource, action, outcome,
+  `decision_support_only`, JSONB `safety_boundary`, JSONB `metadata`,
+  `created_at_utc`, and indexes for occurrence time, event type, resource, and
+  actor. New `backend/app/audit/repository.py` validates
+  `build_audit_event(...)` dictionaries, preserves the required read-only
+  safety boundary, serializes JSONB fields as parameters, and builds
+  parameterized `ON CONFLICT (event_id) DO NOTHING` insert SQL. Added focused
+  repository/migration tests and updated README, human oversight, model card,
+  and backtest docs. This does not add FastAPI endpoints, frontend UI,
+  automatic audit logging, report/PDF persistence wiring, scheduled logging,
+  auth/Entra integration, Azure infrastructure, secrets, ML/LLM behavior,
+  live API calls, live database writes, or control, dispatch, activation, or
+  operational functionality. Future work can wire explicit read-only flows to
+  audit persistence only after review.
 - Documented observed manual audit-event preview validation results. The
   documented checks were
   `python3 -m py_compile scripts/audit_event_preview.py`,

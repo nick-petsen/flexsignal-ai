@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.energy import router as energy_router
@@ -12,15 +12,24 @@ LOCAL_DEVELOPMENT_CORS_ORIGINS = (
     "http://127.0.0.1:3000",
 )
 
+
+def _include_materialized_router(application: FastAPI, router: APIRouter) -> None:
+    """Register routes so app.routes exposes concrete route paths."""
+    application.router.routes.extend(router.routes)
+    mark_routes_changed = getattr(application.router, "_mark_routes_changed", None)
+    if callable(mark_routes_changed):
+        mark_routes_changed()
+
+
 app = FastAPI(title="FlexSignal AI API", version=APP_VERSION)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=LOCAL_DEVELOPMENT_CORS_ORIGINS,
     allow_methods=("GET", "POST", "OPTIONS"),
 )
-app.include_router(energy_router)
-app.include_router(forecast_router)
-app.include_router(risk_router)
+_include_materialized_router(app, energy_router)
+_include_materialized_router(app, forecast_router)
+_include_materialized_router(app, risk_router)
 
 
 @app.get("/health")
