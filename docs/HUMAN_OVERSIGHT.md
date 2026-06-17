@@ -563,18 +563,36 @@ future runtime audit persistence. It combines the runtime event factory in
 `backend/app/audit/runtime_events.py` with the repository INSERT SQL builder
 in `backend/app/audit/repository.py` and returns a dictionary plan only.
 
-Implemented planner functions cover current-risk views, forecast-preview
-requests, report-summary builds, report Markdown rendering, and report PDF
-export previews. Each output includes `dry_run=true`,
-`database_write_performed=false`, `requires_database_url=false`, the
-`audit-event-v0` event, an `audit_events` persistence plan, the `event_id`,
-the `event_type`, conflict behavior `ON CONFLICT (event_id) DO NOTHING`, the
-read-only human-review safety boundary, and warnings.
+Implemented planner functions:
+
+- `build_current_risk_viewed_audit_plan`
+- `build_forecast_preview_requested_audit_plan`
+- `build_report_summary_built_audit_plan`
+- `build_report_markdown_rendered_audit_plan`
+- `build_report_pdf_exported_audit_plan`
+
+Each output includes `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, `event`,
+`persistence_plan`, `event_id`, `event_type`, `table=audit_events`,
+`conflict_behavior`, `safety_boundary`, and `warnings`.
 
 The persistence plan exposes the repository-built SQL preview, parameter
 keys/params, `event_id` idempotency key, target table, operation, and explicit
-non-execution status. It does not include raw `DATABASE_URL`, secrets, tokens,
-raw user claims, full request headers, or full request bodies.
+non-execution status. The target table is `audit_events`; the idempotency key
+is `event_id`; conflict behavior is
+`ON CONFLICT (event_id) DO NOTHING`. SQL and parameters are previewed only, and
+no SQL is executed.
+
+Metadata remains safe and minimal. Planner output does not include raw
+`DATABASE_URL`, secrets, tokens, raw user claims, full request headers, or full
+request bodies. Every event preserves:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
 
 This planner does not write to the database, call the audit writer service,
 create database connections, read `DATABASE_URL`, execute SQL, expose an API,
@@ -584,3 +602,30 @@ flows, add scheduler/auth/Azure infrastructure, call EDS/DMI, use ML/LLMs, or
 add control, dispatch, activation, or operational functionality. Runtime
 integration remains deferred; this prepares a safe future API audit dry-run
 step only.
+
+Observed runtime dry-run planner validation:
+
+- Focused runtime plan tests passed: `32 passed`.
+- Full backend suite passed: `393 passed, 1 warning`.
+- `py_compile` passed for `runtime_plan` and tests.
+- Forbidden-pattern grep matched only safety/negative assertions in tests.
+- `git diff --check` passed.
+- Tests were pure unit tests only.
+- No live DB writes were performed.
+
+Interpretation: the runtime dry-run planner is a backend foundation only. It
+prepares a safe future API audit dry-run step, but it does not enable
+production audit persistence, add automatic audit logging, call the audit
+writer, expose an API, modify frontend behavior, or connect report/PDF flows.
+
+Non-goals remain unchanged: no FastAPI endpoint, no `backend/app/main.py`
+change, no API route modification, no frontend behavior, no automatic audit
+logging, no audit writer call, no database write, no database connection, no
+`DATABASE_URL` handling, no migrations, no report/PDF runtime wiring, no
+scheduler, no Azure infrastructure, no auth/Entra integration, no live EDS/DMI
+calls, no ML/LLM use, and no control, dispatch, activation, or operational
+functionality.
+
+A future reviewed module may add an API-side audit dry-run endpoint or
+wrapper. Do not wire automatic audit persistence into runtime flows yet, and
+do not add production DB writes without explicit review.

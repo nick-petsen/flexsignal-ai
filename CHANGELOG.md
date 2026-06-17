@@ -17,8 +17,29 @@
   migrations, integrate with report/PDF/API/frontend flows, add scheduler,
   Azure, auth, EDS/DMI, ML/LLM, control, dispatch, activation, or operational
   functionality. Runtime integration remains deferred; this prepares a safe
-  future API audit dry-run step only. Focused planner tests passed with
-  `32 passed`; full backend validation requires a Python 3.11+ environment.
+  future API audit dry-run step only. Implemented planner functions are
+  `build_current_risk_viewed_audit_plan`,
+  `build_forecast_preview_requested_audit_plan`,
+  `build_report_summary_built_audit_plan`,
+  `build_report_markdown_rendered_audit_plan`, and
+  `build_report_pdf_exported_audit_plan`. Each plan includes `dry_run=true`,
+  `database_write_performed=false`, `requires_database_url=false`, `event`,
+  `persistence_plan`, `event_id`, `event_type`, `table=audit_events`,
+  `conflict_behavior`, `safety_boundary`, and `warnings`. The persistence plan
+  previews the repository INSERT for `audit_events`; `event_id` is the
+  idempotency key and conflict behavior is
+  `ON CONFLICT (event_id) DO NOTHING`. SQL and parameters are previewed only,
+  and no SQL is executed. Metadata remains safe and minimal: raw
+  `DATABASE_URL`, secrets, tokens, full request headers, and full request
+  bodies are not included. The full read-only human-review safety boundary is
+  preserved. Observed validation: focused planner tests passed with
+  `32 passed`; full backend suite passed with `393 passed, 1 warning`;
+  `py_compile` passed for `runtime_plan` and tests; forbidden-pattern grep
+  matched only safety/negative assertions in tests; `git diff --check`
+  passed; tests were pure unit tests only; and no live DB writes were
+  performed. Future work may add an API-side audit dry-run endpoint or wrapper
+  after review, but automatic audit persistence remains deferred and
+  production DB writes require explicit review.
 - Documented runtime audit event factory validation results. Recorded that
   `backend/app/audit/runtime_events.py` now provides pure constructors
   `build_current_risk_viewed_event`,
