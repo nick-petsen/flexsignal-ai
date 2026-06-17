@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Added `backend/app/audit/runtime_plan.py`, a pure backend runtime audit
+  persistence dry-run planner, plus
+  `backend/tests/test_audit_runtime_plan.py`. The planner delegates to
+  `runtime_events.py` factory functions, uses the audit repository INSERT SQL
+  builder, and returns dictionaries with `dry_run=true`,
+  `database_write_performed=false`, `requires_database_url=false`, the
+  `audit-event-v0` event, repository-built `audit_events` persistence plan,
+  `event_id`, `event_type`, conflict behavior
+  `ON CONFLICT (event_id) DO NOTHING`, safety-boundary details, and warnings.
+  It does not write to the database, call the audit writer service, create
+  database connections, read `DATABASE_URL`, execute SQL, expose an API,
+  modify `backend/app/main.py`, modify routes, modify frontend behavior, add
+  migrations, integrate with report/PDF/API/frontend flows, add scheduler,
+  Azure, auth, EDS/DMI, ML/LLM, control, dispatch, activation, or operational
+  functionality. Runtime integration remains deferred; this prepares a safe
+  future API audit dry-run step only. Focused planner tests passed with
+  `32 passed`; full backend validation requires a Python 3.11+ environment.
 - Documented runtime audit event factory validation results. Recorded that
   `backend/app/audit/runtime_events.py` now provides pure constructors
   `build_current_risk_viewed_event`,
