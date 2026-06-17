@@ -1003,15 +1003,22 @@ only. It does not write to the database, call the audit writer service, create
 database connections, read `DATABASE_URL`, execute SQL, expose an API, modify
 frontend behavior, or integrate with report/PDF/API/frontend flows.
 
+Implemented planner functions are
+`build_current_risk_viewed_audit_plan`,
+`build_forecast_preview_requested_audit_plan`,
+`build_report_summary_built_audit_plan`,
+`build_report_markdown_rendered_audit_plan`, and
+`build_report_pdf_exported_audit_plan`.
+
 Planner outputs include `dry_run=true`,
 `database_write_performed=false`, `requires_database_url=false`, the event, a
 repository-built `persistence_plan`, `event_id`, `event_type`,
 `table=audit_events`, conflict behavior
 `ON CONFLICT (event_id) DO NOTHING`, the preserved safety boundary, and
 warnings. The persistence plan includes SQL preview, params/parameter keys,
-and the event idempotency key. It is a safe future API audit dry-run
-preparation step only; runtime integration and automatic audit logging remain
-deferred.
+and the `event_id` idempotency key. SQL and parameters are previewed only; no
+SQL is executed. It is a safe future API audit dry-run preparation step only;
+runtime integration and automatic audit logging remain deferred.
 
 Implemented factory functions:
 
@@ -1048,12 +1055,20 @@ Observed validation documented focused runtime event tests passing with
 returning no matches, and `git diff --check` passing. These were pure unit
 tests only and did not perform live database writes.
 
+Observed runtime dry-run planner validation documented focused runtime plan
+tests passing with `32 passed`, the full backend suite passing with
+`393 passed, 1 warning`, `py_compile` passing for `runtime_plan` and tests,
+forbidden-pattern grep matching only safety/negative assertions in tests, and
+`git diff --check` passing. Planner tests were pure unit tests only and
+performed no live database writes.
+
 Interpretation: the runtime factory does not affect model quality, forecast
 performance, statistical calibration, production readiness, or operational
 fitness. It standardizes future audit-event construction only. It does not
 enable production audit persistence, automatic audit logging, audit writer
-calls, database connections, `DATABASE_URL` handling, migrations, FastAPI
-endpoints, route changes, frontend behavior, report/PDF runtime wiring,
-schedulers, Azure infrastructure, auth/Entra integration, live EDS/DMI calls,
-ML/LLM behavior, control, dispatch, activation, or operational functionality.
-A future API audit dry-run wrapper/design may be reviewed separately.
+calls, database writes, database connections, `DATABASE_URL` handling,
+migrations, FastAPI endpoints, route changes, frontend behavior, report/PDF
+runtime wiring, schedulers, Azure infrastructure, auth/Entra integration, live
+EDS/DMI calls, ML/LLM behavior, control, dispatch, activation, or operational
+functionality. A future API audit dry-run wrapper/design may be reviewed
+separately; production DB writes require explicit review.
