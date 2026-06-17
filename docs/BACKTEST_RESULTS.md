@@ -1594,3 +1594,28 @@ or add control, dispatch, activation, or operational functionality. Runtime
 integration remains deferred. This validation does not change any backtest
 result, model-performance claim, forecast-validation status, or production
 readiness assessment.
+
+## Runtime Audit Dry-Run Planner Boundary
+
+`backend/app/audit/runtime_plan.py` is outside the backtest path and does not
+change scoring, row pairing, forecast windows, report generation, API
+behavior, frontend behavior, or any documented backtest result. It is a pure
+backend planner that combines `runtime_events.py` factory output with the
+audit repository INSERT SQL builder and returns a dry-run dictionary only.
+
+Supported dry-run planner functions cover current-risk views,
+forecast-preview requests, report-summary builds, report Markdown rendering,
+and report PDF export previews. Each result includes `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, the
+`audit-event-v0`, a repository-built persistence plan for `audit_events`,
+`event_id`, `event_type`, conflict behavior
+`ON CONFLICT (event_id) DO NOTHING`, safety-boundary details, and warnings.
+
+The persistence plan includes SQL preview, params/parameter keys, and
+`event_id` as the idempotency key. It does not include raw `DATABASE_URL`,
+secrets, tokens, raw user claims, full request headers, or full request bodies.
+It does not write to a database, call the audit writer service, create
+database connections, execute SQL, expose an API, modify frontend behavior,
+add migrations, call EDS/DMI, use ML/LLMs, schedule work, add Azure/auth
+infrastructure, or add control, dispatch, activation, or operational
+functionality. Runtime integration remains deferred.

@@ -996,6 +996,23 @@ does not modify frontend behavior, and is not integrated with report, PDF, API,
 scheduler, auth, Azure, EDS, DMI, control, dispatch, activation, or operational
 flows. Runtime wiring remains deferred.
 
+`backend/app/audit/runtime_plan.py` adds the next pure backend dry-run layer:
+runtime audit persistence planning. The planner calls the runtime event
+factory, then calls the repository INSERT SQL builder, and returns a dictionary
+only. It does not write to the database, call the audit writer service, create
+database connections, read `DATABASE_URL`, execute SQL, expose an API, modify
+frontend behavior, or integrate with report/PDF/API/frontend flows.
+
+Planner outputs include `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, the event, a
+repository-built `persistence_plan`, `event_id`, `event_type`,
+`table=audit_events`, conflict behavior
+`ON CONFLICT (event_id) DO NOTHING`, the preserved safety boundary, and
+warnings. The persistence plan includes SQL preview, params/parameter keys,
+and the event idempotency key. It is a safe future API audit dry-run
+preparation step only; runtime integration and automatic audit logging remain
+deferred.
+
 Implemented factory functions:
 
 | Function | Event type | Action | Resource type |

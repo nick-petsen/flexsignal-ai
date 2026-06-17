@@ -555,3 +555,32 @@ operational functionality.
 A future reviewed module may add an API audit dry-run wrapper/design. Do not
 wire automatic audit persistence into runtime flows yet, and do not add
 production DB writes without explicit review.
+
+## Runtime Audit Persistence Dry-Run Planner
+
+`backend/app/audit/runtime_plan.py` adds a pure backend dry-run planner for
+future runtime audit persistence. It combines the runtime event factory in
+`backend/app/audit/runtime_events.py` with the repository INSERT SQL builder
+in `backend/app/audit/repository.py` and returns a dictionary plan only.
+
+Implemented planner functions cover current-risk views, forecast-preview
+requests, report-summary builds, report Markdown rendering, and report PDF
+export previews. Each output includes `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, the
+`audit-event-v0` event, an `audit_events` persistence plan, the `event_id`,
+the `event_type`, conflict behavior `ON CONFLICT (event_id) DO NOTHING`, the
+read-only human-review safety boundary, and warnings.
+
+The persistence plan exposes the repository-built SQL preview, parameter
+keys/params, `event_id` idempotency key, target table, operation, and explicit
+non-execution status. It does not include raw `DATABASE_URL`, secrets, tokens,
+raw user claims, full request headers, or full request bodies.
+
+This planner does not write to the database, call the audit writer service,
+create database connections, read `DATABASE_URL`, execute SQL, expose an API,
+modify frontend behavior, modify `backend/app/main.py`, modify existing
+routes, write files, add migrations, integrate with report/PDF/API/frontend
+flows, add scheduler/auth/Azure infrastructure, call EDS/DMI, use ML/LLMs, or
+add control, dispatch, activation, or operational functionality. Runtime
+integration remains deferred; this prepares a safe future API audit dry-run
+step only.
