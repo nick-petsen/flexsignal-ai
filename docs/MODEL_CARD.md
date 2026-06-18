@@ -214,13 +214,22 @@ validates `build_audit_event(...)` dictionaries, preserves the full read-only
 safety boundary, serializes JSONB fields as parameters, and builds
 parameterized `ON CONFLICT (event_id) DO NOTHING` insert SQL.
 
+`POST /api/audit/preview` is a read-only API wrapper for the runtime audit
+persistence planner. It returns dry-run audit persistence plans for reviewed
+event types only and reports `dry_run=true`,
+`database_write_performed=false`, and `requires_database_url=false`. It does
+not write to the database, call the audit writer service, create database
+connections, read `DATABASE_URL`, add automatic audit logging, generate
+reports/PDFs, call EDS/DMI, or wire audit persistence into risk, forecast, or
+report runtime flows.
+
 This foundation does not automatically persist audit logs, write files, expose
-an API, add frontend UI, connect report/PDF flows, run scheduled logging,
-connect to auth/Entra, call Energi Data Service, call DMI/weather APIs, use
-ML, use LLMs, add Azure infrastructure, add auth, add secrets, or perform
-operational behavior. It must not be used for automatic control, dispatch,
-activation, closed-loop workflows, asset connections, plant/device commands,
-live control signals, or autonomous decisions.
+runtime audit writes, write files, add frontend UI, connect report/PDF flows,
+run scheduled logging, connect to auth/Entra, call Energi Data Service, call
+DMI/weather APIs, use ML, use LLMs, add Azure infrastructure, add auth, add
+secrets, or perform operational behavior. It must not be used for automatic
+control, dispatch, activation, closed-loop workflows, asset connections,
+plant/device commands, live control signals, or autonomous decisions.
 
 `scripts/audit_event_preview.py` is a manual synthetic local JSON preview for
 `audit-event-v0`. It imports `build_audit_event(...)`, uses fixed

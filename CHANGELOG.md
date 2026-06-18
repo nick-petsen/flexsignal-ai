@@ -2,6 +2,26 @@
 
 ## v0.1.0 - TODO
 
+- Added `POST /api/audit/preview`, a read-only FastAPI audit persistence
+  dry-run endpoint, plus `backend/tests/test_api_audit_preview.py`. The
+  endpoint delegates only to `backend/app/audit/runtime_plan.py` planner
+  functions for `current_risk_viewed`, `forecast_preview_requested`,
+  `report_summary_built`, `report_markdown_rendered`, and
+  `report_pdf_exported`, validates `DK1`/`DK2` price areas, defaults omitted
+  API actor fields to `actor_type=local_user` and
+  `actor_id=unknown-local-user`, and returns the existing dry-run plan shape
+  with `dry_run=true`, `database_write_performed=false`,
+  `requires_database_url=false`, `event`, `persistence_plan`, `event_id`,
+  `event_type`, `table=audit_events`, `ON CONFLICT (event_id) DO NOTHING`,
+  safety-boundary details, and warnings. Added `local_user` to allowed audit
+  actor types so the API default is valid. This endpoint does not write to the
+  database, call the audit writer service, create database connections, read
+  `DATABASE_URL`, execute SQL, add migrations, modify frontend behavior,
+  trigger report/PDF generation, add automatic audit logging, wire audit
+  persistence into report/PDF/forecast/risk runtime flows, add scheduler,
+  Azure, auth, EDS/DMI, ML/LLM, control, dispatch, activation, or operational
+  functionality. It is a preview endpoint for future reviewed audit
+  integration only.
 - Added `backend/app/audit/runtime_plan.py`, a pure backend runtime audit
   persistence dry-run planner, plus
   `backend/tests/test_audit_runtime_plan.py`. The planner delegates to

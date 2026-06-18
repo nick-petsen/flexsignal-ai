@@ -53,6 +53,11 @@ Current read-only foundation:
 - Audit writer service foundation exists for explicitly executing validated
   `audit-event-v0` inserts through a caller-provided connection, but no
   runtime flow is wired to it.
+- `POST /api/audit/preview` exposes audit persistence dry-run plans for
+  reviewed event types only. It returns `dry_run=true`,
+  `database_write_performed=false`, and `requires_database_url=false`; it does
+  not execute SQL, write audit events, call the audit writer, or wire audit
+  persistence into report/PDF/forecast/risk runtime flows.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
@@ -81,11 +86,11 @@ Still preview / not production:
   explicit `--output` path is provided and refuses overwrite without
   `--force`.
 - `audit-event-v0` and the manual audit-event preview have a schema/repository
-  persistence foundation available for later explicit reviewed wiring, but do
-  not automatically persist audit logs, write files, expose an API, add
-  frontend UI, connect report/PDF flows, run scheduled logging, connect to
-  auth/Entra, call EDS or DMI/weather APIs, use ML, use LLMs, or validate
-  production forecast performance.
+  persistence foundation and read-only API dry-run preview available for later
+  explicit reviewed wiring, but do not automatically persist audit logs, write
+  files, add frontend UI, connect report/PDF flows, run scheduled logging,
+  connect to auth/Entra, call EDS or DMI/weather APIs, use ML, use LLMs, or
+  validate production forecast performance.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.

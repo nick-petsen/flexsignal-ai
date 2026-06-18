@@ -161,7 +161,11 @@ def test_endpoint_submits_select_only_query(monkeypatch: Any) -> None:
 
 def test_app_exposes_no_mutating_write_methods() -> None:
     mutating_methods = {"PUT", "PATCH", "DELETE"}
-    allowed_preview_posts = {"/api/risk/preview", "/api/forecast/preview"}
+    allowed_preview_posts = {
+        "/api/risk/preview",
+        "/api/forecast/preview",
+        "/api/audit/preview",
+    }
 
     exposed_mutating_routes = [
         (route.path, sorted(route.methods & mutating_methods))

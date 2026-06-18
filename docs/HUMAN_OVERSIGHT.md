@@ -253,6 +253,33 @@ controlled local audit persistence write testing must be a separate reviewed
 module, and report/PDF/frontend/API flows should not be connected to audit
 persistence until explicit review.
 
+## Audit API Dry-Run Preview
+
+`POST /api/audit/preview` exposes a read-only FastAPI wrapper around the
+runtime audit persistence planner for these explicit event types:
+`current_risk_viewed`, `forecast_preview_requested`,
+`report_summary_built`, `report_markdown_rendered`, and
+`report_pdf_exported`.
+
+The endpoint accepts caller-provided event metadata such as `price_area`,
+optional actor fields, optional request/source identifiers, optional
+`occurred_at_utc`, and relevant report or forecast version fields. It rejects
+unsupported event types and price areas outside `DK1`/`DK2` with HTTP 400.
+When actor fields are omitted, the API uses `actor_type=local_user` and
+`actor_id=unknown-local-user`.
+
+The response is a dry-run persistence plan only. It includes `dry_run=true`,
+`database_write_performed=false`, `requires_database_url=false`, the planned
+`audit_events` target, `ON CONFLICT (event_id) DO NOTHING`, warnings, and the
+full read-only human-review safety boundary.
+
+This API does not write to the database, call the audit writer service, create
+database connections, read `DATABASE_URL`, run SQL, write files, add automatic
+audit logging, call EDS/DMI, generate reports or PDFs, modify frontend
+behavior, use ML or LLMs, add scheduler/auth/Azure behavior, or connect to
+report/PDF/forecast/risk runtime flows. It is a preview endpoint for future
+reviewed audit integration only.
+
 ## Audit DB Write Smoke
 
 `scripts/audit_db_write_smoke.py` is a manual local-only smoke script for one
