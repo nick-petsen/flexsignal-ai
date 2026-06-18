@@ -23,6 +23,7 @@ ALLOWED_ACTOR_TYPES = frozenset(
     {
         "human_user",
         "local_developer",
+        "local_user",
         "system_test",
     }
 )
