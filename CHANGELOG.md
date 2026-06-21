@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual local energy freshness DB smoke results for
+  `scripts/energy_freshness_db_smoke.py`. The smoke used explicit
+  `--execute` and a local `--database-url`, performed SELECT-only freshness
+  reads, performed no database writes, made no live EDS/DMI calls, and started
+  no backend or frontend server. Observed DK1 results:
+  `database_query_executed=true`, `database_write_performed=false`, spot
+  price `row_count=53`, spot price latest timestamp
+  `2026-06-11T21:45:00+02:00`, power balance `row_count=53`, power balance
+  latest timestamp `2026-06-10T17:00:00+02:00`, warnings `[]`. Observed DK2
+  results: `database_query_executed=true`,
+  `database_write_performed=false`, spot price `row_count=50`, spot price
+  latest timestamp `2026-06-11T21:45:00+02:00`, power balance
+  `row_count=50`, power balance latest timestamp
+  `2026-06-10T17:00:00+02:00`, warnings `[]`. This proves local DB-backed
+  freshness reads work against the observed local data, does not mean
+  production freshness monitoring exists, and prepares future DB-backed
+  API/dashboard freshness indicators. This change is documentation only.
 - Added `scripts/energy_freshness_db_smoke.py`, a manual local-only smoke
   script for DB-executed energy freshness reads, plus focused unit tests in
   `backend/tests/test_energy_freshness_db_smoke.py`. The script reuses

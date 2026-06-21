@@ -121,6 +121,21 @@ add Azure/auth infrastructure, use ML/LLMs, write audit events, wire
 report/PDF flows, or add control, dispatch, activation, or operational
 functionality. It is manual/local read-only freshness validation only.
 
+Observed local DB smoke results:
+
+| Area | DB query executed | DB write performed | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp | Warnings |
+| --- | --- | --- | ---: | --- | ---: | --- | --- |
+| DK1 | true | false | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` | `[]` |
+| DK2 | true | false | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` | `[]` |
+
+The observed smoke used explicit `--execute` and a local `--database-url`.
+Reads were SELECT-only. No database writes were performed, no live EDS/DMI
+calls were made, and no backend or frontend server was started. This proves
+local DB-backed freshness reads work for the observed local data, but it does
+not change `rule-engine-v0`, establish production freshness monitoring, or
+validate predictive performance. It prepares future DB-backed API/dashboard
+freshness indicators only.
+
 Observed frontend freshness card validation:
 
 - `npm run build` passed.

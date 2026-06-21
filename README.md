@@ -79,6 +79,11 @@ Working read-only core:
   no data, never prints the raw database URL, does not call EDS/DMI APIs, and
   does not add API, frontend, scheduler, Azure, auth, ML/LLM, audit-write,
   report/PDF, control, dispatch, activation, or operational behavior.
+- Observed manual local energy freshness DB smoke results confirm local
+  DB-backed freshness reads work for stored DK1/DK2 data using explicit
+  `--execute` and a local `--database-url`. Reads were SELECT-only, no
+  database writes were performed, no live EDS/DMI calls were made, and no
+  backend or frontend server was started.
 - `POST /api/audit/preview` exists as a reviewed read-only audit persistence
   dry-run preview API. It exposes runtime planner output for inspection only
   and does not add automatic audit logging or wire audit persistence into
@@ -299,19 +304,36 @@ boundary. It writes no data, does not fetch EDS/DMI data, does not expose an
 API, does not add frontend behavior, and must not be used for automatic
 control, dispatch, or activation.
 
-Frontend freshness card non-goals: this documentation step did not change
-backend behavior, add a backend endpoint, add database code, execute SQL,
-write to a database, add migrations, call live Energi Data Service, call
-DMI/weather APIs, add auth, add Azure infrastructure, add ML/LLM behavior,
-write audit events, wire report/PDF flows, or add control, dispatch,
-activation, closed-loop, live-control, or operational functionality.
+Observed local DB smoke results:
+
+| Area | DB query executed | DB write performed | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp | Warnings |
+| --- | --- | --- | ---: | --- | ---: | --- | --- |
+| DK1 | true | false | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` | `[]` |
+| DK2 | true | false | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` | `[]` |
+
+The observed smoke used explicit `--execute` and a local `--database-url`.
+Reads were SELECT-only through the existing freshness reader. No database
+writes were performed, no live Energi Data Service or DMI/weather calls were
+made, and no backend or frontend server was started. This proves local
+DB-backed freshness reads work against the observed local database contents.
+It does not yet mean production freshness monitoring exists; it prepares
+future DB-backed API/dashboard freshness indicators only.
+
+Manual freshness smoke non-goals: this documentation step did not change
+backend behavior, modify frontend behavior, add a backend endpoint, add
+database code, write to a database, add migrations, call live Energi Data
+Service, call DMI/weather APIs, add auth, add Azure infrastructure, add ML/LLM
+behavior, write audit events, wire report/PDF flows, or add control,
+dispatch, activation, closed-loop, live-control, or operational functionality.
 
 Interpretation: the energy freshness preview API and frontend card are
-read-only and expose query-plan previews only. They do not prove live database
-freshness, execute freshness SQL, fetch new data, or write data. A future
-reviewed module may add a controlled DB-backed read endpoint that executes
-freshness SELECT queries. Another future module may improve the dashboard UI
-after live freshness reads exist; DB execution and live ingestion remain
+read-only and expose query-plan previews only. The manual local DB smoke proves
+the existing reader can execute local DB-backed freshness SELECTs when a human
+explicitly supplies `--execute` and a local `--database-url`, but it does not
+create production freshness monitoring, fetch new data, or write data. A
+future reviewed module may add a controlled DB-backed read endpoint that
+executes freshness SELECT queries. Another future module may improve the
+dashboard UI after live freshness reads exist; live ingestion remains
 deferred.
 
 ## DB-Executed Energy Freshness Reader
@@ -359,13 +381,13 @@ safety-boundary keys, defensive blocked-token validation, and negative
 assertions/unsafe-plan tests. The tests used fake connection/cursor objects
 only; no live DB writes were performed.
 
-Interpretation: the DB-executed freshness reader proves the system can execute
-read-only freshness SELECTs through an explicit connection. It is backend
-foundation only, is not exposed through the API yet, is not connected to the
-frontend yet, does not fetch new data, and does not write data. Runtime
-integration remains deferred. A future module may add a controlled local DB
-freshness smoke script, and another future module may add a DB-backed
-read-only API endpoint that executes freshness SELECTs.
+Interpretation: the DB-executed freshness reader and observed manual local DB
+smoke prove the system can execute read-only freshness SELECTs through an
+explicit local connection. It is backend foundation only, is not exposed
+through a DB-backed API yet, is not connected to the frontend for executed
+freshness reads, does not fetch new data, and does not write data. Runtime
+integration remains deferred. A future module may add a DB-backed read-only
+API endpoint that executes freshness SELECTs.
 
 ## Audit Event Foundation
 
