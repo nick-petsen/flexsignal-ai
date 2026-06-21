@@ -301,6 +301,21 @@ data, prints no raw database URL, does not fetch EDS/DMI data, does not expose
 an API, does not add frontend behavior, and must not be used for automatic
 control, dispatch, or activation.
 
+Observed local DB smoke results:
+
+| Area | DB query executed | DB write performed | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp | Warnings |
+| --- | --- | --- | ---: | --- | ---: | --- | --- |
+| DK1 | true | false | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` | `[]` |
+| DK2 | true | false | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` | `[]` |
+
+The observed smoke used explicit `--execute` and a local `--database-url`.
+Reads were SELECT-only, no database writes were performed, no live Energi Data
+Service or DMI/weather calls were made, and no backend or frontend server was
+started. The result proves local DB-backed freshness reads work against the
+observed local database contents. It does not mean production freshness
+monitoring exists, does not affect backtest scoring, and prepares future
+DB-backed API/dashboard freshness indicators only.
+
 ## Audit Event Boundary
 
 `audit-event-v0` is not a backtest, forecast model, API endpoint, database
