@@ -266,12 +266,15 @@ optional actor fields, optional request/source identifiers, optional
 `occurred_at_utc`, and relevant report or forecast version fields. It rejects
 unsupported event types and price areas outside `DK1`/`DK2` with HTTP 400.
 When actor fields are omitted, the API uses `actor_type=local_user` and
-`actor_id=unknown-local-user`.
+`actor_id=unknown-local-user`. `local_user` is an allowed audit actor type.
 
 The response is a dry-run persistence plan only. It includes `dry_run=true`,
-`database_write_performed=false`, `requires_database_url=false`, the planned
-`audit_events` target, `ON CONFLICT (event_id) DO NOTHING`, warnings, and the
-full read-only human-review safety boundary.
+`database_write_performed=false`, `requires_database_url=false`, `event`,
+`persistence_plan`, `event_id`, `event_type`, `table=audit_events`,
+`conflict_behavior`, `safety_boundary`, and `warnings`. The plan is built by
+`backend/app/audit/runtime_plan.py`, targets `audit_events`, uses `event_id`
+as the idempotency key, and previews
+`ON CONFLICT (event_id) DO NOTHING`.
 
 This API does not write to the database, call the audit writer service, create
 database connections, read `DATABASE_URL`, run SQL, write files, add automatic
@@ -279,6 +282,32 @@ audit logging, call EDS/DMI, generate reports or PDFs, modify frontend
 behavior, use ML or LLMs, add scheduler/auth/Azure behavior, or connect to
 report/PDF/forecast/risk runtime flows. It is a preview endpoint for future
 reviewed audit integration only.
+
+Validation behavior:
+
+- Unsupported `event_type` returns HTTP 400.
+- Unsupported `price_area` outside `DK1`/`DK2` returns HTTP 400.
+- Responses contain no raw `DATABASE_URL`, secrets, tokens, full headers, or
+  full request bodies.
+- The read-only decision-support safety boundary is preserved.
+
+Observed validation:
+
+- Route allowlist was updated so `/api/audit/preview` is treated as an allowed
+  read-only preview POST.
+- Focused mutating-route check passed: `1 passed, 1 warning`.
+- Focused audit preview API tests passed: `16 passed, 1 warning`.
+- Full backend suite passed: `409 passed, 1 warning`.
+- `py_compile` passed.
+- `git diff --check` passed.
+- No live DB writes were performed.
+
+Interpretation: the audit preview API is a reviewed read-only preview
+endpoint. It exposes audit persistence plans for inspection only. It does not
+enable production audit persistence, add automatic audit logging, or connect
+audit persistence to forecast, risk, report, PDF, or frontend runtime flows.
+Future runtime audit persistence remains deferred and requires explicit
+review.
 
 ## Audit DB Write Smoke
 
@@ -432,11 +461,11 @@ raw `DATABASE_URL` was not printed. This does not mean production audit
 persistence is enabled, does not add automatic audit logging, and does not
 connect audit persistence to API, frontend, report, or PDF flows.
 
-Non-goals remain unchanged: no FastAPI endpoint, frontend behavior, automatic
-audit logging, report/PDF flow integration, scheduler, Azure infrastructure,
+Non-goals remain unchanged for production persistence: no automatic audit
+logging, report/PDF flow integration, scheduler, Azure infrastructure,
 auth/Entra integration, live EDS/DMI calls, ML/LLM use, control, dispatch,
-activation, or operational functionality. A future module may add a read-only
-API-side audit logging design or manual API audit dry-run. Do not wire
+activation, or operational functionality. The reviewed API audit dry-run
+preview is documented separately and remains inspection-only. Do not wire
 automatic audit persistence into runtime flows yet, and do not add production
 DB writes without explicit review.
 
@@ -491,11 +520,11 @@ production audit persistence, add automatic audit logging, expose an API,
 modify frontend behavior, connect report/PDF flows to audit persistence, or
 create runtime integration.
 
-Non-goals remain unchanged: no FastAPI endpoint, frontend behavior, automatic
-audit logging, report/PDF flow integration, scheduler, Azure infrastructure,
-auth/Entra integration, live EDS/DMI calls, ML/LLM use, control, dispatch,
-activation, or operational functionality. A future module may add an API
-audit dry-run design or a manually invoked API-side audit logging wrapper.
+Non-goals remain unchanged for the writer itself: no frontend behavior,
+automatic audit logging, report/PDF flow integration, scheduler, Azure
+infrastructure, auth/Entra integration, live EDS/DMI calls, ML/LLM use,
+control, dispatch, activation, or operational functionality. The reviewed API
+audit dry-run preview is documented separately and remains inspection-only.
 Do not wire automatic audit persistence into runtime flows yet, and do not add
 production DB writes without explicit review.
 
@@ -571,17 +600,16 @@ audit writer, create database connections, read `DATABASE_URL`, write files,
 perform API calls, expose FastAPI routes, import FastAPI/APIRouter, modify
 frontend behavior, or connect report/PDF/API/frontend flows.
 
-Non-goals remain unchanged: no FastAPI endpoint, no `backend/app/main.py`
-change, no API route modification, no frontend behavior, no automatic audit
-logging, no audit writer call, no database write, no database connection, no
+Non-goals remain unchanged for the factory itself: no automatic audit logging,
+no audit writer call, no database write, no database connection, no
 `DATABASE_URL` handling, no migrations, no report/PDF runtime wiring, no
 scheduler, no Azure infrastructure, no auth/Entra integration, no live
 EDS/DMI calls, no ML/LLM use, and no control, dispatch, activation, or
 operational functionality.
 
-A future reviewed module may add an API audit dry-run wrapper/design. Do not
-wire automatic audit persistence into runtime flows yet, and do not add
-production DB writes without explicit review.
+The reviewed API audit dry-run preview is documented separately. Do not wire
+automatic audit persistence into runtime flows yet, and do not add production
+DB writes without explicit review.
 
 ## Runtime Audit Persistence Dry-Run Planner
 
@@ -622,13 +650,11 @@ request bodies. Every event preserves:
 - `human_review_required: true`
 
 This planner does not write to the database, call the audit writer service,
-create database connections, read `DATABASE_URL`, execute SQL, expose an API,
-modify frontend behavior, modify `backend/app/main.py`, modify existing
-routes, write files, add migrations, integrate with report/PDF/API/frontend
+create database connections, read `DATABASE_URL`, execute SQL, modify frontend
+behavior, write files, add migrations, integrate with report/PDF/frontend
 flows, add scheduler/auth/Azure infrastructure, call EDS/DMI, use ML/LLMs, or
-add control, dispatch, activation, or operational functionality. Runtime
-integration remains deferred; this prepares a safe future API audit dry-run
-step only.
+add control, dispatch, activation, or operational functionality. It prepared
+the reviewed API audit dry-run preview path documented above.
 
 Observed runtime dry-run planner validation:
 
@@ -641,18 +667,14 @@ Observed runtime dry-run planner validation:
 - No live DB writes were performed.
 
 Interpretation: the runtime dry-run planner is a backend foundation only. It
-prepares a safe future API audit dry-run step, but it does not enable
+supports the reviewed API audit dry-run preview, but it does not enable
 production audit persistence, add automatic audit logging, call the audit
-writer, expose an API, modify frontend behavior, or connect report/PDF flows.
+writer, modify frontend behavior, or connect report/PDF flows.
 
-Non-goals remain unchanged: no FastAPI endpoint, no `backend/app/main.py`
-change, no API route modification, no frontend behavior, no automatic audit
+Non-goals remain unchanged for runtime persistence: no automatic audit
 logging, no audit writer call, no database write, no database connection, no
 `DATABASE_URL` handling, no migrations, no report/PDF runtime wiring, no
 scheduler, no Azure infrastructure, no auth/Entra integration, no live EDS/DMI
 calls, no ML/LLM use, and no control, dispatch, activation, or operational
-functionality.
-
-A future reviewed module may add an API-side audit dry-run endpoint or
-wrapper. Do not wire automatic audit persistence into runtime flows yet, and
-do not add production DB writes without explicit review.
+functionality. Do not wire automatic audit persistence into runtime flows yet,
+and do not add production DB writes without explicit review.

@@ -2,6 +2,35 @@
 
 ## v0.1.0 - TODO
 
+- Documented read-only audit dry-run preview API validation results in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. Recorded that `POST /api/audit/preview` is a
+  reviewed read-only preview endpoint for `current_risk_viewed`,
+  `forecast_preview_requested`, `report_summary_built`,
+  `report_markdown_rendered`, and `report_pdf_exported`; accepts only
+  `DK1`/`DK2`; defaults omitted actor fields to `actor_type=local_user` and
+  `actor_id=unknown-local-user`; and returns dry-run audit persistence plans
+  with `dry_run=true`, `database_write_performed=false`,
+  `requires_database_url=false`, `event`, `persistence_plan`, `event_id`,
+  `event_type`, `table=audit_events`, `conflict_behavior`,
+  `safety_boundary`, and `warnings`. Documented HTTP 400 validation for
+  unsupported event types and price areas outside `DK1`/`DK2`, response
+  boundaries excluding raw `DATABASE_URL`, secrets, tokens, full headers, and
+  full request bodies, and preservation of the read-only decision-support
+  safety boundary. Recorded observed validation: route allowlist updated so
+  `/api/audit/preview` is treated as an allowed read-only preview POST;
+  focused mutating-route check passed with `1 passed, 1 warning`; focused
+  audit preview API tests passed with `16 passed, 1 warning`; full backend
+  suite passed with `409 passed, 1 warning`; `py_compile` passed;
+  `git diff --check` passed; and no live DB writes were performed. Clarified
+  that the endpoint uses `backend/app/audit/runtime_plan.py` dry-run planners
+  only and does not execute SQL, write to the database, call the audit writer
+  service, create database connections, read `DATABASE_URL`, call external
+  APIs, write files, trigger report/PDF generation, modify frontend behavior,
+  add automatic audit logging, enable production audit persistence, or connect
+  audit persistence to forecast/risk/report/PDF runtime flows. Future runtime
+  audit persistence remains deferred and requires explicit review. This
+  change is documentation only.
 - Added `POST /api/audit/preview`, a read-only FastAPI audit persistence
   dry-run endpoint, plus `backend/tests/test_api_audit_preview.py`. The
   endpoint delegates only to `backend/app/audit/runtime_plan.py` planner
