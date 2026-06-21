@@ -2,6 +2,17 @@
 
 ## v0.1.0 - TODO
 
+- Added `backend/app/db/repositories/energy_freshness.py`, a read-only EDS
+  data freshness read model, plus `backend/tests/test_energy_freshness.py`.
+  The helper builds parameterized SELECT query plans for DK1/DK2
+  `spot_prices` and `power_balance` freshness summaries with earliest/latest
+  timestamps, row counts, source labels, and empty-result warnings. It does
+  not add FastAPI endpoints, modify `backend/app/main.py`, modify frontend
+  code, connect to a database, read `DATABASE_URL`, execute SQL, write data,
+  add migrations, call live EDS or DMI/weather APIs, add scheduler/Azure/auth
+  behavior, use ML/LLM logic, or add control, dispatch, activation, or
+  operational functionality. This prepares future dashboard/API freshness
+  indicators for MVP data trust and debugging only.
 - Documented read-only audit dry-run preview API validation results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. Recorded that `POST /api/audit/preview` is a

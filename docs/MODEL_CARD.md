@@ -36,6 +36,14 @@ MVP foundation. It is simple, deterministic, testable, and explainable. It is
 not a trained forecasting model, not an LLM decision engine, and not validated
 for production operations.
 
+`eds-data-freshness-read-model-v0` now exists as a backend repository
+read-model helper for future freshness indicators. It produces parameterized
+SELECT query plans for DK1/DK2 `spot_prices` and `power_balance` summaries
+with earliest/latest timestamps, row counts, source labels, and empty-result
+warnings. It does not execute SQL, connect to a database, read `DATABASE_URL`,
+call live EDS or DMI/weather APIs, write data, expose endpoints, or affect the
+forecasting model. Its purpose is MVP data trust and debugging only.
+
 Working read-only paths around the model:
 
 - `POST /api/risk/preview` scores caller-provided DK1/DK2 JSON.

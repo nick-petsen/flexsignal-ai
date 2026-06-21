@@ -1,5 +1,20 @@
 # Human Oversight
 
+## EDS Data Freshness Read Model
+
+`eds-data-freshness-read-model-v0` adds a backend-only read model for future
+data freshness indicators. It builds parameterized query plans for DK1/DK2
+`spot_prices` and `power_balance` freshness summaries, including earliest
+timestamp, latest timestamp, row count, data source label, and an empty-result
+warning field.
+
+The read model only builds SQL and params. It does not call live Energi Data
+Service or DMI/weather APIs, connect to a database, read `DATABASE_URL`,
+execute SQL, write data, expose FastAPI endpoints, modify frontend behavior,
+schedule jobs, add infrastructure, or add operational behavior. It prepares a
+future dashboard/API freshness indicator for MVP data trust and debugging
+while preserving the read-only decision-support boundary.
+
 ## Audit Event Foundation
 
 `audit-event-v0` is an in-memory/data-structure foundation for future
