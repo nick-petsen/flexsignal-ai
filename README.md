@@ -29,7 +29,8 @@ Working read-only core:
 - Repeating the same `limit 50` import was idempotent for the tested batch.
 - Read-only energy API endpoints exist for `spot_prices` and `power_balance`.
 - Frontend dashboard can manually load spot prices, power balance, current
-  surplus risk, and a forecast-window preview.
+  surplus risk, a forecast-window preview, and an energy freshness dry-run
+  query-plan preview.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
@@ -59,10 +60,9 @@ Working read-only core:
 - An EDS data freshness read-model foundation exists in
   `backend/app/db/repositories/energy_freshness.py`, and
   `GET /api/energy/freshness` exposes those DK1/DK2 query plans as a
-  read-only dry-run preview for future dashboard freshness indicators. The
-  API does not connect to a database, read `DATABASE_URL`, execute SQL, call
-  live Energi Data Service, call DMI/weather APIs, modify frontend behavior,
-  schedule jobs, or write data.
+  read-only dry-run preview for dashboard freshness indicators. The API does
+  not connect to a database, read `DATABASE_URL`, execute SQL, call live
+  Energi Data Service, call DMI/weather APIs, schedule jobs, or write data.
 - `POST /api/audit/preview` exists as a reviewed read-only audit persistence
   dry-run preview API. It exposes runtime planner output for inspection only
   and does not add automatic audit logging or wire audit persistence into
@@ -109,6 +109,11 @@ Latest read-only API/UI smoke-test observations:
   responses for unsupported price areas, dry-run query-plan output, and no
   `DATABASE_URL`, database connection, SQL execution, live EDS/DMI call, data
   write, frontend behavior, scheduler, or operational functionality.
+- Frontend energy freshness card manually calls
+  `GET /api/energy/freshness?price_area=DK1|DK2` and displays dry-run
+  query-plan previews only, including no database query execution, no database
+  write, plan presence/status, warnings, and the human-review safety boundary.
+  It does not prove live data freshness.
 - Frontend forecast preview card manually calls `POST /api/forecast/preview`
   with deterministic synthetic/caller-provided demo rows only.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
@@ -159,11 +164,11 @@ Still preview / not production:
 
 Recommended next MVP direction: the audit foundation is now sufficient for the
 MVP foundation. Move product work back toward stable data ingestion,
-DMI/weather ingestion, dashboard graphs, forecast UI, freshness indicators,
-and PDF export from the UI. Do not add production audit writes yet, do not add
-automatic scheduled report generation, do not fetch data in the report
-builder, do not use an LLM as the forecast or reporting engine, and do not add
-control, dispatch, or activation behavior.
+DMI/weather ingestion, dashboard graphs, forecast UI, DB-backed freshness
+execution after review, and PDF export from the UI. Do not add production
+audit writes yet, do not add automatic scheduled report generation, do not
+fetch data in the report builder, do not use an LLM as the forecast or
+reporting engine, and do not add control, dispatch, or activation behavior.
 
 ## EDS Data Freshness Preview API
 
@@ -198,10 +203,10 @@ row count fields, and empty-row warnings.
 
 Safety boundary: the preview API does not call live Energi Data Service, call
 DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
-write to a database, add migrations, modify frontend behavior, schedule jobs,
-add Azure infrastructure, add auth, use ML/LLMs, write audit events, add
-report/PDF wiring, or perform control, dispatch, activation, closed-loop
-workflows, live control signals, or operational functionality.
+write to a database, add migrations, schedule jobs, add Azure infrastructure,
+add auth, use ML/LLMs, write audit events, add report/PDF wiring, or perform
+control, dispatch, activation, closed-loop workflows, live control signals, or
+operational functionality.
 
 Observed validation:
 
@@ -213,15 +218,18 @@ Observed validation:
 - `git diff --check` passed.
 - No live DB writes were performed.
 
-Interpretation: the energy freshness preview API is read-only and exposes
-query-plan previews only. It does not prove live database freshness yet, does
-not execute freshness SQL, and does not fetch new data. It prepares a future
-frontend dashboard freshness indicator for DK1/DK2 data trust review.
+The frontend dashboard now includes an energy freshness card that manually
+calls this endpoint for the selected `DK1`/`DK2` price area. The card displays
+the dry-run flags, no-query/no-write database flags, `requires_database_url`,
+spot price and power balance plan presence/status, warnings, and the safety
+boundary. It labels the response as a freshness query plan preview, not live
+freshness measurement.
 
-Next step: a future module may add a frontend freshness card for DK1/DK2, and
-another future module may add a controlled DB-backed read endpoint that
-executes freshness SELECT queries. Live ingestion, DB execution, and frontend
-wiring remain deferred from this documentation step.
+Interpretation: the energy freshness preview API and frontend card are
+read-only and expose query-plan previews only. They do not prove live database
+freshness, execute freshness SQL, fetch new data, or write data. A future
+reviewed module may add a controlled DB-backed read endpoint that executes
+freshness SELECT queries.
 
 ## Audit Event Foundation
 

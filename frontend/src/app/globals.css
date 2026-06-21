@@ -168,6 +168,11 @@ h1 {
   font-weight: 700;
 }
 
+.status--warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
 .load-button {
   display: inline-flex;
   align-items: center;
@@ -305,6 +310,39 @@ tr:last-child td {
 .forecast-window h3 {
   margin: 0 0 10px;
   font-size: 1rem;
+}
+
+.plan-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.plan-summary {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.plan-summary h3,
+.freshness-detail h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.freshness-detail {
+  margin-top: 14px;
+}
+
+.plain-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
 }
 
 .api-note {

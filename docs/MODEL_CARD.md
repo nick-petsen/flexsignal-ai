@@ -60,12 +60,13 @@ negative/safety assertions in tests, `git diff --check` passing, and no live
 DB writes.
 
 Interpretation: this read model is not part of `rule-engine-v0`, is not a
-forecasting engine, and does not change scoring behavior. It is backend
-API preview foundation only for future read-only dashboard freshness
-indicators over stored data. It does not fetch new EDS data, execute queries,
-modify frontend behavior, schedule jobs, add Azure/auth infrastructure, use
-ML/LLMs, write audit events, or add control, dispatch, activation, or
-operational functionality.
+forecasting engine, and does not change scoring behavior. The frontend
+dashboard has a manual energy freshness card that calls the API and displays
+dry-run query-plan previews, no-query/no-write flags, plan presence/status,
+warnings, and the human-review safety boundary. It does not prove live data
+freshness, fetch new EDS data, execute queries, schedule jobs, add Azure/auth
+infrastructure, use ML/LLMs, write audit events, or add control, dispatch,
+activation, or operational functionality.
 
 Working read-only paths around the model:
 
@@ -75,6 +76,8 @@ Working read-only paths around the model:
 - `GET /api/risk/current` scores the latest existing local DK1/DK2 rows.
 - The frontend can manually request current risk and forecast-window previews
   through the backend API.
+- The frontend can manually request energy freshness dry-run query-plan
+  previews through `GET /api/energy/freshness`.
 - Synthetic and local DB read-only backtest previews exist.
 - Local DB backtest row pairing uses `nearest_timestamp_v0_1`.
 

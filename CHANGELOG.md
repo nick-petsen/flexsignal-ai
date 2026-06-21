@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added a frontend energy freshness card to the dashboard. The card manually
+  calls the existing `GET /api/energy/freshness?price_area=DK1|DK2` endpoint
+  through the existing frontend API base URL helper and displays dry-run
+  query-plan previews only: `price_area`, `dry_run`,
+  `database_query_executed`, `database_write_performed`,
+  `requires_database_url`, spot price and power balance plan presence/status,
+  warnings, and the read-only human-review safety boundary. It is explicitly
+  labeled as a freshness query plan preview with no database query executed,
+  no database write performed, and live freshness execution not enabled yet.
+  The frontend does not call live EDS/DMI APIs, execute SQL, write to a
+  database, add backend endpoints, add migrations, add auth/Azure/ML/LLM
+  behavior, write audit events, wire report/PDF flows, or add control,
+  dispatch, activation, or operational functionality. Updated docs to clarify
+  that the card prepares future dashboard trust indicators and does not prove
+  live data freshness.
 - Documented observed validation for
   `GET /api/energy/freshness?price_area=DK1|DK2`, a read-only FastAPI energy
   freshness dry-run preview endpoint with focused coverage in
@@ -40,9 +55,9 @@
   `430 passed, 1 warning`; `py_compile` passed; forbidden-pattern grep
   matched only negative assertions in tests; `git diff --check` passed; and no
   live DB writes were performed. Runtime integration was deferred at that
-  stage; the read-only API preview is now documented separately above, and
-  frontend DK1/DK2 freshness indicators remain deferred. This change is
-  documentation only.
+  stage; the read-only API preview is now documented separately above, and the
+  frontend freshness card was added later as a dry-run query-plan preview
+  surface only. This change is documentation only.
 - Documented read-only audit dry-run preview API validation results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. Recorded that `POST /api/audit/preview` is a

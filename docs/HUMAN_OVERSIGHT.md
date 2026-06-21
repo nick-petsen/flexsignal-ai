@@ -3,7 +3,7 @@
 ## EDS Data Freshness Preview API
 
 `GET /api/energy/freshness?price_area=DK1|DK2` exposes a read-only preview of
-`eds-data-freshness-read-model-v0` for future data freshness indicators. It
+`eds-data-freshness-read-model-v0` for data freshness indicators. It
 exists because product work has moved back toward data/dashboard readiness
 while preserving the v0.1 human-review boundary.
 
@@ -27,14 +27,15 @@ earliest/latest timestamp fields, row count fields, and empty-row warnings.
 Price areas are limited to `DK1` and `DK2`; invalid values outside those areas
 return HTTP 400.
 
-This is a read-only foundation for human oversight. It prepares future
-dashboard data freshness indicators so reviewers can understand whether stored
-energy data is fresh enough to trust before relying on a dashboard, risk view,
-forecast preview, or report.
+This is a read-only foundation for human oversight. The frontend dashboard has
+a manual energy freshness card that calls this endpoint for `DK1`/`DK2` and
+displays the dry-run query-plan preview, no-query/no-write database flags,
+plan presence/status, warnings, and the safety boundary. The card does not
+claim that live data freshness has been measured.
 
-Safety boundary: the preview API does not call live Energi Data Service, call
-DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
-write to a database, modify frontend behavior, schedule jobs, add Azure
+Safety boundary: the preview API and frontend card do not call live Energi
+Data Service, call DMI/weather APIs, connect to a database, read
+`DATABASE_URL`, execute SQL, write to a database, schedule jobs, add Azure
 infrastructure, add auth, use ML/LLMs, write audit events, or perform
 automatic control, dispatch, activation, closed-loop workflows, live control
 signals, or operational functionality.
@@ -50,10 +51,10 @@ Observed validation:
 - `git diff --check` passed.
 - No live DB writes were performed.
 
-Interpretation: this is an API-side dry-run preview only. It does not fetch new
-data, execute queries, or wire runtime dashboard behavior. Frontend DK1/DK2
-freshness indicators remain deferred and can be added separately without live
-ingestion or control behavior.
+Interpretation: this remains a dry-run preview only. It does not fetch new
+data, execute queries, prove live data freshness, or enable live ingestion or
+control behavior. The frontend card prepares dashboard trust indicators by
+showing the reviewed query plans and safety flags for human review.
 
 ## Audit Event Foundation
 
