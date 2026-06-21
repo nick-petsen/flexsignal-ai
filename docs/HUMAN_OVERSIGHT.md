@@ -1,52 +1,57 @@
 # Human Oversight
 
-## EDS Data Freshness Read Model
+## EDS Data Freshness Preview API
 
-`eds-data-freshness-read-model-v0` adds a backend-only read model for future
-data freshness indicators. It exists because the audit foundation is
-sufficient for the MVP foundation and product work has moved back toward
-data/dashboard readiness.
+`GET /api/energy/freshness?price_area=DK1|DK2` exposes a read-only preview of
+`eds-data-freshness-read-model-v0` for future data freshness indicators. It
+exists because product work has moved back toward data/dashboard readiness
+while preserving the v0.1 human-review boundary.
 
 The implementation in `backend/app/db/repositories/energy_freshness.py`
-builds pure query-plan objects for DK1/DK2 stored energy data, with focused
-coverage in `backend/tests/test_energy_freshness.py`. Implemented plans
-include:
+builds pure query-plan objects for DK1/DK2 stored energy data. The FastAPI
+wrapper in `backend/app/api/energy_freshness.py` returns those plans with
+focused coverage in `backend/tests/test_energy_freshness.py` and
+`backend/tests/test_api_energy_freshness.py`. Implemented previews include:
 
 - Spot price freshness summary.
 - Power balance freshness summary.
 - Combined energy freshness summary.
 
-The read model only returns parameterized SELECT SQL and params. Plans include
+The API returns query-plan previews only. It includes `dry_run=true`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, the combined `freshness_plans`,
+`spot_price_freshness_plan`, `power_balance_freshness_plan`, warnings, and the
+explicit safety boundary. Plans include parameterized SELECT SQL, params,
 source labels, earliest/latest timestamp fields, row count fields, and
 empty-row warnings. Price areas are limited to `DK1` and `DK2`; invalid values
-outside those areas are rejected.
+outside those areas return HTTP 400.
 
-This is a read-only foundation for future human oversight. It prepares a
-future dashboard/API freshness indicator so reviewers can understand whether
-stored energy data is fresh enough to trust before relying on a dashboard,
-risk view, forecast preview, or report.
+This is a read-only foundation for human oversight. It prepares future
+dashboard data freshness indicators so reviewers can understand whether stored
+energy data is fresh enough to trust before relying on a dashboard, risk view,
+forecast preview, or report.
 
-Safety boundary: the read model does not call live Energi Data Service, call
+Safety boundary: the preview API does not call live Energi Data Service, call
 DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
-write to a database, expose FastAPI endpoints, modify frontend behavior,
-schedule jobs, add Azure infrastructure, add auth, use ML/LLMs, write audit
-events, or perform automatic control, dispatch, activation, closed-loop
-workflows, live control signals, or operational functionality.
+write to a database, modify frontend behavior, schedule jobs, add Azure
+infrastructure, add auth, use ML/LLMs, write audit events, or perform
+automatic control, dispatch, activation, closed-loop workflows, live control
+signals, or operational functionality.
 
 Observed validation:
 
+- Focused energy freshness API tests passed: `12 passed, 1 warning`.
 - Focused energy freshness tests passed: `21 passed`.
-- Full backend suite passed: `430 passed, 1 warning`.
+- Full backend suite passed: `442 passed, 1 warning`.
 - `py_compile` passed.
 - Forbidden-pattern grep matched only negative assertions in tests.
 - `git diff --check` passed.
 - No live DB writes were performed.
 
-Interpretation: this is backend foundation only. It does not fetch new data,
-execute queries, expose an API, or wire runtime dashboard behavior. Runtime
-integration remains deferred. A future module may add a read-only API endpoint
-for energy freshness, after which the frontend can show DK1/DK2 freshness
-indicators without adding live ingestion or control behavior.
+Interpretation: this is an API-side dry-run preview only. It does not fetch new
+data, execute queries, or wire runtime dashboard behavior. Frontend DK1/DK2
+freshness indicators remain deferred and can be added separately without live
+ingestion or control behavior.
 
 ## Audit Event Foundation
 

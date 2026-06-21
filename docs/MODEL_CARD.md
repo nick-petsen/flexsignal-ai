@@ -36,26 +36,31 @@ MVP foundation. It is simple, deterministic, testable, and explainable. It is
 not a trained forecasting model, not an LLM decision engine, and not validated
 for production operations.
 
-`eds-data-freshness-read-model-v0` now exists as a backend repository
-read-model helper for future freshness indicators. It produces parameterized
-SELECT query plans for DK1/DK2 `spot_prices` and `power_balance` summaries
-with earliest/latest timestamps, row counts, source labels, and empty-result
-warnings. It does not execute SQL, connect to a database, read `DATABASE_URL`,
-call live EDS or DMI/weather APIs, write data, expose endpoints, or affect the
-forecasting model. Its purpose is MVP data trust and debugging only.
+`GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
+of `eds-data-freshness-read-model-v0` for future freshness indicators. It
+returns parameterized SELECT query plans for DK1/DK2 `spot_prices` and
+`power_balance` summaries with earliest/latest timestamps, row counts, source
+labels, and empty-result warnings. It does not execute SQL, connect to a
+database, read `DATABASE_URL`, call live EDS or DMI/weather APIs, write data,
+or affect the forecasting model. Its purpose is MVP data trust and debugging
+only.
 
-The read-model helper also includes a combined energy freshness summary plan.
-All plans return parameterized SELECT SQL only, include params and source
-labels, and reject invalid `price_area` values outside `DK1`/`DK2`. Observed
-validation recorded focused energy freshness tests passing with `21 passed`,
-the full backend suite passing with `430 passed, 1 warning`, `py_compile`
-passing, forbidden-pattern grep matching only negative assertions in tests,
-`git diff --check` passing, and no live DB writes.
+The preview also includes a combined energy freshness summary plan. All plans
+return parameterized SELECT SQL only, include params and source labels, and
+reject invalid `price_area` values outside `DK1`/`DK2` with HTTP 400. The API
+response includes `dry_run=true`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, warnings, and
+the explicit read-only human-review safety boundary. Observed validation
+recorded focused energy freshness API tests passing with `12 passed, 1
+warning`, the full backend suite passing with `442 passed, 1 warning`,
+`py_compile` passing, forbidden-pattern grep matching only required safety
+keys and negative assertions in tests, `git diff --check` passing, and no live
+DB writes.
 
 Interpretation: this read model is not part of `rule-engine-v0`, is not a
 forecasting engine, and does not change scoring behavior. It is backend
-foundation only for future read-only dashboard/API freshness indicators over
-stored data. It does not fetch new EDS data, execute queries, expose an API,
+API preview foundation only for future read-only dashboard freshness
+indicators over stored data. It does not fetch new EDS data, execute queries,
 modify frontend behavior, schedule jobs, add Azure/auth infrastructure, use
 ML/LLMs, write audit events, or add control, dispatch, activation, or
 operational functionality.
