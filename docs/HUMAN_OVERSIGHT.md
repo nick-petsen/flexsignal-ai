@@ -17,14 +17,15 @@ focused coverage in `backend/tests/test_energy_freshness.py` and
 - Power balance freshness summary.
 - Combined energy freshness summary.
 
-The API returns query-plan previews only. It includes `dry_run=true`,
-`database_query_executed=false`, `database_write_performed=false`,
-`requires_database_url=false`, the combined `freshness_plans`,
-`spot_price_freshness_plan`, `power_balance_freshness_plan`, warnings, and the
-explicit safety boundary. Plans include parameterized SELECT SQL, params,
-source labels, earliest/latest timestamp fields, row count fields, and
-empty-row warnings. Price areas are limited to `DK1` and `DK2`; invalid values
-outside those areas return HTTP 400.
+The API returns query-plan previews only. It includes `price_area`,
+`dry_run=true`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, the combined
+`freshness_plans`, `spot_price_freshness_plan`,
+`power_balance_freshness_plan`, warnings, and the explicit safety boundary.
+Plans include parameterized SELECT SQL, params, source labels,
+earliest/latest timestamp fields, row count fields, and empty-row warnings.
+Price areas are limited to `DK1` and `DK2`; invalid values outside those areas
+return HTTP 400.
 
 This is a read-only foundation for human oversight. It prepares future
 dashboard data freshness indicators so reviewers can understand whether stored
@@ -44,7 +45,8 @@ Observed validation:
 - Focused energy freshness tests passed: `21 passed`.
 - Full backend suite passed: `442 passed, 1 warning`.
 - `py_compile` passed.
-- Forbidden-pattern grep matched only negative assertions in tests.
+- Forbidden-pattern grep matched only required safety flags and
+  negative/safety assertions in tests.
 - `git diff --check` passed.
 - No live DB writes were performed.
 

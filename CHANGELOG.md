@@ -2,11 +2,12 @@
 
 ## v0.1.0 - TODO
 
-- Added `GET /api/energy/freshness?price_area=DK1|DK2`, a read-only FastAPI
-  energy freshness dry-run preview endpoint, plus
+- Documented observed validation for
+  `GET /api/energy/freshness?price_area=DK1|DK2`, a read-only FastAPI energy
+  freshness dry-run preview endpoint with focused coverage in
   `backend/tests/test_api_energy_freshness.py`. The endpoint delegates only to
   `backend/app/db/repositories/energy_freshness.py` query-plan builders and
-  returns `dry_run=true`, `database_query_executed=false`,
+  returns `price_area`, `dry_run=true`, `database_query_executed=false`,
   `database_write_performed=false`, `requires_database_url=false`,
   `freshness_plans`, `spot_price_freshness_plan`,
   `power_balance_freshness_plan`, warnings, and the read-only human-review
@@ -19,8 +20,9 @@
   Observed validation: focused energy freshness API tests passed with
   `12 passed, 1 warning`; the full backend suite passed with `442 passed, 1
   warning`; `py_compile` passed; forbidden-pattern grep matched only required
-  safety keys and negative assertions in tests; `git diff --check` passed; and
-  no live DB writes were performed.
+  safety flags and negative/safety assertions in tests; `git diff --check`
+  passed; and no live DB writes were performed. This change is documentation
+  only.
 - Added `backend/app/db/repositories/energy_freshness.py`, a read-only EDS
   data freshness read model, plus `backend/tests/test_energy_freshness.py`.
   The helper builds parameterized SELECT query plans for DK1/DK2
@@ -37,10 +39,10 @@
   freshness tests passed with `21 passed`; the full backend suite passed with
   `430 passed, 1 warning`; `py_compile` passed; forbidden-pattern grep
   matched only negative assertions in tests; `git diff --check` passed; and no
-  live DB writes were performed. Runtime integration remains deferred. A
-  future module may add a read-only API endpoint for energy freshness, after
-  which frontend DK1/DK2 freshness indicators can be added separately. This
-  change is documentation only.
+  live DB writes were performed. Runtime integration was deferred at that
+  stage; the read-only API preview is now documented separately above, and
+  frontend DK1/DK2 freshness indicators remain deferred. This change is
+  documentation only.
 - Documented read-only audit dry-run preview API validation results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. Recorded that `POST /api/audit/preview` is a

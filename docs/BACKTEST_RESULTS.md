@@ -126,6 +126,7 @@ interpret current risk, forecast previews, reports, or backtest context.
 Implemented behavior:
 
 - `GET /api/energy/freshness?price_area=DK1|DK2` exists.
+- The response includes `price_area`.
 - The endpoint returns `dry_run=true`,
   `database_query_executed=false`, `database_write_performed=false`, and
   `requires_database_url=false`.
@@ -145,7 +146,7 @@ Observed validation:
 | Focused energy freshness tests | `21 passed` |
 | Full backend suite | `442 passed, 1 warning` |
 | `py_compile` | Passed |
-| Forbidden-pattern grep | Matched only required safety keys and negative assertions in tests |
+| Forbidden-pattern grep | Matched only required safety flags and negative/safety assertions in tests |
 | `git diff --check` | Passed |
 | Live DB writes | None performed |
 
