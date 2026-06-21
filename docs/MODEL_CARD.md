@@ -89,6 +89,21 @@ Azure/auth behavior, use ML/LLMs, write audit events, wire report/PDF flows,
 or add control, dispatch, activation, closed-loop, live-control, or
 operational functionality. It prepares future DB-backed freshness indicators
 for API/dashboard use only and does not change `rule-engine-v0` scoring.
+Implemented functions are `read_spot_price_freshness`,
+`read_power_balance_freshness`, and `read_energy_freshness_summary`.
+SQL safety requires parameterized plans that start with `SELECT`; mutating
+tokens including `INSERT`, `UPDATE`, `DELETE`, `UPSERT`, `CREATE`, `ALTER`,
+`DROP`, `TRUNCATE`, and `MERGE` are blocked before cursor execution. The
+combined summary returns `spot_price_freshness`, `power_balance_freshness`,
+`warnings`, and the safety boundary. Observed validation recorded focused
+reader tests passing with `24 passed`, the full backend suite passing with
+`466 passed, 1 warning`, `py_compile` passing, forbidden-pattern grep matching
+only safety-boundary keys, defensive blocked-token validation, and negative
+assertions/unsafe-plan tests, `git diff --check` passing, fake
+connection/cursor tests only, and no live DB writes. Runtime API/frontend
+integration remains deferred; future work may add a controlled local DB
+freshness smoke script and a DB-backed read-only freshness API endpoint after
+review.
 
 Observed frontend freshness card validation:
 

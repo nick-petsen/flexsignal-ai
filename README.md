@@ -63,6 +63,14 @@ Working read-only core:
   read-only dry-run preview for dashboard freshness indicators. The API does
   not connect to a database, read `DATABASE_URL`, execute SQL, call live
   Energi Data Service, call DMI/weather APIs, schedule jobs, or write data.
+- A DB-executed energy freshness reader foundation exists in
+  `backend/app/db/repositories/energy_freshness_reader.py` with focused tests
+  in `backend/tests/test_energy_freshness_reader.py`. It requires an explicit
+  caller-provided database connection, validates parameterized SELECT-only
+  query plans before cursor execution, rejects invalid price areas outside
+  `DK1`/`DK2`, returns structured dictionaries only, and does not create
+  connections, read `DATABASE_URL`, call live EDS/DMI APIs, write data, expose
+  a FastAPI route, or modify frontend behavior.
 - `POST /api/audit/preview` exists as a reviewed read-only audit persistence
   dry-run preview API. It exposes runtime planner output for inspection only
   and does not add automatic audit logging or wire audit persistence into
@@ -119,6 +127,14 @@ Latest read-only API/UI smoke-test observations:
   communicates freshness query plan preview only, no database query executed,
   no database write performed, live freshness execution not enabled yet, and
   read-only decision support. It does not prove live data freshness.
+- DB-executed energy freshness reader validation covered
+  `read_spot_price_freshness`, `read_power_balance_freshness`, and
+  `read_energy_freshness_summary`. Focused reader tests passed with
+  `24 passed`; the full backend suite passed with `466 passed, 1 warning`;
+  `py_compile` passed; forbidden-pattern grep matched only safety-boundary
+  keys, defensive blocked-token validation, and negative assertions/unsafe-plan
+  tests; `git diff --check` passed. Tests used fake connection/cursor objects
+  only, and no live database writes were performed.
 - Frontend forecast preview card manually calls `POST /api/forecast/preview`
   with deterministic synthetic/caller-provided demo rows only.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
@@ -260,6 +276,59 @@ reviewed module may add a controlled DB-backed read endpoint that executes
 freshness SELECT queries. Another future module may improve the dashboard UI
 after live freshness reads exist; DB execution and live ingestion remain
 deferred.
+
+## DB-Executed Energy Freshness Reader
+
+`backend/app/db/repositories/energy_freshness_reader.py` is a backend
+foundation for future DB-backed freshness indicators over stored EDS-derived
+energy data. It implements:
+
+- `read_spot_price_freshness`
+- `read_power_balance_freshness`
+- `read_energy_freshness_summary`
+
+The reader uses the existing EDS freshness query-plan read model and executes
+SELECT-only plans through an explicit caller-provided database connection. It
+does not create database connections, read `DATABASE_URL`, call live Energi
+Data Service, call DMI/weather APIs, write data, expose a FastAPI endpoint, or
+connect to the frontend.
+
+SQL safety: every plan must be parameterized and must start with `SELECT`.
+Unsafe SQL is rejected before cursor execution. Blocked mutating tokens
+include `INSERT`, `UPDATE`, `DELETE`, `UPSERT`, `CREATE`, `ALTER`, `DROP`,
+`TRUNCATE`, and `MERGE`. No write behavior is implemented.
+
+Reader outputs are structured dictionaries only. Spot price and power balance
+results include `price_area`, `database_query_executed=true`,
+`database_write_performed=false`, `source_label`, `earliest_timestamp`,
+`latest_timestamp`, `row_count`, an empty-row warning when no rows are present,
+and the read-only human-review `safety_boundary`. The combined summary
+includes `spot_price_freshness`, `power_balance_freshness`, `warnings`, and
+the same safety boundary.
+
+Safety boundary:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Observed validation recorded `24 passed` focused reader tests,
+`466 passed, 1 warning` for the full backend suite, passing `py_compile`, and
+passing `git diff --check`. Forbidden-pattern grep matched only
+safety-boundary keys, defensive blocked-token validation, and negative
+assertions/unsafe-plan tests. The tests used fake connection/cursor objects
+only; no live DB writes were performed.
+
+Interpretation: the DB-executed freshness reader proves the system can execute
+read-only freshness SELECTs through an explicit connection. It is backend
+foundation only, is not exposed through the API yet, is not connected to the
+frontend yet, does not fetch new data, and does not write data. Runtime
+integration remains deferred. A future module may add a controlled local DB
+freshness smoke script, and another future module may add a DB-backed
+read-only API endpoint that executes freshness SELECTs.
 
 ## Audit Event Foundation
 
