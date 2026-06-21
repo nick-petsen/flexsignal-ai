@@ -54,6 +54,12 @@ Current read-only foundation:
   dispatch, activation, or operational functionality. It prepares future
   DB-backed API/dashboard freshness indicators only and does not affect
   backtest scoring.
+- `scripts/energy_freshness_db_smoke.py` provides a manual local DB smoke for
+  that freshness reader. It defaults to dry-run query-plan JSON, requires
+  `--execute` plus an explicit local `--database-url` for DB-executed reads,
+  rejects remote/cloud URLs, writes no data, prints no raw database URL, does
+  not fetch EDS/DMI data, and does not expose API/frontend behavior. It does
+  not affect backtest scoring.
 - Synthetic backtest preview exists for local smoke validation.
 - Local PostgreSQL read-only backtest exists for existing local rows.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
@@ -269,9 +275,31 @@ Interpretation: the reader proves that read-only freshness SELECTs can be
 executed through an explicit connection. It is not exposed through API yet, is
 not connected to the frontend yet, does not fetch new data, does not write
 data, and does not change backtest scoring. Runtime integration remains
-deferred. A future module may add a controlled local DB freshness smoke
-script, and another future module may add a DB-backed read-only API endpoint
-that executes freshness SELECTs.
+deferred. A controlled local DB freshness smoke script now exists, and a
+future module may add a DB-backed read-only API endpoint that executes
+freshness SELECTs.
+
+## Manual Energy Freshness DB Smoke Validation
+
+`scripts/energy_freshness_db_smoke.py` is the controlled local DB freshness
+smoke script. Dry-run:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --pretty
+```
+
+Local read:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --execute --database-url postgresql://localhost/flexsignal_ai --pretty
+```
+
+The script defaults to dry-run, performs no DB connection or SQL execution in
+dry-run mode, requires an explicit local database URL for `--execute`, and
+performs SELECT-only freshness reads through the existing reader. It writes no
+data, prints no raw database URL, does not fetch EDS/DMI data, does not expose
+an API, does not add frontend behavior, and must not be used for automatic
+control, dispatch, or activation.
 
 ## Audit Event Boundary
 

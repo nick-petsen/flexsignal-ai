@@ -101,9 +101,25 @@ reader tests passing with `24 passed`, the full backend suite passing with
 only safety-boundary keys, defensive blocked-token validation, and negative
 assertions/unsafe-plan tests, `git diff --check` passing, fake
 connection/cursor tests only, and no live DB writes. Runtime API/frontend
-integration remains deferred; future work may add a controlled local DB
-freshness smoke script and a DB-backed read-only freshness API endpoint after
-review.
+integration remains deferred; a controlled local DB freshness smoke script now
+exists, and future work may add a DB-backed read-only freshness API endpoint
+after review.
+
+`scripts/energy_freshness_db_smoke.py` is that controlled manual local DB
+freshness smoke. It defaults to dry-run query-plan JSON and performs
+DB-executed freshness SELECTs only when both `--execute` and an explicit local
+`--database-url` are supplied. Example commands:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --pretty
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --execute --database-url postgresql://localhost/flexsignal_ai --pretty
+```
+
+This smoke script does not change `rule-engine-v0`, train a model, fetch
+EDS/DMI data, write data, expose API/frontend behavior, add scheduled jobs,
+add Azure/auth infrastructure, use ML/LLMs, write audit events, wire
+report/PDF flows, or add control, dispatch, activation, or operational
+functionality. It is manual/local read-only freshness validation only.
 
 Observed frontend freshness card validation:
 

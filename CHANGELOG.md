@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/energy_freshness_db_smoke.py`, a manual local-only smoke
+  script for DB-executed energy freshness reads, plus focused unit tests in
+  `backend/tests/test_energy_freshness_db_smoke.py`. The script reuses
+  `backend/app/db/repositories/energy_freshness.py` for dry-run query-plan
+  JSON and `backend/app/db/repositories/energy_freshness_reader.py` for
+  explicit DB-executed SELECT reads. It supports `--price-area DK1|DK2`
+  defaulting to `DK1`, `--pretty`, `--execute`, and `--database-url`. Dry-run
+  is the default and does not connect to a database or execute SQL. Real reads
+  require both `--execute` and an explicit local database URL; localhost,
+  `127.0.0.1`, and local socket-style URLs are accepted, while obvious
+  remote/cloud URLs are refused. Output is JSON with dry-run/execution flags,
+  `database_query_executed`, `database_write_performed=false`,
+  `requires_database_url`, `local_database_only`, freshness plan or result,
+  warnings, and the read-only human-review safety boundary. The raw database
+  URL is not printed. This does not add FastAPI endpoints, modify
+  `backend/app/main.py`, modify frontend code, call live EDS/DMI APIs, write
+  to the database, add migrations, add jobs, add Azure/auth behavior, use
+  ML/LLMs, write audit events, wire report/PDF flows, or add control,
+  dispatch, activation, or operational functionality.
 - Added `backend/app/db/repositories/energy_freshness_reader.py`, a
   backend-only DB-executed read-only freshness reader, plus
   `backend/tests/test_energy_freshness_reader.py`. The reader reuses the

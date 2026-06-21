@@ -61,9 +61,33 @@ Interpretation: this is backend foundation only. It proves read-only
 freshness SELECT execution through an explicit connection, but it is not
 exposed through API yet, is not connected to the frontend yet, does not fetch
 new data, and does not write data. Runtime integration remains deferred. A
-future module may add a controlled local DB freshness smoke script, and
-another future module may add a DB-backed read-only API endpoint that executes
-freshness SELECTs.
+controlled local DB freshness smoke script now exists, and a future module
+may add a DB-backed read-only API endpoint that executes freshness SELECTs.
+
+## Manual Energy Freshness DB Smoke
+
+`scripts/energy_freshness_db_smoke.py` provides the controlled local DB
+freshness smoke script for the reader above. It defaults to dry-run JSON using
+`backend/app/db/repositories/energy_freshness.py` and only performs DB reads
+when a human supplies both `--execute` and an explicit local `--database-url`.
+
+Usage:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --pretty
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --execute --database-url postgresql://localhost/flexsignal_ai --pretty
+```
+
+Local URL validation accepts localhost, `127.0.0.1`, and local socket-style
+PostgreSQL URLs such as `postgresql:///flexsignal_ai`. Remote/cloud URLs are
+refused, and raw database URLs are not printed.
+
+The script performs SELECT-only freshness reads through
+`read_energy_freshness_summary(...)`, writes no data, does not fetch EDS/DMI
+data, does not expose a FastAPI endpoint, does not modify the frontend, does
+not add migrations or jobs, and does not add auth, Azure, ML/LLM, audit
+writes, report/PDF wiring, control, dispatch, activation, or operational
+energy-system integration.
 
 ## EDS Data Freshness Preview API
 
