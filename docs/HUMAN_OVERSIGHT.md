@@ -3,17 +3,50 @@
 ## EDS Data Freshness Read Model
 
 `eds-data-freshness-read-model-v0` adds a backend-only read model for future
-data freshness indicators. It builds parameterized query plans for DK1/DK2
-`spot_prices` and `power_balance` freshness summaries, including earliest
-timestamp, latest timestamp, row count, data source label, and an empty-result
-warning field.
+data freshness indicators. It exists because the audit foundation is
+sufficient for the MVP foundation and product work has moved back toward
+data/dashboard readiness.
 
-The read model only builds SQL and params. It does not call live Energi Data
-Service or DMI/weather APIs, connect to a database, read `DATABASE_URL`,
-execute SQL, write data, expose FastAPI endpoints, modify frontend behavior,
-schedule jobs, add infrastructure, or add operational behavior. It prepares a
-future dashboard/API freshness indicator for MVP data trust and debugging
-while preserving the read-only decision-support boundary.
+The implementation in `backend/app/db/repositories/energy_freshness.py`
+builds pure query-plan objects for DK1/DK2 stored energy data, with focused
+coverage in `backend/tests/test_energy_freshness.py`. Implemented plans
+include:
+
+- Spot price freshness summary.
+- Power balance freshness summary.
+- Combined energy freshness summary.
+
+The read model only returns parameterized SELECT SQL and params. Plans include
+source labels, earliest/latest timestamp fields, row count fields, and
+empty-row warnings. Price areas are limited to `DK1` and `DK2`; invalid values
+outside those areas are rejected.
+
+This is a read-only foundation for future human oversight. It prepares a
+future dashboard/API freshness indicator so reviewers can understand whether
+stored energy data is fresh enough to trust before relying on a dashboard,
+risk view, forecast preview, or report.
+
+Safety boundary: the read model does not call live Energi Data Service, call
+DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
+write to a database, expose FastAPI endpoints, modify frontend behavior,
+schedule jobs, add Azure infrastructure, add auth, use ML/LLMs, write audit
+events, or perform automatic control, dispatch, activation, closed-loop
+workflows, live control signals, or operational functionality.
+
+Observed validation:
+
+- Focused energy freshness tests passed: `21 passed`.
+- Full backend suite passed: `430 passed, 1 warning`.
+- `py_compile` passed.
+- Forbidden-pattern grep matched only negative assertions in tests.
+- `git diff --check` passed.
+- No live DB writes were performed.
+
+Interpretation: this is backend foundation only. It does not fetch new data,
+execute queries, expose an API, or wire runtime dashboard behavior. Runtime
+integration remains deferred. A future module may add a read-only API endpoint
+for energy freshness, after which the frontend can show DK1/DK2 freshness
+indicators without adding live ingestion or control behavior.
 
 ## Audit Event Foundation
 

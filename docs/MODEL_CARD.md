@@ -44,6 +44,22 @@ warnings. It does not execute SQL, connect to a database, read `DATABASE_URL`,
 call live EDS or DMI/weather APIs, write data, expose endpoints, or affect the
 forecasting model. Its purpose is MVP data trust and debugging only.
 
+The read-model helper also includes a combined energy freshness summary plan.
+All plans return parameterized SELECT SQL only, include params and source
+labels, and reject invalid `price_area` values outside `DK1`/`DK2`. Observed
+validation recorded focused energy freshness tests passing with `21 passed`,
+the full backend suite passing with `430 passed, 1 warning`, `py_compile`
+passing, forbidden-pattern grep matching only negative assertions in tests,
+`git diff --check` passing, and no live DB writes.
+
+Interpretation: this read model is not part of `rule-engine-v0`, is not a
+forecasting engine, and does not change scoring behavior. It is backend
+foundation only for future read-only dashboard/API freshness indicators over
+stored data. It does not fetch new EDS data, execute queries, expose an API,
+modify frontend behavior, schedule jobs, add Azure/auth infrastructure, use
+ML/LLMs, write audit events, or add control, dispatch, activation, or
+operational functionality.
+
 Working read-only paths around the model:
 
 - `POST /api/risk/preview` scores caller-provided DK1/DK2 JSON.

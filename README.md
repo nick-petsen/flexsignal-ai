@@ -56,6 +56,12 @@ Working read-only core:
   `audit-event-v0` dictionaries plus repository INSERT plans without executing
   SQL, opening database connections, reading `DATABASE_URL`, calling the audit
   writer, exposing API routes, or modifying frontend behavior.
+- An EDS data freshness read-model foundation exists in
+  `backend/app/db/repositories/energy_freshness.py` for future DK1/DK2
+  dashboard/API freshness indicators. It builds parameterized SELECT query
+  plans only and does not connect to a database, read `DATABASE_URL`, execute
+  SQL, call live Energi Data Service, call DMI/weather APIs, expose endpoints,
+  modify frontend behavior, schedule jobs, or write data.
 - `POST /api/audit/preview` exists as a reviewed read-only audit persistence
   dry-run preview API. It exposes runtime planner output for inspection only
   and does not add automatic audit logging or wire audit persistence into
@@ -147,11 +153,56 @@ Still preview / not production:
 
 Recommended next MVP direction: the audit foundation is now sufficient for the
 MVP foundation. Move product work back toward stable data ingestion,
-DMI/weather ingestion, dashboard graphs, forecast UI, and PDF export from the
-UI. Do not add production audit writes yet, do not add automatic scheduled
-report generation, do not fetch data in the report builder, do not use an LLM
-as the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+DMI/weather ingestion, dashboard graphs, forecast UI, freshness indicators,
+and PDF export from the UI. Do not add production audit writes yet, do not add
+automatic scheduled report generation, do not fetch data in the report
+builder, do not use an LLM as the forecast or reporting engine, and do not add
+control, dispatch, or activation behavior.
+
+## EDS Data Freshness Read Model
+
+`eds-data-freshness-read-model-v0` is a backend foundation for future
+freshness indicators over stored Energi Data Service-derived data. It exists
+because the audit foundation is sufficient for the MVP foundation and product
+work has moved back toward data/dashboard readiness.
+
+The read model is implemented in
+`backend/app/db/repositories/energy_freshness.py` with focused tests in
+`backend/tests/test_energy_freshness.py`. It builds pure query plans for
+DK1/DK2 freshness summaries:
+
+- Spot price freshness plan.
+- Power balance freshness plan.
+- Combined energy freshness summary plan.
+
+The plans return parameterized SELECT SQL only. They include params, source
+labels, earliest/latest timestamp fields, row count fields, and empty-row
+warnings. Price areas are limited to `DK1` and `DK2`; invalid values outside
+those areas are rejected.
+
+Safety boundary: this foundation does not call live Energi Data Service, call
+DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
+write to a database, add API endpoints, modify frontend behavior, schedule
+jobs, add Azure infrastructure, add auth, use ML/LLMs, write audit events, or
+perform control, dispatch, activation, or operational functionality.
+
+Observed validation documented for the read-model branch:
+
+- Focused energy freshness tests passed: `21 passed`.
+- Full backend suite passed: `430 passed, 1 warning`.
+- `py_compile` passed.
+- Forbidden-pattern grep matched only negative assertions in tests.
+- `git diff --check` passed.
+- No live DB writes were performed.
+
+Interpretation: the EDS freshness read model is backend foundation only. It
+helps future dashboard/API layers show whether stored energy data is fresh
+enough to trust. It does not fetch new data, execute queries, expose an API,
+or integrate with runtime flows yet.
+
+Next step: a future module may add a read-only API endpoint for energy
+freshness. After that, the frontend can show data freshness indicators in the
+DK1/DK2 dashboard. Live ingestion and frontend wiring remain deferred.
 
 ## Audit Event Foundation
 
