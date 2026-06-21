@@ -1,5 +1,28 @@
 # Human Oversight
 
+## DB-Executed Energy Freshness Reader
+
+`backend/app/db/repositories/energy_freshness_reader.py` now provides a
+backend-only read-only reader for `eds-data-freshness-read-model-v0`. It uses
+the existing query-plan builders in
+`backend/app/db/repositories/energy_freshness.py`, defensively validates those
+plans as parameterized SELECT-only SQL, and executes them only through an
+explicit caller-provided database connection.
+
+The reader returns structured dictionaries for spot price freshness, power
+balance freshness, and a combined summary. Results include `price_area`,
+`database_query_executed=true`, `database_write_performed=false`, source
+label, earliest/latest timestamps, row count, empty-row warnings, and the
+explicit read-only human-review safety boundary.
+
+Boundary: this reader does not create database connections, read
+`DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs, write to
+the database, add migrations, expose a FastAPI endpoint, modify the frontend,
+schedule jobs, add Azure/auth behavior, use ML/LLMs, write audit events, wire
+report/PDF flows, or add control, dispatch, activation, closed-loop, live
+control, or operational functionality. It prepares a future DB-backed
+freshness API/dashboard indicator only; it is not exposed through an API yet.
+
 ## EDS Data Freshness Preview API
 
 `GET /api/energy/freshness?price_area=DK1|DK2` exposes a read-only preview of

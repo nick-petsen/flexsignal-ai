@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Added `backend/app/db/repositories/energy_freshness_reader.py`, a
+  backend-only DB-executed read-only freshness reader, plus
+  `backend/tests/test_energy_freshness_reader.py`. The reader reuses the
+  existing `energy_freshness.py` query-plan builders, defensively validates
+  parameterized SELECT-only SQL for `DK1`/`DK2`, requires an explicit
+  caller-provided database connection, executes spot price and power balance
+  freshness reads through common DB cursor patterns, and returns structured
+  dictionaries with `database_query_executed=true`,
+  `database_write_performed=false`, source labels, earliest/latest timestamps,
+  row counts, empty-row warnings, and the read-only human-review safety
+  boundary. It does not add FastAPI endpoints, modify `backend/app/main.py`,
+  modify frontend code, create database connections, read `DATABASE_URL`,
+  call live Energi Data Service or DMI/weather APIs, write to the database,
+  add migrations, add scheduler/Azure/auth behavior, use ML/LLMs, write audit
+  events, wire report/PDF flows, or add control, dispatch, activation, or
+  operational functionality. It prepares future DB-backed API/dashboard
+  freshness indicators only. Focused reader tests passed with `24 passed`.
 - Documented frontend energy freshness card validation results. The card uses
   the added `fetchEnergyFreshness()` helper to manually call the existing
   `GET /api/energy/freshness?price_area=DK1|DK2` endpoint through the
