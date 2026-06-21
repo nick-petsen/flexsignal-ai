@@ -126,6 +126,41 @@ DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_local
 DATABASE_URL='postgresql://localhost/flexsignal_ai' python3 scripts/manual_local_db_read_preview.py --table power_balance --price-area DK2 --limit 25
 ```
 
+## Manual Energy Freshness Local DB Smoke
+
+`energy_freshness_db_smoke.py` is a manual local-only smoke script for
+DB-executed energy freshness reads. It uses the existing
+`backend/app/db/repositories/energy_freshness.py` query-plan builders for
+dry-run preview and
+`backend/app/db/repositories/energy_freshness_reader.py` for explicit
+DB-executed reads.
+
+The default mode is dry-run only. It does not connect to a database, execute
+SQL, write data, fetch Energi Data Service data, call weather APIs, expose an
+API, add frontend behavior, or run automatically.
+
+Dry-run:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --pretty
+```
+
+Local read, only after a local database is available:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --execute --database-url postgresql://localhost/flexsignal_ai --pretty
+```
+
+Real DB reads require both `--execute` and an explicit local `--database-url`.
+Accepted URL shapes include `postgresql://localhost/flexsignal_ai`,
+`postgresql://127.0.0.1/flexsignal_ai`, and
+`postgresql:///flexsignal_ai`. Obvious remote/cloud URLs are refused and the
+raw database URL is never printed.
+
+The script performs SELECT-only freshness reads for `DK1` or `DK2`, writes no
+data, does not fetch EDS/DMI data, does not expose an API, does not modify the
+frontend, and must not be used for automatic control, dispatch, or activation.
+
 ## Manual EDS Local DB Ingest
 
 `manual_eds_local_db_ingest.py` is an explicit manual local-only validation

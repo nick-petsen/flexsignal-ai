@@ -71,6 +71,14 @@ Working read-only core:
   `DK1`/`DK2`, returns structured dictionaries only, and does not create
   connections, read `DATABASE_URL`, call live EDS/DMI APIs, write data, expose
   a FastAPI route, or modify frontend behavior.
+- Manual local energy freshness DB smoke now exists at
+  `scripts/energy_freshness_db_smoke.py`. It defaults to dry-run query-plan
+  JSON, does not connect to a database unless `--execute` is provided, and
+  requires an explicit local `--database-url` for DB-executed freshness reads.
+  It performs SELECT-only reads through the existing freshness reader, writes
+  no data, never prints the raw database URL, does not call EDS/DMI APIs, and
+  does not add API, frontend, scheduler, Azure, auth, ML/LLM, audit-write,
+  report/PDF, control, dispatch, activation, or operational behavior.
 - `POST /api/audit/preview` exists as a reviewed read-only audit persistence
   dry-run preview API. It exposes runtime planner output for inspection only
   and does not add automatic audit logging or wire audit persistence into
@@ -261,6 +269,35 @@ Observed frontend validation:
 - No database was accessed.
 - No SQL was executed.
 - No live Energi Data Service or DMI/weather APIs were called.
+
+## Manual Energy Freshness DB Smoke
+
+`scripts/energy_freshness_db_smoke.py` is a manual/local smoke script for
+DB-executed freshness reads over stored energy data. It reuses
+`backend/app/db/repositories/energy_freshness.py` for dry-run query-plan JSON
+and `backend/app/db/repositories/energy_freshness_reader.py` for explicit
+DB-executed SELECT reads.
+
+Dry-run:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --pretty
+```
+
+Local read:
+
+```bash
+python3 scripts/energy_freshness_db_smoke.py --price-area DK1 --execute --database-url postgresql://localhost/flexsignal_ai --pretty
+```
+
+Default behavior is dry-run only. Real DB reads require both `--execute` and
+an explicit local `--database-url`; localhost, `127.0.0.1`, and local
+socket-style PostgreSQL URLs are accepted, while remote/cloud URLs are
+rejected. The script prints JSON with dry-run/execution flags, no-write flags,
+freshness plan or result, warnings, and the read-only human-review safety
+boundary. It writes no data, does not fetch EDS/DMI data, does not expose an
+API, does not add frontend behavior, and must not be used for automatic
+control, dispatch, or activation.
 
 Frontend freshness card non-goals: this documentation step did not change
 backend behavior, add a backend endpoint, add database code, execute SQL,
