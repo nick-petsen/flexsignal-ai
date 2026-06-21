@@ -39,6 +39,21 @@ Current read-only foundation:
   with HTTP 400 and does not connect to a database, read `DATABASE_URL`,
   execute SQL, write data, call live EDS/DMI sources, add scheduler behavior,
   or affect backtest scoring.
+- `backend/app/db/repositories/energy_freshness_reader.py` provides a
+  backend-only DB-executed freshness reader for the same read model. It uses
+  the existing query-plan builders, validates parameterized SELECT-only plans,
+  accepts only `DK1`/`DK2`, and requires an explicit caller-provided database
+  connection. It returns structured spot price, power balance, and combined
+  freshness dictionaries with `database_query_executed=true`,
+  `database_write_performed=false`, source labels, earliest/latest timestamps,
+  row counts, empty-row warnings, and the read-only human-review safety
+  boundary. It does not create database connections, read `DATABASE_URL`, call
+  live EDS/DMI sources, write to the database, add migrations, expose an API,
+  modify frontend behavior, schedule jobs, add Azure/auth behavior, use
+  ML/LLMs, write audit events, wire report/PDF flows, or add control,
+  dispatch, activation, or operational functionality. It prepares future
+  DB-backed API/dashboard freshness indicators only and does not affect
+  backtest scoring.
 - Synthetic backtest preview exists for local smoke validation.
 - Local PostgreSQL read-only backtest exists for existing local rows.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.

@@ -74,6 +74,22 @@ EDS data, execute queries, schedule jobs, add Azure/auth infrastructure, use
 ML/LLMs, write audit events, or add control, dispatch, activation, or
 operational functionality.
 
+A backend-only DB-executed energy freshness reader now exists at
+`backend/app/db/repositories/energy_freshness_reader.py`. It is separate from
+the dry-run API preview and is not exposed through FastAPI yet. The reader uses
+the existing freshness query-plan builders, validates that plans are
+parameterized SELECT-only SQL for `DK1`/`DK2`, requires an explicit
+caller-provided database connection, and returns structured dictionaries with
+`database_query_executed=true`, `database_write_performed=false`, source label,
+earliest/latest timestamps, row count, empty-row warnings, and the same
+read-only human-review safety boundary. It does not create database
+connections, read `DATABASE_URL`, call live EDS or DMI/weather APIs, write to
+the database, add migrations, modify API/frontend behavior, schedule jobs, add
+Azure/auth behavior, use ML/LLMs, write audit events, wire report/PDF flows,
+or add control, dispatch, activation, closed-loop, live-control, or
+operational functionality. It prepares future DB-backed freshness indicators
+for API/dashboard use only and does not change `rule-engine-v0` scoring.
+
 Observed frontend freshness card validation:
 
 - `npm run build` passed.
