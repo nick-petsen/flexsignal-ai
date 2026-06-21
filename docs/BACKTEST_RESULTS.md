@@ -30,6 +30,11 @@ historical batch write:
 
 Current read-only foundation:
 
+- `eds-data-freshness-read-model-v0` exists as a backend-only query-plan
+  helper for DK1/DK2 `spot_prices` and `power_balance` freshness summaries.
+  It only builds parameterized SELECT plans and does not connect to a
+  database, execute SQL, write data, call live EDS/DMI sources, expose an API,
+  add scheduler behavior, or affect backtest scoring.
 - Synthetic backtest preview exists for local smoke validation.
 - Local PostgreSQL read-only backtest exists for existing local rows.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
