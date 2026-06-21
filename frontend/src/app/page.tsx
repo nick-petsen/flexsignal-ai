@@ -4,15 +4,19 @@ import { useState } from "react";
 import {
   backendApiBaseUrl,
   fetchCurrentRisk,
+  fetchEnergyFreshness,
   fetchForecastPreview,
   fetchPowerBalance,
   fetchSpotPrices,
   type CurrentRiskResponse,
   type EnergyApiResponse,
+  type EnergyFreshnessQueryPlan,
+  type EnergyFreshnessResponse,
   type ForecastPreviewResponse,
   type ForecastWindowSummary,
   type PowerBalanceRow,
   type PriceArea,
+  type SafetyBoundary,
   type SpotPriceRow
 } from "../lib/api";
 
@@ -32,6 +36,12 @@ type ForecastRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: ForecastPreviewResponse }
+  | { status: "error"; message: string };
+
+type FreshnessRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: EnergyFreshnessResponse }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -329,6 +339,199 @@ function ForecastPreviewCard({
   );
 }
 
+function EnergyFreshnessCard({
+  state,
+  onLoad
+}: {
+  state: FreshnessRequestState;
+  onLoad: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="energy-freshness-title">
+      <div className="card__header">
+        <div>
+          <h2 id="energy-freshness-title">Energy data freshness</h2>
+          <p className="card__description">
+            Freshness query plan preview for prepared read-only checks.
+          </p>
+        </div>
+        <span className="status status--warning">Dry-run</span>
+      </div>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onLoad}
+        disabled={isLoading}
+      >
+        {isLoading ? "Loading..." : "Load freshness plan"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>GET /api/energy/freshness</code> for a dry-run query plan
+            preview.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">
+            Loading read-only dry-run freshness query plan preview...
+          </p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Backend unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <EnergyFreshnessResult data={state.data} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function EnergyFreshnessResult({ data }: { data: EnergyFreshnessResponse }) {
+  const spotPricePlan =
+    data.spot_price_freshness_plan ??
+    data.freshness_plans.queries?.spot_price;
+  const powerBalancePlan =
+    data.power_balance_freshness_plan ??
+    data.freshness_plans.queries?.power_balance;
+
+  return (
+    <div>
+      <p className="preview-note">
+        Dry-run query plan preview only. No database query executed. No
+        database write performed. Live freshness execution not enabled yet.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>price_area</dt>
+          <dd>{formatValue(data.price_area)}</dd>
+        </div>
+        <div>
+          <dt>dry_run</dt>
+          <dd>{formatValue(data.dry_run)}</dd>
+        </div>
+        <div>
+          <dt>database_query_executed</dt>
+          <dd>{formatValue(data.database_query_executed)}</dd>
+        </div>
+        <div>
+          <dt>database_write_performed</dt>
+          <dd>{formatValue(data.database_write_performed)}</dd>
+        </div>
+        <div>
+          <dt>requires_database_url</dt>
+          <dd>{formatValue(data.requires_database_url)}</dd>
+        </div>
+      </dl>
+      <div className="plan-grid">
+        <FreshnessPlanSummary label="spot_price" plan={spotPricePlan} />
+        <FreshnessPlanSummary label="power_balance" plan={powerBalancePlan} />
+      </div>
+      <WarningList warnings={data.warnings} />
+      <SafetyBoundarySummary safetyBoundary={data.safety_boundary} />
+    </div>
+  );
+}
+
+function FreshnessPlanSummary({
+  label,
+  plan
+}: {
+  label: string;
+  plan?: EnergyFreshnessQueryPlan;
+}) {
+  return (
+    <article className="plan-summary">
+      <h3>{label}</h3>
+      <dl className="risk-list">
+        <div>
+          <dt>plan_presence</dt>
+          <dd>{plan ? "present" : "missing"}</dd>
+        </div>
+        <div>
+          <dt>status</dt>
+          <dd>
+            {plan?.operation === "select"
+              ? "prepared read-only SELECT plan"
+              : "not available"}
+          </dd>
+        </div>
+        <div>
+          <dt>operation</dt>
+          <dd>{formatValue(plan?.operation)}</dd>
+        </div>
+        <div>
+          <dt>table</dt>
+          <dd>{formatValue(plan?.table)}</dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+function WarningList({ warnings }: { warnings?: string[] }) {
+  if (!warnings || warnings.length === 0) {
+    return <p className="muted freshness-detail">warnings: n/a</p>;
+  }
+
+  return (
+    <div className="freshness-detail">
+      <h3>Warnings</h3>
+      <ul className="plain-list">
+        {warnings.map((warning) => (
+          <li key={warning}>{warning}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SafetyBoundarySummary({
+  safetyBoundary
+}: {
+  safetyBoundary?: SafetyBoundary;
+}) {
+  return (
+    <div className="freshness-detail">
+      <h3>Safety boundary</h3>
+      <dl className="risk-list">
+        <div>
+          <dt>read_only_decision_support</dt>
+          <dd>{formatValue(safetyBoundary?.read_only_decision_support)}</dd>
+        </div>
+        <div>
+          <dt>no_automatic_control</dt>
+          <dd>{formatValue(safetyBoundary?.no_automatic_control)}</dd>
+        </div>
+        <div>
+          <dt>no_dispatch</dt>
+          <dd>{formatValue(safetyBoundary?.no_dispatch)}</dd>
+        </div>
+        <div>
+          <dt>no_activation</dt>
+          <dd>{formatValue(safetyBoundary?.no_activation)}</dd>
+        </div>
+        <div>
+          <dt>no_operational_energy_system_integration</dt>
+          <dd>
+            {formatValue(
+              safetyBoundary?.no_operational_energy_system_integration
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>human_review_required</dt>
+          <dd>{formatValue(safetyBoundary?.human_review_required)}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
 function ForecastPreviewResult({ data }: { data: ForecastPreviewResponse }) {
   return (
     <div>
@@ -428,6 +631,9 @@ export default function DashboardPage() {
     useState<ForecastRequestState>({
       status: "idle"
     });
+  const [freshnessState, setFreshnessState] = useState<FreshnessRequestState>({
+    status: "idle"
+  });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
@@ -435,6 +641,7 @@ export default function DashboardPage() {
     setPowerBalanceState({ status: "idle" });
     setCurrentRiskState({ status: "idle" });
     setForecastPreviewState({ status: "idle" });
+    setFreshnessState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -474,6 +681,19 @@ export default function DashboardPage() {
       setForecastPreviewState({ status: "success", data });
     } catch (error) {
       setForecastPreviewState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
+  async function handleLoadFreshness() {
+    setFreshnessState({ status: "loading" });
+    try {
+      const data = await fetchEnergyFreshness(selectedArea);
+      setFreshnessState({ status: "success", data });
+    } catch (error) {
+      setFreshnessState({
         status: "error",
         message: errorMessage(error)
       });
@@ -542,6 +762,10 @@ export default function DashboardPage() {
           <ForecastPreviewCard
             state={forecastPreviewState}
             onLoad={handleLoadForecastPreview}
+          />
+          <EnergyFreshnessCard
+            state={freshnessState}
+            onLoad={handleLoadFreshness}
           />
         </div>
 

@@ -72,6 +72,10 @@ Current read-only foundation:
 - The frontend dashboard has a manual read-only forecast preview card that
   calls `POST /api/forecast/preview` with deterministic
   synthetic/caller-provided demo rows only.
+- The frontend dashboard has a manual energy freshness card that calls
+  `GET /api/energy/freshness?price_area=DK1|DK2` and displays dry-run
+  query-plan previews only. It does not execute SQL or prove live data
+  freshness.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
@@ -109,11 +113,11 @@ Still preview / not production:
 
 Recommended next MVP direction: the audit foundation is now sufficient for the
 MVP foundation. Move product work back toward stable data ingestion,
-DMI/weather ingestion, dashboard graphs, forecast UI, freshness indicators,
-and PDF export from the UI. Do not add production audit writes yet, do not add
-automatic scheduled report generation, do not fetch data from the report
-builder, do not use an LLM as the forecast or reporting engine, and do not add
-control, dispatch, or activation behavior.
+DMI/weather ingestion, dashboard graphs, forecast UI, reviewed DB-backed
+freshness execution, and PDF export from the UI. Do not add production audit
+writes yet, do not add automatic scheduled report generation, do not fetch
+data from the report builder, do not use an LLM as the forecast or reporting
+engine, and do not add control, dispatch, or activation behavior.
 
 ## EDS Data Freshness Preview API Validation
 
@@ -150,16 +154,16 @@ Observed validation:
 | `git diff --check` | Passed |
 | Live DB writes | None performed |
 
-Safety boundary: this preview API does not call live Energi Data Service, call
-DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
-write to a database, modify frontend behavior, run a scheduler, add Azure
+Safety boundary: this preview API and frontend card do not call live Energi
+Data Service, call DMI/weather APIs, connect to a database, read
+`DATABASE_URL`, execute SQL, write to a database, run a scheduler, add Azure
 infrastructure, add auth, use ML/LLMs, write audit events, or add control,
 dispatch, activation, or operational functionality.
 
-Interpretation: EDS freshness is API-side dry-run preview only. It does not
-fetch new data, execute queries, or change backtest scoring. Frontend DK1/DK2
-freshness indicators remain deferred and can be added later without live
-ingestion or frontend wiring in this step.
+Interpretation: EDS freshness is dry-run preview only. It does not fetch new
+data, execute queries, prove live data freshness, or change backtest scoring.
+The frontend card prepares dashboard trust indicators by showing the reviewed
+query plans, no-query/no-write flags, warnings, and safety boundary.
 
 ## Audit Event Boundary
 

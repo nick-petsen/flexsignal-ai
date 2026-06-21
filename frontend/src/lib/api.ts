@@ -78,6 +78,49 @@ export type ForecastPreviewResponse = {
   windows: ForecastWindowSummary[];
 };
 
+export type EnergyFreshnessQueryPlan = {
+  read_model?: string;
+  part?: "spot_price" | "power_balance" | string;
+  price_area?: PriceArea;
+  table?: string;
+  operation?: string;
+  sql?: string;
+  params?: Record<string, unknown>;
+  expected_result_fields?: string[];
+};
+
+export type EnergyFreshnessPlans = {
+  read_model?: string;
+  price_area?: PriceArea;
+  operation?: string;
+  queries?: {
+    spot_price?: EnergyFreshnessQueryPlan;
+    power_balance?: EnergyFreshnessQueryPlan;
+  };
+};
+
+export type SafetyBoundary = {
+  read_only_decision_support?: boolean;
+  no_automatic_control?: boolean;
+  no_dispatch?: boolean;
+  no_activation?: boolean;
+  no_operational_energy_system_integration?: boolean;
+  human_review_required?: boolean;
+};
+
+export type EnergyFreshnessResponse = {
+  price_area: PriceArea;
+  dry_run: boolean;
+  database_query_executed: boolean;
+  database_write_performed: boolean;
+  requires_database_url: boolean;
+  freshness_plans: EnergyFreshnessPlans;
+  spot_price_freshness_plan?: EnergyFreshnessQueryPlan;
+  power_balance_freshness_plan?: EnergyFreshnessQueryPlan;
+  warnings?: string[];
+  safety_boundary?: SafetyBoundary;
+};
+
 export type SpotPriceRow = {
   id: number;
   price_area: PriceArea;
@@ -161,6 +204,28 @@ export async function fetchForecastPreview(
   return body as ForecastPreviewResponse;
 }
 
+export async function fetchEnergyFreshness(
+  priceArea: PriceArea
+): Promise<EnergyFreshnessResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/energy/freshness`
+  );
+  url.searchParams.set("price_area", priceArea);
+
+  const response = await fetch(url);
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  if (!isEnergyFreshnessResponse(body)) {
+    throw new Error("Backend returned an unexpected freshness preview shape");
+  }
+
+  return body;
+}
+
 async function fetchEnergyApi<Row>(
   path: string,
   priceArea: PriceArea
@@ -223,6 +288,48 @@ function buildForecastPreviewRequest(
       }
     ]
   };
+}
+
+function isEnergyFreshnessResponse(
+  value: unknown
+): value is EnergyFreshnessResponse {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<EnergyFreshnessResponse>;
+
+  return (
+    isPriceArea(candidate.price_area) &&
+    typeof candidate.dry_run === "boolean" &&
+    typeof candidate.database_query_executed === "boolean" &&
+    typeof candidate.database_write_performed === "boolean" &&
+    typeof candidate.requires_database_url === "boolean" &&
+    isRecord(candidate.freshness_plans) &&
+    isOptionalStringArray(candidate.warnings) &&
+    isOptionalRecord(candidate.safety_boundary) &&
+    isOptionalRecord(candidate.spot_price_freshness_plan) &&
+    isOptionalRecord(candidate.power_balance_freshness_plan)
+  );
+}
+
+function isPriceArea(value: unknown): value is PriceArea {
+  return value === "DK1" || value === "DK2";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isOptionalRecord(value: unknown): value is Record<string, unknown> {
+  return value === undefined || isRecord(value);
+}
+
+function isOptionalStringArray(value: unknown): value is string[] {
+  return (
+    value === undefined ||
+    (Array.isArray(value) && value.every((item) => typeof item === "string"))
+  );
 }
 
 function getApiErrorMessage(body: unknown, status: number): string {
