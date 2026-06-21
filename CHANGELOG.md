@@ -9,16 +9,32 @@
   parameterized SELECT-only SQL for `DK1`/`DK2`, requires an explicit
   caller-provided database connection, executes spot price and power balance
   freshness reads through common DB cursor patterns, and returns structured
-  dictionaries with `database_query_executed=true`,
+  dictionaries only with `database_query_executed=true`,
   `database_write_performed=false`, source labels, earliest/latest timestamps,
   row counts, empty-row warnings, and the read-only human-review safety
-  boundary. It does not add FastAPI endpoints, modify `backend/app/main.py`,
-  modify frontend code, create database connections, read `DATABASE_URL`,
-  call live Energi Data Service or DMI/weather APIs, write to the database,
-  add migrations, add scheduler/Azure/auth behavior, use ML/LLMs, write audit
+  boundary. Implemented functions are `read_spot_price_freshness`,
+  `read_power_balance_freshness`, and `read_energy_freshness_summary`; the
+  combined summary includes `spot_price_freshness`,
+  `power_balance_freshness`, `warnings`, and the safety boundary. Query plans
+  must be parameterized and start with `SELECT`; unsafe SQL is rejected before
+  cursor execution, and blocked mutating tokens include `INSERT`, `UPDATE`,
+  `DELETE`, `UPSERT`, `CREATE`, `ALTER`, `DROP`, `TRUNCATE`, and `MERGE`. It
+  does not add FastAPI endpoints, modify `backend/app/main.py`, modify
+  frontend code, create database connections, read `DATABASE_URL`, call live
+  Energi Data Service or DMI/weather APIs, write to the database, add
+  migrations, add scheduler/Azure/auth behavior, use ML/LLMs, write audit
   events, wire report/PDF flows, or add control, dispatch, activation, or
   operational functionality. It prepares future DB-backed API/dashboard
-  freshness indicators only. Focused reader tests passed with `24 passed`.
+  freshness indicators only. Observed validation: focused reader tests passed
+  with `24 passed`; the full backend suite passed with `466 passed, 1
+  warning`; `py_compile` passed; forbidden-pattern grep matched only
+  safety-boundary keys, defensive blocked-token validation, and negative
+  assertions/unsafe-plan tests; `git diff --check` passed; tests used fake
+  connection/cursor objects only; and no live DB writes were performed.
+  Runtime integration remains deferred. A future module may add a controlled
+  local DB freshness smoke script, and another future module may add a
+  DB-backed read-only API endpoint that executes freshness SELECTs. This
+  change is documentation only.
 - Documented frontend energy freshness card validation results. The card uses
   the added `fetchEnergyFreshness()` helper to manually call the existing
   `GET /api/energy/freshness?price_area=DK1|DK2` endpoint through the

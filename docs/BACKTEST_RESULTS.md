@@ -212,6 +212,67 @@ DB-backed SELECT execution for energy freshness, and another future module may
 improve the dashboard UI once live freshness reads exist. DB execution and
 live ingestion remain deferred.
 
+## DB-Executed Energy Freshness Reader Validation
+
+The DB-executed reader is a backend-only foundation for future freshness
+indicators. It implements `read_spot_price_freshness`,
+`read_power_balance_freshness`, and `read_energy_freshness_summary`.
+
+Implemented behavior:
+
+- Requires an explicit caller-provided DB connection.
+- Does not create DB connections.
+- Does not read `DATABASE_URL`.
+- Does not call live Energi Data Service.
+- Does not call DMI/weather APIs.
+- Executes SELECT-only query plans.
+- Rejects unsafe SQL before cursor execution.
+- Rejects invalid `price_area` values outside `DK1`/`DK2`.
+- Returns structured dictionaries only.
+
+SQL safety: query plans must be parameterized and must start with `SELECT`.
+Blocked mutating tokens include `INSERT`, `UPDATE`, `DELETE`, `UPSERT`,
+`CREATE`, `ALTER`, `DROP`, `TRUNCATE`, and `MERGE`. No write behavior is
+implemented.
+
+Output behavior:
+
+- Spot price and power balance results include `price_area`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `source_label`, `earliest_timestamp`, `latest_timestamp`, `row_count`,
+  empty-row warnings when applicable, and the safety boundary.
+- Combined summary includes `spot_price_freshness`,
+  `power_balance_freshness`, `warnings`, and the safety boundary.
+
+Safety boundary:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Observed validation:
+
+| Check | Result |
+| --- | --- |
+| Focused energy freshness reader tests | `24 passed` |
+| Full backend suite | `466 passed, 1 warning` |
+| `py_compile` | Passed |
+| Forbidden-pattern grep | Matched only safety-boundary keys, defensive blocked-token validation, and negative assertions/unsafe-plan tests |
+| `git diff --check` | Passed |
+| Test DB behavior | Fake connection/cursor only |
+| Live DB writes | None performed |
+
+Interpretation: the reader proves that read-only freshness SELECTs can be
+executed through an explicit connection. It is not exposed through API yet, is
+not connected to the frontend yet, does not fetch new data, does not write
+data, and does not change backtest scoring. Runtime integration remains
+deferred. A future module may add a controlled local DB freshness smoke
+script, and another future module may add a DB-backed read-only API endpoint
+that executes freshness SELECTs.
+
 ## Audit Event Boundary
 
 `audit-event-v0` is not a backtest, forecast model, API endpoint, database

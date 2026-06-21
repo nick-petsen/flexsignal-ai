@@ -15,6 +15,29 @@ balance freshness, and a combined summary. Results include `price_area`,
 label, earliest/latest timestamps, row count, empty-row warnings, and the
 explicit read-only human-review safety boundary.
 
+Implemented reader functions:
+
+- `read_spot_price_freshness`
+- `read_power_balance_freshness`
+- `read_energy_freshness_summary`
+
+SQL safety is enforced before cursor execution. Query plans must be
+parameterized and must start with `SELECT`; mutating SQL tokens are blocked
+before execution, including `INSERT`, `UPDATE`, `DELETE`, `UPSERT`, `CREATE`,
+`ALTER`, `DROP`, `TRUNCATE`, and `MERGE`. Price areas outside `DK1` and `DK2`
+are rejected. No write behavior is implemented.
+
+The combined summary includes `spot_price_freshness`,
+`power_balance_freshness`, `warnings`, and the same safety boundary. The
+safety boundary is:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
 Boundary: this reader does not create database connections, read
 `DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs, write to
 the database, add migrations, expose a FastAPI endpoint, modify the frontend,
@@ -22,6 +45,25 @@ schedule jobs, add Azure/auth behavior, use ML/LLMs, write audit events, wire
 report/PDF flows, or add control, dispatch, activation, closed-loop, live
 control, or operational functionality. It prepares a future DB-backed
 freshness API/dashboard indicator only; it is not exposed through an API yet.
+
+Observed validation:
+
+- Focused energy freshness reader tests passed: `24 passed`.
+- Full backend suite passed: `466 passed, 1 warning`.
+- `py_compile` passed.
+- Forbidden-pattern grep matched only safety-boundary keys, defensive
+  blocked-token validation, and negative assertions/unsafe-plan tests.
+- `git diff --check` passed.
+- Tests used fake connection/cursor objects only.
+- No live DB writes were performed.
+
+Interpretation: this is backend foundation only. It proves read-only
+freshness SELECT execution through an explicit connection, but it is not
+exposed through API yet, is not connected to the frontend yet, does not fetch
+new data, and does not write data. Runtime integration remains deferred. A
+future module may add a controlled local DB freshness smoke script, and
+another future module may add a DB-backed read-only API endpoint that executes
+freshness SELECTs.
 
 ## EDS Data Freshness Preview API
 
