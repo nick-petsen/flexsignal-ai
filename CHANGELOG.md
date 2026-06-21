@@ -2,10 +2,11 @@
 
 ## v0.1.0 - TODO
 
-- Added a frontend energy freshness card to the dashboard. The card manually
-  calls the existing `GET /api/energy/freshness?price_area=DK1|DK2` endpoint
-  through the existing frontend API base URL helper and displays dry-run
-  query-plan previews only: `price_area`, `dry_run`,
+- Documented frontend energy freshness card validation results. The card uses
+  the added `fetchEnergyFreshness()` helper to manually call the existing
+  `GET /api/energy/freshness?price_area=DK1|DK2` endpoint through the
+  existing `NEXT_PUBLIC_API_BASE_URL` pattern and displays dry-run query-plan
+  previews only: `price_area`, `dry_run`,
   `database_query_executed`, `database_write_performed`,
   `requires_database_url`, spot price and power balance plan presence/status,
   warnings, and the read-only human-review safety boundary. It is explicitly
@@ -16,7 +17,14 @@
   behavior, write audit events, wire report/PDF flows, or add control,
   dispatch, activation, or operational functionality. Updated docs to clarify
   that the card prepares future dashboard trust indicators and does not prove
-  live data freshness.
+  live data freshness. Observed validation: `npm run build` passed;
+  `git diff --check` passed; the `npm run lint` script did not exist; the
+  `npm run typecheck` script did not exist; no backend server was started; no
+  frontend dev server was started; no database was accessed; no SQL was
+  executed; and no live Energi Data Service or DMI/weather APIs were called.
+  Future DB-backed SELECT execution for energy freshness and future dashboard
+  UI improvements remain separate reviewed modules after live freshness reads
+  exist. This change is documentation only.
 - Documented observed validation for
   `GET /api/energy/freshness?price_area=DK1|DK2`, a read-only FastAPI energy
   freshness dry-run preview endpoint with focused coverage in
