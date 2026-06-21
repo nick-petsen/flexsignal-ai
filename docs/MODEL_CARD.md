@@ -48,13 +48,15 @@ only.
 The preview also includes a combined energy freshness summary plan. All plans
 return parameterized SELECT SQL only, include params and source labels, and
 reject invalid `price_area` values outside `DK1`/`DK2` with HTTP 400. The API
-response includes `dry_run=true`, `database_query_executed=false`,
-`database_write_performed=false`, `requires_database_url=false`, warnings, and
-the explicit read-only human-review safety boundary. Observed validation
-recorded focused energy freshness API tests passing with `12 passed, 1
-warning`, the full backend suite passing with `442 passed, 1 warning`,
-`py_compile` passing, forbidden-pattern grep matching only required safety
-keys and negative assertions in tests, `git diff --check` passing, and no live
+response includes `price_area`, `dry_run=true`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, `freshness_plans`,
+`spot_price_freshness_plan`, `power_balance_freshness_plan`, warnings, and the
+explicit read-only human-review safety boundary. Observed validation recorded
+focused energy freshness API tests passing with `12 passed, 1 warning`, the
+full backend suite passing with `442 passed, 1 warning`, `py_compile`
+passing, forbidden-pattern grep matching only required safety flags and
+negative/safety assertions in tests, `git diff --check` passing, and no live
 DB writes.
 
 Interpretation: this read model is not part of `rule-engine-v0`, is not a
