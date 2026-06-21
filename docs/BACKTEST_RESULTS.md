@@ -86,11 +86,11 @@ Still preview / not production:
   explicit `--output` path is provided and refuses overwrite without
   `--force`.
 - `audit-event-v0` and the manual audit-event preview have a schema/repository
-  persistence foundation and read-only API dry-run preview available for later
-  explicit reviewed wiring, but do not automatically persist audit logs, write
-  files, add frontend UI, connect report/PDF flows, run scheduled logging,
-  connect to auth/Entra, call EDS or DMI/weather APIs, use ML, use LLMs, or
-  validate production forecast performance.
+  persistence foundation and reviewed read-only API dry-run preview available
+  for inspection only, but do not automatically persist audit logs, write
+  files, add frontend UI, connect report/PDF/forecast/risk runtime flows, run
+  scheduled logging, connect to auth/Entra, call EDS or DMI/weather APIs, use
+  ML, use LLMs, or validate production forecast performance.
 - `report-summary-v0` and its local preview script do not fetch data, read or
   write a database, expose an API, use ML, use LLMs, or validate production
   forecast performance.
@@ -98,11 +98,12 @@ Still preview / not production:
   training, LLM decisioning, automatic control, dispatch, activation, or
   operational workflow exists.
 
-Recommended next MVP audit/reporting step: keep PDF export and audit-event
-preview manual/local for now. A future reviewed module can wire explicit
-read-only flows to audit persistence. Do not add automatic scheduled report
-generation, do not fetch data from the report builder, do not use an LLM as
-the forecast or reporting engine, and do not add control, dispatch, or
+Recommended next MVP direction: the audit foundation is now sufficient for the
+MVP foundation. Move product work back toward stable data ingestion,
+DMI/weather ingestion, dashboard graphs, forecast UI, and PDF export from the
+UI. Do not add production audit writes yet, do not add automatic scheduled
+report generation, do not fetch data from the report builder, do not use an
+LLM as the forecast or reporting engine, and do not add control, dispatch, or
 activation behavior.
 
 ## Audit Event Boundary
@@ -418,12 +419,11 @@ repository insert path works against local Postgres, idempotency works via
 `ON CONFLICT (event_id) DO NOTHING`, and verify-read by `event_id` works. This
 does not change backtest results, model validation, API/frontend behavior,
 report/PDF behavior, or automatic audit logging status. It does not enable
-production audit persistence and does not add FastAPI endpoints, frontend
-behavior, scheduler, Azure infrastructure, auth/Entra integration, live
-EDS/DMI calls, ML/LLM use, control, dispatch, activation, or operational
-functionality. A future module may add a read-only API-side audit logging
-design or manual API audit dry-run, but automatic audit persistence must not
-be wired into runtime flows yet.
+production audit persistence and does not add frontend behavior, scheduler,
+Azure infrastructure, auth/Entra integration, live EDS/DMI calls, ML/LLM use,
+control, dispatch, activation, or operational functionality. The reviewed API
+audit dry-run preview remains inspection-only, and automatic audit persistence
+must not be wired into runtime flows yet.
 
 ### Audit Writer Service Foundation Validation
 
@@ -471,6 +471,51 @@ persistence or add live EDS/DMI calls, ML/LLM use, scheduler, Azure
 infrastructure, auth/Entra integration, control, dispatch, activation, or
 operational functionality. Runtime integration remains intentionally deferred,
 and production DB writes require explicit review.
+
+## Audit API Dry-Run Preview Validation
+
+`POST /api/audit/preview` is a reviewed read-only preview endpoint for audit
+persistence planning. It accepts only `current_risk_viewed`,
+`forecast_preview_requested`, `report_summary_built`,
+`report_markdown_rendered`, and `report_pdf_exported`, and accepts only
+`DK1`/`DK2` price areas. When actor fields are omitted, it defaults to
+`actor_type=local_user` and `actor_id=unknown-local-user`.
+
+The endpoint returns dry-run audit persistence plans from
+`backend/app/audit/runtime_plan.py` only. Response output includes
+`dry_run=true`, `database_write_performed=false`,
+`requires_database_url=false`, `event`, `persistence_plan`, `event_id`,
+`event_type`, `table=audit_events`, `conflict_behavior`, `safety_boundary`,
+and `warnings`. The plan previews the `audit_events` target and
+`ON CONFLICT (event_id) DO NOTHING`; it does not execute SQL.
+
+Validation behavior:
+
+- Unsupported `event_type` returns HTTP 400.
+- Unsupported `price_area` outside `DK1`/`DK2` returns HTTP 400.
+- Responses contain no raw `DATABASE_URL`, secrets, tokens, full headers, or
+  full request bodies.
+- The read-only decision-support safety boundary is preserved.
+
+Observed validation:
+
+- Route allowlist was updated so `/api/audit/preview` is treated as an allowed
+  read-only preview POST.
+- Focused mutating-route check passed: `1 passed, 1 warning`.
+- Focused audit preview API tests passed: `16 passed, 1 warning`.
+- Full backend suite passed: `409 passed, 1 warning`.
+- `py_compile` passed.
+- `git diff --check` passed.
+- No live DB writes were performed.
+
+Interpretation: the audit preview API exposes audit persistence plans for
+inspection only. It does not enable production audit persistence, add
+automatic audit logging, call the audit writer, create database connections,
+read `DATABASE_URL`, write files, call external APIs, generate reports/PDFs,
+modify frontend behavior, or connect audit persistence to forecast, risk,
+report, or PDF runtime flows. It does not affect backtest results, model
+quality, forecast performance, or production readiness. Future runtime audit
+persistence remains deferred and requires explicit review.
 
 ## Report Summary Boundary
 
@@ -1639,10 +1684,9 @@ performed.
 Interpretation: the planner does not affect backtest results, model quality,
 forecast performance, statistical calibration, production readiness, or
 operational fitness. It does not write to a database, call the audit writer
-service, create database connections, read `DATABASE_URL`, execute SQL, expose
-an API, modify `backend/app/main.py`, modify API routes, modify frontend
-behavior, add migrations, call EDS/DMI, use ML/LLMs, schedule work, add
-Azure/auth infrastructure, or add control, dispatch, activation, or
-operational functionality. Runtime integration remains deferred. A future
-module may add an API-side audit dry-run endpoint or wrapper after review, but
-automatic audit persistence must not be wired into runtime flows yet.
+service, create database connections, read `DATABASE_URL`, execute SQL, modify
+frontend behavior, add migrations, call EDS/DMI, use ML/LLMs, schedule work,
+add Azure/auth infrastructure, or add control, dispatch, activation, or
+operational functionality. The reviewed API audit dry-run preview remains
+inspection-only, and automatic audit persistence must not be wired into
+runtime flows yet.
