@@ -28,10 +28,13 @@ Price areas are limited to `DK1` and `DK2`; invalid values outside those areas
 return HTTP 400.
 
 This is a read-only foundation for human oversight. The frontend dashboard has
-a manual energy freshness card that calls this endpoint for `DK1`/`DK2` and
-displays the dry-run query-plan preview, no-query/no-write database flags,
-plan presence/status, warnings, and the safety boundary. The card does not
-claim that live data freshness has been measured.
+a manual energy freshness card backed by `fetchEnergyFreshness()`. The card
+calls this endpoint for `DK1`/`DK2` through the existing
+`NEXT_PUBLIC_API_BASE_URL` pattern and displays the dry-run query-plan
+preview, `database_query_executed`, `database_write_performed`,
+`requires_database_url`, spot price and power balance freshness plan status,
+warnings, and the safety boundary. The card does not claim that live data
+freshness has been measured.
 
 Safety boundary: the preview API and frontend card do not call live Energi
 Data Service, call DMI/weather APIs, connect to a database, read
@@ -51,10 +54,35 @@ Observed validation:
 - `git diff --check` passed.
 - No live DB writes were performed.
 
+Observed frontend card validation:
+
+- `npm run build` passed.
+- `git diff --check` passed.
+- `npm run lint` did not exist.
+- `npm run typecheck` did not exist.
+- No backend server was started.
+- No frontend dev server was started.
+- No database was accessed.
+- No SQL was executed.
+- No live Energi Data Service or DMI/weather APIs were called.
+
 Interpretation: this remains a dry-run preview only. It does not fetch new
 data, execute queries, prove live data freshness, or enable live ingestion or
 control behavior. The frontend card prepares dashboard trust indicators by
-showing the reviewed query plans and safety flags for human review.
+showing the reviewed query plans and safety flags for human review. UI wording
+explicitly communicates freshness query plan preview only, no database query
+executed, no database write performed, live freshness execution not enabled
+yet, and read-only decision support.
+
+Non-goals: this documentation step did not change backend behavior, add a
+backend endpoint, add database code, execute SQL, write to a database, add
+migrations, call live Energi Data Service, call DMI/weather APIs, add auth,
+add Azure infrastructure, add ML/LLM behavior, write audit events, wire
+report/PDF flows, or add control, dispatch, activation, closed-loop,
+live-control, or operational functionality. A future module may add DB-backed
+SELECT execution for energy freshness, and another future module may improve
+the dashboard UI once live freshness reads exist. DB execution and live
+ingestion remain deferred.
 
 ## Audit Event Foundation
 

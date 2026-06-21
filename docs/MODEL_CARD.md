@@ -61,12 +61,39 @@ DB writes.
 
 Interpretation: this read model is not part of `rule-engine-v0`, is not a
 forecasting engine, and does not change scoring behavior. The frontend
-dashboard has a manual energy freshness card that calls the API and displays
-dry-run query-plan previews, no-query/no-write flags, plan presence/status,
-warnings, and the human-review safety boundary. It does not prove live data
-freshness, fetch new EDS data, execute queries, schedule jobs, add Azure/auth
-infrastructure, use ML/LLMs, write audit events, or add control, dispatch,
-activation, or operational functionality.
+dashboard has a manual energy freshness card backed by
+`fetchEnergyFreshness()`. The card calls the API through the existing
+`NEXT_PUBLIC_API_BASE_URL` pattern and displays dry-run query-plan previews,
+`database_query_executed`, `database_write_performed`,
+`requires_database_url`, spot price and power balance freshness plan status,
+warnings, and the human-review safety boundary. UI wording explicitly
+communicates freshness query plan preview only, no database query executed, no
+database write performed, live freshness execution not enabled yet, and
+read-only decision support. It does not prove live data freshness, fetch new
+EDS data, execute queries, schedule jobs, add Azure/auth infrastructure, use
+ML/LLMs, write audit events, or add control, dispatch, activation, or
+operational functionality.
+
+Observed frontend freshness card validation:
+
+- `npm run build` passed.
+- `git diff --check` passed.
+- `npm run lint` did not exist.
+- `npm run typecheck` did not exist.
+- No backend server was started.
+- No frontend dev server was started.
+- No database was accessed.
+- No SQL was executed.
+- No live Energi Data Service or DMI/weather APIs were called.
+
+This documentation step did not change backend behavior, add backend
+endpoints, add database code, execute SQL, write to a database, add
+migrations, call live Energi Data Service, call DMI/weather APIs, add auth,
+add Azure infrastructure, add ML/LLM behavior, write audit events, wire
+report/PDF flows, or add control, dispatch, activation, closed-loop,
+live-control, or operational functionality. Future DB-backed SELECT execution
+for energy freshness and future dashboard UI improvements remain separate
+reviewed modules after live freshness reads exist.
 
 Working read-only paths around the model:
 

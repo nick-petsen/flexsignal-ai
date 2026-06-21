@@ -109,11 +109,16 @@ Latest read-only API/UI smoke-test observations:
   responses for unsupported price areas, dry-run query-plan output, and no
   `DATABASE_URL`, database connection, SQL execution, live EDS/DMI call, data
   write, frontend behavior, scheduler, or operational functionality.
-- Frontend energy freshness card manually calls
-  `GET /api/energy/freshness?price_area=DK1|DK2` and displays dry-run
-  query-plan previews only, including no database query execution, no database
-  write, plan presence/status, warnings, and the human-review safety boundary.
-  It does not prove live data freshness.
+- Frontend energy freshness card validation covered the new
+  `fetchEnergyFreshness()` helper and manual calls to
+  `GET /api/energy/freshness?price_area=DK1|DK2` through the existing
+  `NEXT_PUBLIC_API_BASE_URL` pattern. The card displays `dry_run`,
+  `database_query_executed`, `database_write_performed`,
+  `requires_database_url`, spot price and power balance freshness plan
+  status, warnings, and the human-review safety boundary. It explicitly
+  communicates freshness query plan preview only, no database query executed,
+  no database write performed, live freshness execution not enabled yet, and
+  read-only decision support. It does not prove live data freshness.
 - Frontend forecast preview card manually calls `POST /api/forecast/preview`
   with deterministic synthetic/caller-provided demo rows only.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
@@ -218,18 +223,43 @@ Observed validation:
 - `git diff --check` passed.
 - No live DB writes were performed.
 
-The frontend dashboard now includes an energy freshness card that manually
-calls this endpoint for the selected `DK1`/`DK2` price area. The card displays
-the dry-run flags, no-query/no-write database flags, `requires_database_url`,
-spot price and power balance plan presence/status, warnings, and the safety
-boundary. It labels the response as a freshness query plan preview, not live
-freshness measurement.
+The frontend dashboard now includes an energy freshness card backed by
+`fetchEnergyFreshness()`. The card manually calls this endpoint for the
+selected `DK1`/`DK2` price area through the existing
+`NEXT_PUBLIC_API_BASE_URL` pattern. It displays `dry_run`,
+`database_query_executed`, `database_write_performed`,
+`requires_database_url`, spot price and power balance freshness plan status,
+warnings, and the safety boundary. UI wording explicitly labels the response
+as a freshness query plan preview only, with no database query executed, no
+database write performed, live freshness execution not enabled yet, and
+read-only decision support.
+
+Observed frontend validation:
+
+- `npm run build` passed.
+- `git diff --check` passed.
+- `npm run lint` did not exist.
+- `npm run typecheck` did not exist.
+- No backend server was started.
+- No frontend dev server was started.
+- No database was accessed.
+- No SQL was executed.
+- No live Energi Data Service or DMI/weather APIs were called.
+
+Frontend freshness card non-goals: this documentation step did not change
+backend behavior, add a backend endpoint, add database code, execute SQL,
+write to a database, add migrations, call live Energi Data Service, call
+DMI/weather APIs, add auth, add Azure infrastructure, add ML/LLM behavior,
+write audit events, wire report/PDF flows, or add control, dispatch,
+activation, closed-loop, live-control, or operational functionality.
 
 Interpretation: the energy freshness preview API and frontend card are
 read-only and expose query-plan previews only. They do not prove live database
 freshness, execute freshness SQL, fetch new data, or write data. A future
 reviewed module may add a controlled DB-backed read endpoint that executes
-freshness SELECT queries.
+freshness SELECT queries. Another future module may improve the dashboard UI
+after live freshness reads exist; DB execution and live ingestion remain
+deferred.
 
 ## Audit Event Foundation
 
