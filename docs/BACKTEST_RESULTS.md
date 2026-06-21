@@ -32,9 +32,12 @@ Current read-only foundation:
 
 - `eds-data-freshness-read-model-v0` exists as a backend-only query-plan
   helper for DK1/DK2 `spot_prices` and `power_balance` freshness summaries.
-  It only builds parameterized SELECT plans and does not connect to a
-  database, execute SQL, write data, call live EDS/DMI sources, expose an API,
-  add scheduler behavior, or affect backtest scoring.
+  It also includes a combined energy freshness summary plan. It only builds
+  parameterized SELECT plans with params, source labels, earliest/latest
+  timestamp fields, row count fields, and empty-row warnings. It rejects
+  invalid price areas outside `DK1`/`DK2` and does not connect to a database,
+  read `DATABASE_URL`, execute SQL, write data, call live EDS/DMI sources,
+  expose an API, add scheduler behavior, or affect backtest scoring.
 - Synthetic backtest preview exists for local smoke validation.
 - Local PostgreSQL read-only backtest exists for existing local rows.
 - Backtest row pairing uses `nearest_timestamp_v0_1`.
@@ -105,11 +108,53 @@ Still preview / not production:
 
 Recommended next MVP direction: the audit foundation is now sufficient for the
 MVP foundation. Move product work back toward stable data ingestion,
-DMI/weather ingestion, dashboard graphs, forecast UI, and PDF export from the
-UI. Do not add production audit writes yet, do not add automatic scheduled
-report generation, do not fetch data from the report builder, do not use an
-LLM as the forecast or reporting engine, and do not add control, dispatch, or
-activation behavior.
+DMI/weather ingestion, dashboard graphs, forecast UI, freshness indicators,
+and PDF export from the UI. Do not add production audit writes yet, do not add
+automatic scheduled report generation, do not fetch data from the report
+builder, do not use an LLM as the forecast or reporting engine, and do not add
+control, dispatch, or activation behavior.
+
+## EDS Data Freshness Read-Model Validation
+
+`backend/app/db/repositories/energy_freshness.py` is a backend foundation for
+future freshness indicators over stored EDS-derived data. It prepares future
+dashboard/API layers to show whether stored energy data is fresh enough to
+trust before humans interpret current risk, forecast previews, reports, or
+backtest context.
+
+Implemented behavior:
+
+- Pure query-plan builders exist for DK1/DK2 freshness summaries.
+- Spot price freshness plan exists.
+- Power balance freshness plan exists.
+- Combined energy freshness summary plan exists.
+- Plans return parameterized SELECT SQL only.
+- Plans include params, source labels, earliest/latest timestamp fields, row
+  count fields, and empty-row warnings.
+- Invalid `price_area` values outside `DK1`/`DK2` are rejected.
+
+Observed validation:
+
+| Check | Result |
+| --- | --- |
+| Focused energy freshness tests | `21 passed` |
+| Full backend suite | `430 passed, 1 warning` |
+| `py_compile` | Passed |
+| Forbidden-pattern grep | Matched only negative assertions in tests |
+| `git diff --check` | Passed |
+| Live DB writes | None performed |
+
+Safety boundary: this read model does not call live Energi Data Service, call
+DMI/weather APIs, connect to a database, read `DATABASE_URL`, execute SQL,
+write to a database, expose an API endpoint, modify frontend behavior, run a
+scheduler, add Azure infrastructure, add auth, use ML/LLMs, write audit
+events, or add control, dispatch, activation, or operational functionality.
+
+Interpretation: EDS freshness is backend foundation only. It does not fetch
+new data, execute queries, expose an API, or change backtest scoring. Runtime
+integration remains deferred. A future module may add a read-only API endpoint
+for energy freshness, and a later frontend step can show DK1/DK2 freshness
+indicators without adding live ingestion or frontend wiring in this docs step.
 
 ## Audit Event Boundary
 
