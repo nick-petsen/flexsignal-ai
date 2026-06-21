@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `GET /api/energy/freshness?price_area=DK1|DK2`, a read-only FastAPI
+  energy freshness dry-run preview endpoint, plus
+  `backend/tests/test_api_energy_freshness.py`. The endpoint delegates only to
+  `backend/app/db/repositories/energy_freshness.py` query-plan builders and
+  returns `dry_run=true`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`,
+  `freshness_plans`, `spot_price_freshness_plan`,
+  `power_balance_freshness_plan`, warnings, and the read-only human-review
+  safety boundary. It accepts only `DK1`/`DK2` and returns HTTP 400 for other
+  price areas. It does not execute SQL, connect to a database, read
+  `DATABASE_URL`, write data, call live EDS/DMI APIs, modify frontend code,
+  add migrations, add scheduler/Azure/auth behavior, use ML/LLM logic, write
+  audit events, or add control, dispatch, activation, or operational
+  functionality. It prepares future dashboard data freshness indicators only.
+  Observed validation: focused energy freshness API tests passed with
+  `12 passed, 1 warning`; the full backend suite passed with `442 passed, 1
+  warning`; `py_compile` passed; forbidden-pattern grep matched only required
+  safety keys and negative assertions in tests; `git diff --check` passed; and
+  no live DB writes were performed.
 - Added `backend/app/db/repositories/energy_freshness.py`, a read-only EDS
   data freshness read model, plus `backend/tests/test_energy_freshness.py`.
   The helper builds parameterized SELECT query plans for DK1/DK2
