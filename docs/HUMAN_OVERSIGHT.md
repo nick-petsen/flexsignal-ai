@@ -46,6 +46,26 @@ Observed validation:
 - Tests used mocked database connections only.
 - No live DB writes were performed.
 
+Observed local API smoke:
+
+The backend was started locally with
+`DATABASE_URL=postgresql://localhost/flexsignal_ai` and the DB-backed
+freshness read endpoint was called for `DK1`, `DK2`, and invalid `SE3`.
+The endpoint performed SELECT-only freshness reads, no database writes were
+performed, no live EDS/DMI calls were made, no ingestion was triggered, and no
+frontend changes were involved.
+
+| Area | HTTP | `dry_run` | `database_query_executed` | `database_write_performed` | `requires_database_url` | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp |
+| --- | ---: | --- | --- | --- | --- | ---: | --- | ---: | --- |
+| DK1 | 200 | false | true | false | true | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` |
+| DK2 | 200 | false | true | false | true | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` |
+
+Invalid `price_area=SE3` returned HTTP 400 with `Unsupported price_area`.
+The read-only human-review safety boundary was preserved. This proves local
+DB-backed API freshness reads work against the observed local data. It does
+not mean production monitoring or Azure deployment exists, and it prepares
+future frontend live freshness card wiring only.
+
 Interpretation: this is the first controlled DB-backed freshness API. It
 performs read-only SELECT execution only, improves MVP data trust readiness,
 does not perform ingestion, does not verify production freshness yet, and is

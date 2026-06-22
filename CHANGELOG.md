@@ -2,6 +2,27 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed local DB-backed energy freshness API smoke results for
+  `GET /api/energy/freshness/read?price_area=DK1|DK2`. The backend was
+  started locally with `DATABASE_URL=postgresql://localhost/flexsignal_ai`;
+  the endpoint performed SELECT-only freshness reads, no database writes were
+  performed, no live EDS/DMI calls were made, no ingestion was triggered, and
+  no frontend changes were involved. Observed DK1: HTTP 200,
+  `dry_run=false`, `database_query_executed=true`,
+  `database_write_performed=false`, `requires_database_url=true`, spot price
+  `row_count=53`, spot price latest timestamp
+  `2026-06-11T21:45:00+02:00`, power balance `row_count=53`, power balance
+  latest timestamp `2026-06-10T17:00:00+02:00`, and safety boundary
+  preserved. Observed DK2: HTTP 200, `dry_run=false`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `requires_database_url=true`, spot price `row_count=50`, spot price latest
+  timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=50`, power
+  balance latest timestamp `2026-06-10T17:00:00+02:00`, and safety boundary
+  preserved. Invalid `price_area=SE3` returned HTTP 400 with
+  `Unsupported price_area`. This proves local DB-backed API freshness reads
+  work against the observed local data, does not mean production monitoring or
+  Azure deployment exists, and prepares future frontend live freshness card
+  wiring only. This change is documentation only.
 - Documented observed validation for
   `GET /api/energy/freshness/read?price_area=DK1|DK2`, the first controlled
   DB-backed energy freshness read API. The endpoint supports `DK1` and `DK2`,
