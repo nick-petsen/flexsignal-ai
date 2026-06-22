@@ -236,6 +236,24 @@ Latest read-only API/UI smoke-test observations:
   only; no auto-load or polling was observed. Spot prices, power balance,
   current surplus risk, forecast preview, DB-backed energy freshness reads,
   and dry-run freshness query-plan previews loaded for DK1 and DK2.
+- Manual frontend dashboard chart smoke was observed with the backend started
+  locally, the frontend started locally with `NEXT_PUBLIC_API_BASE_URL`
+  pointing to the backend, and the browser opened to the local dashboard.
+  Requests were manual button clicks only; no auto-load or polling was
+  observed. For DK1, spot prices loaded, the spot price table remained
+  visible, the spot price trend chart displayed, power balance loaded, the
+  power balance table remained visible, and the power balance trend chart
+  displayed. After switching the price area to DK2, the same behavior was
+  observed for DK2 spot prices and power balance. Both charts used only
+  manually loaded backend rows.
+- Manual chart smoke safety wording remains explicit: `Manual read-only spot
+  price rows`, `Manual read-only power balance rows`, and `Trend from loaded
+  backend rows`. The chart path uses lightweight inline frontend charts with
+  no charting dependency, no new backend endpoint, no browser call to Energi
+  Data Service, no DMI/weather call, no SQL execution from the frontend, no
+  database writes, no forecast execution from the chart itself, and no
+  control, dispatch, activation, automation, polling, energy-asset control, or
+  operational behavior.
 - In that manual dashboard smoke, DB-backed freshness read wording remained
   explicit: DB-backed freshness read, SELECT-only read, no database write
   performed, freshness of stored local/configured database data, no new

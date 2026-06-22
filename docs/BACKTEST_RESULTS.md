@@ -178,6 +178,21 @@ Current read-only foundation:
   poll, add a backend endpoint, execute SQL, write to the database, call live
   Energi Data Service, call DMI/weather APIs, forecast, trade, control assets,
   dispatch, activate, automate anything, or affect backtest scoring.
+- Observed manual frontend dashboard chart smoke started the backend locally,
+  started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend, and opened the local dashboard in a browser. Requests were manual
+  button clicks only; no auto-load or polling was observed. DK1 spot prices
+  loaded, the spot price table stayed visible, the spot price trend chart
+  displayed, DK1 power balance loaded, the power balance table stayed visible,
+  and the power balance trend chart displayed. After switching the price area
+  to DK2, DK2 spot prices and power balance loaded with the same table and
+  trend-chart behavior. The charts used only manually loaded backend rows.
+  This smoke does not affect backtest scoring, does not execute forecasting
+  logic from the chart itself, adds no charting dependency, adds no backend
+  endpoint, makes no browser call to Energi Data Service, makes no
+  DMI/weather call, executes no SQL from the frontend, writes nothing to the
+  database, and does not add polling, control, dispatch, activation,
+  energy-asset control, automation, or operational behavior.
 - Observed frontend chart validation recorded `npm run build`
   passing and `git diff --check` passing. `npm run lint` and
   `npm run typecheck` scripts did not exist. No backend server was started,
