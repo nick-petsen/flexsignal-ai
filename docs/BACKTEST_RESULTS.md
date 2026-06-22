@@ -156,6 +156,29 @@ Current read-only foundation:
   is a SELECT-only freshness read over stored local/configured database data,
   performs no database write, does not fetch new EDS/DMI data, and does not
   imply ingestion has run. This smoke does not affect backtest scoring.
+- The frontend Spot prices card includes a lightweight read-only spot price
+  trend chart for MVP dashboard visualization. It uses only rows returned by
+  the existing manual `Load spot prices` action, renders in/near the existing
+  Spot prices card only when spot price rows exist, keeps the existing table
+  visible, supports `DK1` and `DK2` through the selected price area, and uses
+  inline SVG/HTML/CSS without a charting dependency. It handles empty,
+  single-point, multi-point, missing, and invalid values safely. It does not
+  auto-load, poll, add a backend endpoint, execute SQL, write to the
+  database, call live Energi Data Service, call DMI/weather APIs, forecast,
+  trade, control assets, dispatch, activate, automate anything, or affect
+  backtest scoring.
+- Observed frontend spot price chart validation recorded `npm run build`
+  passing and `git diff --check` passing. `npm run lint` and
+  `npm run typecheck` scripts did not exist. No backend server was started,
+  no database was accessed, no SQL was executed, and no live EDS/DMI APIs
+  were called. This was documentation-only validation of the existing manual
+  dashboard visualization path and added no ingestion, automation, backend
+  changes, API endpoints, auth, Azure infrastructure, ML/LLM behavior, audit
+  writes, report/PDF wiring, control, dispatch, activation, or operational
+  functionality. A future module may add a simple power balance chart, and
+  another future module may improve dashboard layout. Those future modules
+  must not add ingestion, automation, or backend changes in this documentation
+  step.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
