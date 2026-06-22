@@ -36,11 +36,33 @@ Observed validation:
 - No SQL was executed.
 - No live Energi Data Service or DMI/weather APIs were called.
 
-Next step: a future module may manually smoke-test the risk visual in the
-local frontend/backend dashboard. Another future module may improve dashboard
-layout and visual hierarchy. Neither follow-up should add ingestion,
-automation, database writes, backend changes, ML/LLM behavior, or operational
-functionality without explicit review.
+Observed manual frontend risk score visual smoke:
+
+- Backend was started locally.
+- Frontend was started locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend.
+- Browser opened the local dashboard.
+- Current surplus risk was loaded manually by button click.
+- No auto-load or polling was observed.
+- DK1 displayed `price_area=DK1`, `risk_score=35/100`,
+  `risk_level=medium`, the visible `Decision-support risk score` box, a
+  visible 0-100 horizontal bar, `Human review required`, raw/text risk
+  details below the visual, and `decision_support_only=true`.
+- DK2 displayed `price_area=DK2`, `risk_score=20/100`, `risk_level=low`, the
+  visible `Decision-support risk score` box, a visible 0-100 horizontal bar,
+  `Human review required`, raw/text risk details below the visual, and
+  `decision_support_only=true`.
+
+Manual smoke safety interpretation: the visual uses only the existing manual
+`Load current risk` response. It adds no new backend endpoint, changes no
+backend behavior, performs no database write, executes no SQL, calls no live
+EDS/DMI API, uses no ML/LLM behavior, performs no automatic control, performs
+no dispatch, and performs no activation. Human review remains required.
+
+Next step: a future module may improve dashboard layout and visual hierarchy.
+That follow-up should not add ingestion, automation, database writes, backend
+changes, ML/LLM behavior, or operational functionality without explicit
+review.
 
 ## Frontend Read-Only Trend Charts
 

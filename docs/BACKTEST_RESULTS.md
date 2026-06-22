@@ -229,6 +229,23 @@ Current read-only foundation:
   frontend/backend dashboard, and another future module may improve dashboard
   layout and visual hierarchy without adding ingestion, automation, database
   writes, backend changes, ML/LLM behavior, or operational functionality.
+- Observed manual frontend risk score visual smoke started the backend
+  locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+  pointing to the backend, and opened the local dashboard in a browser.
+  Current surplus risk was loaded manually by button click only; no auto-load
+  or polling was observed. DK1 displayed `price_area=DK1`,
+  `risk_score=35/100`, `risk_level=medium`, the visible
+  `Decision-support risk score` box, a visible 0-100 horizontal bar,
+  `Human review required`, raw/text risk details below the visual, and
+  `decision_support_only=true`. DK2 displayed `price_area=DK2`,
+  `risk_score=20/100`, `risk_level=low`, the same visual box, 0-100 bar,
+  human-review wording, raw/text risk details below the visual, and
+  `decision_support_only=true`. The visual uses only the existing manual
+  `Load current risk` response. This smoke added no new backend endpoint,
+  changed no backend behavior, performed no DB write, executed no SQL, called
+  no live EDS/DMI API, used no ML/LLM behavior, and added no automatic
+  control, dispatch, activation, or operational functionality. It does not
+  affect backtest scoring; human review remains required.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
