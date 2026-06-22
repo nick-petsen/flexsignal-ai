@@ -680,8 +680,9 @@ function CurrentRiskScoreVisual({ data }: { data: CurrentRiskResponse }) {
   const riskScore = parseRiskScore(data.risk_score);
   const riskLevel = formatValue(data.risk_level);
   const scoreLabel =
-    riskScore === null ? "n/a" : `${formatNumber(riskScore)} / 100`;
+    riskScore === null ? "Unavailable" : `${formatNumber(riskScore)}/100`;
   const barWidth = riskScore === null ? 0 : riskScore;
+  const riskLevelClass = getRiskLevelClass(data.risk_level);
 
   return (
     <section
@@ -691,17 +692,19 @@ function CurrentRiskScoreVisual({ data }: { data: CurrentRiskResponse }) {
       <div className="risk-score__header">
         <div>
           <h3 id="current-risk-score-title">Decision-support risk score</h3>
-          <p>Read-only recommendation context. Human review required.</p>
+          <p className="risk-score__review">Human review required</p>
         </div>
-        <div
-          className="risk-score__value"
-          aria-label={`Risk score ${scoreLabel}`}
-        >
-          {scoreLabel}
+        <div className="risk-score__summary">
+          <div
+            className="risk-score__value"
+            aria-label={`Risk score ${scoreLabel}`}
+          >
+            {scoreLabel}
+          </div>
+          <span className={`risk-score__level ${riskLevelClass}`}>
+            {riskLevel}
+          </span>
         </div>
-      </div>
-      <div className="risk-score__meta">
-        <span>risk_level: {riskLevel}</span>
       </div>
       <div
         className="risk-score__bar"
@@ -723,6 +726,10 @@ function CurrentRiskScoreVisual({ data }: { data: CurrentRiskResponse }) {
           style={{ width: `${barWidth}%` }}
         />
       </div>
+      <div className="risk-score__scale" aria-hidden="true">
+        <span>0</span>
+        <span>100</span>
+      </div>
       {riskScore === null && (
         <p className="muted risk-score__fallback">
           risk_score is missing or outside the expected 0-100 range.
@@ -742,6 +749,14 @@ function parseRiskScore(value: unknown): number | null {
   }
 
   return parsed;
+}
+
+function getRiskLevelClass(value: unknown): string {
+  if (value === "low" || value === "medium" || value === "high") {
+    return `risk-score__level--${value}`;
+  }
+
+  return "risk-score__level--unknown";
 }
 
 function ForecastPreviewCard({
