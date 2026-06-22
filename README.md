@@ -32,6 +32,13 @@ Working read-only core:
   surplus risk, a forecast-window preview, an energy freshness dry-run
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
+- The frontend spot prices card includes a simple read-only SVG trend chart
+  for EUR/MWh values from manually loaded backend spot price rows. The chart
+  appears only after the existing manual `Load spot prices` flow returns rows,
+  keeps the table visible, uses the selected `DK1`/`DK2` price area result,
+  does not add a charting dependency, does not add an API endpoint, does not
+  call EDS/DMI from the browser, performs no database write, and does not add
+  automation, control, dispatch, activation, or operational functionality.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over

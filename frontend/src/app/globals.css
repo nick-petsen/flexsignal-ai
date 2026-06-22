@@ -270,6 +270,75 @@ tr:last-child td {
   border-bottom: 0;
 }
 
+.spot-chart {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.spot-chart__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.spot-chart__header h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.spot-chart__header p,
+.spot-chart__header span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.spot-chart__header span {
+  flex-shrink: 0;
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.spot-chart__svg {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  height: auto;
+  aspect-ratio: 640 / 180;
+  overflow: visible;
+}
+
+.spot-chart__axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.spot-chart__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.spot-chart__point {
+  fill: var(--accent);
+  stroke: var(--panel);
+  stroke-width: 2;
+}
+
+.spot-chart__label,
+.spot-chart__tick {
+  fill: var(--muted);
+  font-size: 0.75rem;
+}
+
 .risk-list {
   display: grid;
   gap: 10px;
@@ -385,6 +454,10 @@ tr:last-child td {
 
   .selector {
     min-width: 0;
+  }
+
+  .spot-chart__header {
+    display: grid;
   }
 }
 
