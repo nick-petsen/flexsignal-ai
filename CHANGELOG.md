@@ -2,6 +2,27 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend dashboard chart smoke results in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
+  the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend, opened the local dashboard in a browser, and used manual button
+  clicks only. No auto-load or polling was observed. DK1 spot prices loaded,
+  the spot price table remained visible, the spot price trend chart displayed,
+  DK1 power balance loaded, the power balance table remained visible, and the
+  power balance trend chart displayed. After switching the price area to DK2,
+  DK2 spot prices and power balance loaded with the same table and trend-chart
+  behavior. Charts used only manually loaded backend rows. UI wording remains
+  read-only: `Manual read-only spot price rows`, `Manual read-only power
+  balance rows`, and `Trend from loaded backend rows`. This documentation step
+  added no code, changed no frontend or backend behavior, added no backend
+  endpoint or charting dependency, made no browser call to Energi Data
+  Service, made no DMI/weather call, executed no SQL from the frontend,
+  accessed no database, wrote nothing to the database, called no live APIs,
+  executed no forecast logic from the chart itself, and added no scheduler,
+  Azure, auth, ML/LLM, audit write, report/PDF wiring, polling, control,
+  dispatch, activation, automation, energy-asset control, or operational
+  functionality.
 - Added a simple frontend power balance trend chart inside the existing manual
   Power balance card. The chart renders production MW over timestamp order
   from only the power balance rows already returned by the existing manual

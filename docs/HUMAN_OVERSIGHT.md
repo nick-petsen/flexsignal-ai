@@ -35,6 +35,32 @@ Safety wording in the UI remains read-only: `Manual read-only spot price rows`
 or `Manual read-only power balance rows`, plus
 `Trend from loaded backend rows`.
 
+Observed manual frontend dashboard chart smoke:
+
+- Backend was started locally.
+- Frontend was started locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend.
+- Browser opened the local dashboard.
+- Requests were manual button clicks only.
+- No auto-load or polling was observed.
+- DK1 spot prices loaded; the spot price table and spot price trend chart were
+  displayed.
+- DK1 power balance loaded; the power balance table and power balance trend
+  chart were displayed.
+- After switching the price area to DK2, DK2 spot prices loaded; the spot
+  price table and spot price trend chart were displayed.
+- DK2 power balance loaded; the power balance table and power balance trend
+  chart were displayed.
+- Existing tables remained visible, and charts used only manually loaded
+  backend rows.
+
+Manual chart smoke safety interpretation: the frontend charts remain
+lightweight inline visualization, add no charting dependency, add no backend
+endpoint, make no browser call to Energi Data Service, make no DMI/weather
+call, execute no SQL from the frontend, write nothing to the database, execute
+no forecast logic from the chart itself, and do not dispatch, activate, poll,
+control energy assets, automate workflows, or add operational behavior.
+
 Observed validation:
 
 - `npm run build` passed.

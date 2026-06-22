@@ -58,6 +58,25 @@ Together, the spot price chart and power balance / production chart complete
 the first MVP pair of read-only dashboard visualizations. They are display
 surfaces only and are not forecasting models or model inputs.
 
+Observed manual frontend dashboard chart smoke started the backend locally,
+started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+backend, and opened the local dashboard in a browser. Requests were manual
+button clicks only; no auto-load or polling was observed. For DK1, spot prices
+loaded, the spot price table remained visible, the spot price trend chart
+displayed, power balance loaded, the power balance table remained visible, and
+the power balance trend chart displayed. After switching the price area to
+DK2, the same spot price and power balance table/chart behavior was observed.
+The charts used only manually loaded backend rows.
+
+The manual chart smoke did not change `rule-engine-v0` and did not execute
+forecasting logic from the chart itself. The frontend chart path uses
+lightweight inline charts with no charting dependency, no new backend
+endpoint, no browser call to Energi Data Service, no DMI/weather call, no SQL
+execution from the frontend, no database writes, and no control, dispatch,
+activation, polling, energy-asset control, or automation. UI wording remains
+read-only: `Manual read-only spot price rows`, `Manual read-only power
+balance rows`, and `Trend from loaded backend rows`.
+
 Observed frontend chart validation recorded `npm run build`
 passing and `git diff --check` passing. `npm run lint` and
 `npm run typecheck` scripts did not exist. No backend server was started, no
