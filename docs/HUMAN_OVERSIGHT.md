@@ -64,14 +64,14 @@ Invalid `price_area=SE3` returned HTTP 400 with `Unsupported price_area`.
 The read-only human-review safety boundary was preserved. This proves local
 DB-backed API freshness reads work against the observed local data. It does
 not mean production monitoring or Azure deployment exists, and it prepares
-future frontend live freshness card wiring only.
+manual frontend data trust display only.
 
 Interpretation: this is the first controlled DB-backed freshness API. It
 performs read-only SELECT execution only, improves MVP data trust readiness,
-does not perform ingestion, does not verify production freshness yet, and is
-not wired to the frontend yet. A future module may add frontend wiring to use
-this endpoint; keep the existing dry-run card wording until live-read UI is
-explicitly added.
+does not perform ingestion, and does not verify production freshness yet. The
+frontend can now manually display this endpoint through the backend API only;
+it does not execute SQL, write to the database, fetch live EDS/DMI data, or
+imply production monitoring exists.
 
 ## DB-Executed Energy Freshness Reader
 
@@ -248,18 +248,17 @@ data, execute queries, prove live data freshness, or enable live ingestion or
 control behavior. The frontend card prepares dashboard trust indicators by
 showing the reviewed query plans and safety flags for human review. UI wording
 explicitly communicates freshness query plan preview only, no database query
-executed, no database write performed, live freshness execution not enabled
-yet, and read-only decision support.
+executed, no database write performed, no new EDS/DMI fetch, and read-only
+decision support.
 
 Non-goals: this documentation step did not change backend behavior, add a
 backend endpoint, add database code, execute SQL, write to a database, add
 migrations, call live Energi Data Service, call DMI/weather APIs, add auth,
 add Azure infrastructure, add ML/LLM behavior, write audit events, wire
 report/PDF flows, or add control, dispatch, activation, closed-loop,
-live-control, or operational functionality. A future module may add DB-backed
-SELECT execution for energy freshness, and another future module may improve
-the dashboard UI once live freshness reads exist. DB execution and live
-ingestion remain deferred.
+live-control, or operational functionality. DB-backed SELECT execution now
+exists through the backend read endpoint, and the dashboard has a manual
+display path for those read results. Live ingestion remains deferred.
 
 ## Audit Event Foundation
 

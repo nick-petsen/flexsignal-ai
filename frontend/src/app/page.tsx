@@ -5,12 +5,14 @@ import {
   backendApiBaseUrl,
   fetchCurrentRisk,
   fetchEnergyFreshness,
+  fetchEnergyFreshnessRead,
   fetchForecastPreview,
   fetchPowerBalance,
   fetchSpotPrices,
   type CurrentRiskResponse,
   type EnergyApiResponse,
   type EnergyFreshnessQueryPlan,
+  type EnergyFreshnessReadResult,
   type EnergyFreshnessResponse,
   type ForecastPreviewResponse,
   type ForecastWindowSummary,
@@ -341,12 +343,18 @@ function ForecastPreviewCard({
 
 function EnergyFreshnessCard({
   state,
-  onLoad
+  onLoadDryRun,
+  onLoadRead
 }: {
   state: FreshnessRequestState;
-  onLoad: () => void;
+  onLoadDryRun: () => void;
+  onLoadRead: () => void;
 }) {
   const isLoading = state.status === "loading";
+  const statusLabel =
+    state.status === "success" && !state.data.dry_run
+      ? "SELECT-only"
+      : "Read-only";
 
   return (
     <section className="card" aria-labelledby="energy-freshness-title">
@@ -354,35 +362,44 @@ function EnergyFreshnessCard({
         <div>
           <h2 id="energy-freshness-title">Energy data freshness</h2>
           <p className="card__description">
-            Freshness query plan preview for prepared read-only checks.
+            DB-backed freshness read for stored local/configured database data,
+            with a dry-run query plan preview available.
           </p>
         </div>
-        <span className="status status--warning">Dry-run</span>
+        <span className="status">{statusLabel}</span>
       </div>
-      <button
-        className="load-button"
-        type="button"
-        onClick={onLoad}
-        disabled={isLoading}
-      >
-        {isLoading ? "Loading..." : "Load freshness plan"}
-      </button>
+      <div className="button-row">
+        <button
+          className="load-button"
+          type="button"
+          onClick={onLoadRead}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Load DB-backed read"}
+        </button>
+        <button
+          className="load-button load-button--secondary"
+          type="button"
+          onClick={onLoadDryRun}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Load dry-run plan"}
+        </button>
+      </div>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
           <p className="muted">
             No request has been made. Use the manual button to call{" "}
-            <code>GET /api/energy/freshness</code> for a dry-run query plan
-            preview.
+            <code>GET /api/energy/freshness/read</code> for a SELECT-only
+            DB-backed freshness read, or preview the dry-run query plan.
           </p>
         )}
         {state.status === "loading" && (
           <p className="muted">
-            Loading read-only dry-run freshness query plan preview...
+            Loading read-only energy freshness data...
           </p>
         )}
-        {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
-        )}
+        {state.status === "error" && <p className="error">{state.message}</p>}
         {state.status === "success" && (
           <EnergyFreshnessResult data={state.data} />
         )}
@@ -394,16 +411,23 @@ function EnergyFreshnessCard({
 function EnergyFreshnessResult({ data }: { data: EnergyFreshnessResponse }) {
   const spotPricePlan =
     data.spot_price_freshness_plan ??
-    data.freshness_plans.queries?.spot_price;
+    data.freshness_plans?.queries?.spot_price;
   const powerBalancePlan =
     data.power_balance_freshness_plan ??
-    data.freshness_plans.queries?.power_balance;
+    data.freshness_plans?.queries?.power_balance;
+  const spotPriceFreshness =
+    data.spot_price_freshness ??
+    data.freshness_result?.spot_price_freshness;
+  const powerBalanceFreshness =
+    data.power_balance_freshness ??
+    data.freshness_result?.power_balance_freshness;
 
   return (
     <div>
       <p className="preview-note">
-        Dry-run query plan preview only. No database query executed. No
-        database write performed. Live freshness execution not enabled yet.
+        {data.dry_run
+          ? "Dry-run query plan preview only. No database query executed. No database write performed. Does not fetch new EDS/DMI data."
+          : "DB-backed freshness read. SELECT-only read. No database write performed. Shows freshness of stored local/configured database data. Does not fetch new EDS/DMI data or imply ingestion has run."}
       </p>
       <dl className="risk-list">
         <div>
@@ -427,10 +451,26 @@ function EnergyFreshnessResult({ data }: { data: EnergyFreshnessResponse }) {
           <dd>{formatValue(data.requires_database_url)}</dd>
         </div>
       </dl>
-      <div className="plan-grid">
-        <FreshnessPlanSummary label="spot_price" plan={spotPricePlan} />
-        <FreshnessPlanSummary label="power_balance" plan={powerBalancePlan} />
-      </div>
+      {data.dry_run ? (
+        <div className="plan-grid">
+          <FreshnessPlanSummary label="spot_price" plan={spotPricePlan} />
+          <FreshnessPlanSummary
+            label="power_balance"
+            plan={powerBalancePlan}
+          />
+        </div>
+      ) : (
+        <div className="plan-grid">
+          <FreshnessReadSummary
+            label="spot_price_freshness"
+            freshness={spotPriceFreshness}
+          />
+          <FreshnessReadSummary
+            label="power_balance_freshness"
+            freshness={powerBalanceFreshness}
+          />
+        </div>
+      )}
       <WarningList warnings={data.warnings} />
       <SafetyBoundarySummary safetyBoundary={data.safety_boundary} />
     </div>
@@ -467,6 +507,38 @@ function FreshnessPlanSummary({
         <div>
           <dt>table</dt>
           <dd>{formatValue(plan?.table)}</dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+function FreshnessReadSummary({
+  label,
+  freshness
+}: {
+  label: string;
+  freshness?: EnergyFreshnessReadResult;
+}) {
+  return (
+    <article className="plan-summary">
+      <h3>{label}</h3>
+      <dl className="risk-list">
+        <div>
+          <dt>latest_timestamp</dt>
+          <dd>{formatValue(freshness?.latest_timestamp)}</dd>
+        </div>
+        <div>
+          <dt>row_count</dt>
+          <dd>{formatValue(freshness?.row_count)}</dd>
+        </div>
+        <div>
+          <dt>database_query_executed</dt>
+          <dd>{formatValue(freshness?.database_query_executed)}</dd>
+        </div>
+        <div>
+          <dt>database_write_performed</dt>
+          <dd>{formatValue(freshness?.database_write_performed)}</dd>
         </div>
       </dl>
     </article>
@@ -687,10 +759,23 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleLoadFreshness() {
+  async function handleLoadFreshnessDryRun() {
     setFreshnessState({ status: "loading" });
     try {
       const data = await fetchEnergyFreshness(selectedArea);
+      setFreshnessState({ status: "success", data });
+    } catch (error) {
+      setFreshnessState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
+  async function handleLoadFreshnessRead() {
+    setFreshnessState({ status: "loading" });
+    try {
+      const data = await fetchEnergyFreshnessRead(selectedArea);
       setFreshnessState({ status: "success", data });
     } catch (error) {
       setFreshnessState({
@@ -765,7 +850,8 @@ export default function DashboardPage() {
           />
           <EnergyFreshnessCard
             state={freshnessState}
-            onLoad={handleLoadFreshness}
+            onLoadDryRun={handleLoadFreshnessDryRun}
+            onLoadRead={handleLoadFreshnessRead}
           />
         </div>
 

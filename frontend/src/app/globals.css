@@ -193,6 +193,23 @@ h1 {
   color: var(--muted);
 }
 
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.button-row .load-button {
+  margin-bottom: 0;
+}
+
+.load-button--secondary {
+  border-color: var(--border);
+  background: var(--panel);
+  color: var(--foreground);
+}
+
 .result {
   min-height: 120px;
 }

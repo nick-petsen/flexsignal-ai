@@ -108,15 +108,38 @@ export type SafetyBoundary = {
   human_review_required?: boolean;
 };
 
+export type EnergyFreshnessReadResult = {
+  price_area?: PriceArea;
+  database_query_executed?: boolean;
+  database_write_performed?: boolean;
+  source_label?: string;
+  earliest_timestamp?: string | null;
+  latest_timestamp?: string | null;
+  row_count?: number;
+  warning?: string | null;
+  safety_boundary?: SafetyBoundary;
+};
+
 export type EnergyFreshnessResponse = {
   price_area: PriceArea;
   dry_run: boolean;
   database_query_executed: boolean;
   database_write_performed: boolean;
   requires_database_url: boolean;
-  freshness_plans: EnergyFreshnessPlans;
+  freshness_plans?: EnergyFreshnessPlans;
+  freshness_result?: {
+    price_area?: PriceArea;
+    database_query_executed?: boolean;
+    database_write_performed?: boolean;
+    spot_price_freshness?: EnergyFreshnessReadResult;
+    power_balance_freshness?: EnergyFreshnessReadResult;
+    warnings?: string[];
+    safety_boundary?: SafetyBoundary;
+  };
   spot_price_freshness_plan?: EnergyFreshnessQueryPlan;
   power_balance_freshness_plan?: EnergyFreshnessQueryPlan;
+  spot_price_freshness?: EnergyFreshnessReadResult;
+  power_balance_freshness?: EnergyFreshnessReadResult;
   warnings?: string[];
   safety_boundary?: SafetyBoundary;
 };
@@ -226,6 +249,28 @@ export async function fetchEnergyFreshness(
   return body;
 }
 
+export async function fetchEnergyFreshnessRead(
+  priceArea: PriceArea
+): Promise<EnergyFreshnessResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/energy/freshness/read`
+  );
+  url.searchParams.set("price_area", priceArea);
+
+  const response = await fetch(url);
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  if (!isEnergyFreshnessResponse(body)) {
+    throw new Error("Backend returned an unexpected freshness read shape");
+  }
+
+  return body;
+}
+
 async function fetchEnergyApi<Row>(
   path: string,
   priceArea: PriceArea
@@ -305,11 +350,17 @@ function isEnergyFreshnessResponse(
     typeof candidate.database_query_executed === "boolean" &&
     typeof candidate.database_write_performed === "boolean" &&
     typeof candidate.requires_database_url === "boolean" &&
-    isRecord(candidate.freshness_plans) &&
+    isOptionalRecord(candidate.freshness_plans) &&
+    isOptionalRecord(candidate.freshness_result) &&
     isOptionalStringArray(candidate.warnings) &&
     isOptionalRecord(candidate.safety_boundary) &&
     isOptionalRecord(candidate.spot_price_freshness_plan) &&
-    isOptionalRecord(candidate.power_balance_freshness_plan)
+    isOptionalRecord(candidate.power_balance_freshness_plan) &&
+    isOptionalRecord(candidate.spot_price_freshness) &&
+    isOptionalRecord(candidate.power_balance_freshness) &&
+    (isRecord(candidate.freshness_plans) ||
+      isRecord(candidate.spot_price_freshness) ||
+      isRecord(candidate.power_balance_freshness))
   );
 }
 
@@ -336,10 +387,27 @@ function getApiErrorMessage(body: unknown, status: number): string {
   if (
     body &&
     typeof body === "object" &&
-    "detail" in body &&
-    typeof body.detail === "string"
+    "detail" in body
   ) {
-    return body.detail;
+    if (typeof body.detail === "string") {
+      return body.detail;
+    }
+
+    if (
+      status === 503 &&
+      isRecord(body.detail) &&
+      body.detail.requires_database_url === true
+    ) {
+      return "DB-backed freshness read requires backend DATABASE_URL.";
+    }
+
+    if (
+      isRecord(body.detail) &&
+      "warning" in body.detail &&
+      typeof body.detail.warning === "string"
+    ) {
+      return body.detail.warning;
+    }
   }
 
   return `Backend request failed with status ${status}`;

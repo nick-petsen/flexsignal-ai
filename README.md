@@ -29,8 +29,9 @@ Working read-only core:
 - Repeating the same `limit 50` import was idempotent for the tested batch.
 - Read-only energy API endpoints exist for `spot_prices` and `power_balance`.
 - Frontend dashboard can manually load spot prices, power balance, current
-  surplus risk, a forecast-window preview, and an energy freshness dry-run
-  query-plan preview.
+  surplus risk, a forecast-window preview, an energy freshness dry-run
+  query-plan preview, and a DB-backed freshness read from stored
+  local/configured database data.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
@@ -78,7 +79,9 @@ Working read-only core:
   executes SELECT-only freshness reads through
   `backend/app/db/repositories/energy_freshness_reader.py`, and does not write
   to the database, fetch new EDS/DMI data, trigger ingestion, modify the
-  frontend, or add operational behavior.
+  database schema, or add operational behavior. The frontend can display these
+  read results through the backend API only; it does not execute SQL or access
+  the database directly.
 - Manual local energy freshness DB smoke now exists at
   `scripts/energy_freshness_db_smoke.py`. It defaults to dry-run query-plan
   JSON, does not connect to a database unless `--execute` is provided, and
@@ -154,8 +157,23 @@ Latest read-only API/UI smoke-test observations:
   `requires_database_url`, spot price and power balance freshness plan
   status, warnings, and the human-review safety boundary. It explicitly
   communicates freshness query plan preview only, no database query executed,
-  no database write performed, live freshness execution not enabled yet, and
-  read-only decision support. It does not prove live data freshness.
+  no database write performed, no new EDS/DMI fetch, and read-only decision
+  support. It does not prove production data freshness.
+- Frontend DB-backed energy freshness card wiring uses
+  `fetchEnergyFreshnessRead()` to manually call
+  `GET /api/energy/freshness/read?price_area=DK1|DK2` through the same
+  backend API base URL helper. The card displays SELECT-only read results from
+  stored local/configured database data: `price_area`, `dry_run`,
+  `database_query_executed`, `database_write_performed`,
+  `requires_database_url`, `spot_price_freshness.latest_timestamp`,
+  `spot_price_freshness.row_count`,
+  `power_balance_freshness.latest_timestamp`,
+  `power_balance_freshness.row_count`, warnings, and the read-only
+  human-review safety boundary. If the backend returns HTTP 503 because
+  `DATABASE_URL` is missing, the UI shows
+  `DB-backed freshness read requires backend DATABASE_URL.` The frontend does
+  not execute SQL, write to the database, fetch live EDS/DMI data, trigger
+  ingestion, or imply production monitoring exists.
 - DB-executed energy freshness reader validation covered
   `read_spot_price_freshness`, `read_power_balance_freshness`, and
   `read_energy_freshness_summary`. Focused reader tests passed with
@@ -230,11 +248,11 @@ Still preview / not production:
 
 Recommended next MVP direction: the audit foundation is now sufficient for the
 MVP foundation. Move product work back toward stable data ingestion,
-DMI/weather ingestion, dashboard graphs, forecast UI, DB-backed freshness
-execution after review, and PDF export from the UI. Do not add production
-audit writes yet, do not add automatic scheduled report generation, do not
-fetch data in the report builder, do not use an LLM as the forecast or
-reporting engine, and do not add control, dispatch, or activation behavior.
+DMI/weather ingestion, dashboard graphs, forecast UI, dashboard data trust
+indicators, and PDF export from the UI. Do not add production audit writes
+yet, do not add automatic scheduled report generation, do not fetch data in
+the report builder, do not use an LLM as the forecast or reporting engine, and
+do not add control, dispatch, or activation behavior.
 
 ## EDS Data Freshness Preview API
 
@@ -284,7 +302,7 @@ Observed validation:
 - `git diff --check` passed.
 - No live DB writes were performed.
 
-The frontend dashboard now includes an energy freshness card backed by
+The frontend dashboard keeps an energy freshness dry-run action backed by
 `fetchEnergyFreshness()`. The card manually calls this endpoint for the
 selected `DK1`/`DK2` price area through the existing
 `NEXT_PUBLIC_API_BASE_URL` pattern. It displays `dry_run`,
@@ -292,8 +310,8 @@ selected `DK1`/`DK2` price area through the existing
 `requires_database_url`, spot price and power balance freshness plan status,
 warnings, and the safety boundary. UI wording explicitly labels the response
 as a freshness query plan preview only, with no database query executed, no
-database write performed, live freshness execution not enabled yet, and
-read-only decision support.
+database write performed, no new EDS/DMI fetch, and read-only decision
+support.
 
 Observed frontend validation:
 
@@ -358,15 +376,15 @@ Service, call DMI/weather APIs, add auth, add Azure infrastructure, add ML/LLM
 behavior, write audit events, wire report/PDF flows, or add control,
 dispatch, activation, closed-loop, live-control, or operational functionality.
 
-Interpretation: the energy freshness preview API and frontend card are
-read-only and expose query-plan previews only. The manual local DB smoke proves
-the existing reader can execute local DB-backed freshness SELECTs when a human
-explicitly supplies `--execute` and a local `--database-url`, but it does not
-create production freshness monitoring, fetch new data, or write data. The
-controlled DB-backed read API now executes those freshness SELECT queries for
-`DK1`/`DK2` when `DATABASE_URL` is configured at request time. Another future
-module may wire the frontend to this DB-backed read endpoint; until then, keep
-the existing dry-run card wording. Live ingestion remains deferred.
+Interpretation: the energy freshness preview API and frontend dry-run action
+are read-only and expose query-plan previews only. The manual local DB smoke
+proves the existing reader can execute local DB-backed freshness SELECTs when a
+human explicitly supplies `--execute` and a local `--database-url`, but it
+does not create production freshness monitoring, fetch new data, or write
+data. The controlled DB-backed read API now executes those freshness SELECT
+queries for `DK1`/`DK2` when `DATABASE_URL` is configured at request time, and
+the frontend can display those read results through the backend API only. Live
+ingestion remains deferred.
 
 ## DB-Backed Energy Freshness Read API
 
@@ -383,10 +401,11 @@ raw database URL.
 
 The endpoint uses `backend/app/db/repositories/energy_freshness_reader.py` and
 executes SELECT-only freshness reads. It does not write to the database, fetch
-new Energi Data Service data, call DMI/weather APIs, trigger ingestion, modify
-the frontend, add audit writes, add scheduler/Azure/auth/report/PDF wiring, or
-perform control, dispatch, activation, closed-loop, live-control, or
-operational functionality.
+new Energi Data Service data, call DMI/weather APIs, trigger ingestion, add
+database migrations, add audit writes, add scheduler/Azure/auth/report/PDF
+wiring, or perform control, dispatch, activation, closed-loop, live-control,
+or operational functionality. The frontend can manually display the endpoint
+response, but it does not execute SQL or access the database directly.
 
 Successful responses include:
 
@@ -437,11 +456,25 @@ Invalid `price_area=SE3` returned HTTP 400 with `Unsupported price_area`.
 The read-only human-review safety boundary was preserved. This proves local
 DB-backed API freshness reads work against the observed local data. It does
 not yet mean production monitoring or Azure deployment exists, and it prepares
-future frontend live freshness card wiring only.
+manual frontend data trust display only.
 
-Interpretation: this API is read-only SELECT execution only. It improves MVP
-data trust readiness, still does not perform ingestion, does not verify
-production freshness yet, and is not wired to the frontend yet.
+Frontend wiring: the dashboard energy freshness card now has a manual
+`Load DB-backed read` action backed by `fetchEnergyFreshnessRead()`. It uses
+the existing `NEXT_PUBLIC_API_BASE_URL` pattern to call
+`GET /api/energy/freshness/read?price_area=DK1|DK2` and displays SELECT-only
+read results from stored local/configured database data: `price_area`,
+`dry_run`, `database_query_executed`, `database_write_performed`,
+`requires_database_url`, `spot_price_freshness.latest_timestamp`,
+`spot_price_freshness.row_count`,
+`power_balance_freshness.latest_timestamp`,
+`power_balance_freshness.row_count`, warnings, and the read-only human-review
+safety boundary. If the backend returns HTTP 503 because `DATABASE_URL` is
+missing, the UI shows
+`DB-backed freshness read requires backend DATABASE_URL.`
+
+Interpretation: this API and frontend display path are read-only SELECT
+execution only. They improve MVP data trust readiness, still do not perform
+ingestion, and do not verify production freshness or production monitoring.
 
 ## DB-Executed Energy Freshness Reader
 
@@ -489,11 +522,10 @@ assertions/unsafe-plan tests. The tests used fake connection/cursor objects
 only; no live DB writes were performed.
 
 Interpretation: the DB-executed freshness reader, observed manual local DB
-smoke, and controlled DB-backed read API prove the system can execute
-read-only freshness SELECTs for `DK1`/`DK2`. The frontend is not wired to the
-executed freshness endpoint yet, the path does not fetch new data, and it does
-not write data. A future module may add frontend wiring to use the DB-backed
-read endpoint while keeping DB writes, ingestion, and automation out of scope.
+smoke, controlled DB-backed read API, and frontend card wiring prove the
+system can display read-only freshness SELECT results for `DK1`/`DK2`. The
+path does not fetch new data, does not write data, and does not add
+automation.
 
 ## Audit Event Foundation
 
