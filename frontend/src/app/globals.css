@@ -348,19 +348,19 @@ tr:last-child td {
 }
 
 .risk-score {
-  margin-bottom: 14px;
-  padding: 14px;
-  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 2px solid #1f6feb;
   border-radius: 8px;
-  background: var(--panel);
+  background: #f8fbff;
 }
 
 .risk-score__header {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-start;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .risk-score__header h3 {
@@ -368,8 +368,7 @@ tr:last-child td {
   font-size: 1rem;
 }
 
-.risk-score__header p,
-.risk-score__meta,
+.risk-score__review,
 .risk-score__fallback {
   margin: 0;
   color: var(--muted);
@@ -377,31 +376,80 @@ tr:last-child td {
   line-height: 1.35;
 }
 
+.risk-score__review {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.risk-score__summary {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
 .risk-score__value {
   flex-shrink: 0;
   color: var(--foreground);
-  font-size: 1.25rem;
+  font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.1;
 }
 
-.risk-score__meta {
-  margin-bottom: 8px;
+.risk-score__level {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.risk-score__level--low {
+  border-color: #0f766e;
+  background: #e6f6f3;
+  color: #0f5f59;
+}
+
+.risk-score__level--medium {
+  border-color: #e4c36d;
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.risk-score__level--high {
+  border-color: #f0b8b8;
+  background: #fff0f0;
+  color: #9a1b1b;
 }
 
 .risk-score__bar {
   width: 100%;
-  height: 12px;
+  height: 22px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid #aeb7c4;
   border-radius: 999px;
-  background: var(--panel-soft);
+  background: #e2e8f0;
+  box-shadow: inset 0 1px 2px rgb(23 32 51 / 0.18);
 }
 
 .risk-score__fill {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #0f766e, #e4c36d, #9a1b1b);
+}
+
+.risk-score__scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .risk-score__fallback {
