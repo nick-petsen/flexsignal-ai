@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend risk score visual smoke results in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
+  the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend, opened the local dashboard in a browser, and loaded current
+  surplus risk by manual button click only. No auto-load or polling was
+  observed. DK1 displayed `price_area=DK1`, `risk_score=35/100`,
+  `risk_level=medium`, the visible `Decision-support risk score` box, a
+  visible 0-100 horizontal bar, `Human review required`, raw/text risk
+  details below the visual, and `decision_support_only=true`. DK2 displayed
+  `price_area=DK2`, `risk_score=20/100`, `risk_level=low`, the same visual
+  box, 0-100 bar, human-review wording, raw/text details, and
+  `decision_support_only=true`. The visual uses only the existing manual
+  `Load current risk` response. This documentation step added no code,
+  changed no frontend or backend behavior, added no backend endpoint, did not
+  access a database, executed no SQL, wrote nothing to the database, called no
+  live APIs, and added no scheduler, Azure, auth, ML/LLM, audit write,
+  report/PDF wiring, automatic control, dispatch, activation, or operational
+  functionality. Human review remains required.
 - Added a simple frontend visual surplus risk score inside the existing
   manual Current surplus risk card. The visual appears only after the
   existing `Load current risk` flow returns a result, uses only that existing

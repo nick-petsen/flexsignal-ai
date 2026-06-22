@@ -111,6 +111,28 @@ and another future module may improve dashboard layout and visual hierarchy
 without adding ingestion, automation, database writes, backend changes,
 ML/LLM behavior, or operational functionality.
 
+Observed manual frontend risk score visual smoke started the backend locally,
+started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+backend, and opened the local dashboard in a browser. Current surplus risk
+was loaded manually by button click only; no auto-load or polling was
+observed.
+
+DK1 displayed `price_area=DK1`, `risk_score=35/100`, `risk_level=medium`, the
+visible `Decision-support risk score` box, a visible 0-100 horizontal bar,
+`Human review required`, raw/text risk details below the visual, and
+`decision_support_only=true`. DK2 displayed `price_area=DK2`,
+`risk_score=20/100`, `risk_level=low`, the same visual box, 0-100 horizontal
+bar, human-review wording, raw/text risk details below the visual, and
+`decision_support_only=true`.
+
+The manual smoke does not change `rule-engine-v0`, scoring thresholds, input
+composition, backtest pairing, or predictive-performance claims. The visual
+uses only the existing manual `Load current risk` response. It adds no new
+backend endpoint, changes no backend behavior, performs no database write,
+executes no SQL, calls no live EDS/DMI API, uses no ML/LLM behavior, and adds
+no automatic control, dispatch, activation, or operational functionality.
+Human review remains required.
+
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
 returns parameterized SELECT query plans for DK1/DK2 `spot_prices` and

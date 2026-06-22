@@ -168,6 +168,21 @@ Latest read-only API/UI smoke-test observations:
   auto-load or poll, adds no new API endpoint, changes no backend behavior,
   uses no ML/LLM, and adds no automation, control, dispatch, activation, or
   operational functionality.
+- Manual frontend risk score visual smoke was observed with the backend
+  started locally, the frontend started locally with
+  `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, and the browser opened
+  to the local dashboard. Current surplus risk was loaded by manual button
+  click only; no auto-load or polling was observed. DK1 displayed
+  `price_area=DK1`, `risk_score=35/100`, `risk_level=medium`, the
+  `Decision-support risk score` box, a 0-100 horizontal bar,
+  `Human review required`, raw/text risk details below the visual, and
+  `decision_support_only=true`. DK2 displayed `price_area=DK2`,
+  `risk_score=20/100`, `risk_level=low`, the same visual box, 0-100 bar,
+  human-review wording, raw/text details, and `decision_support_only=true`.
+  The visual uses only the existing manual `Load current risk` response. This
+  smoke added no endpoint, backend behavior change, DB write, SQL, live
+  EDS/DMI call, ML/LLM behavior, automatic control, dispatch, or activation;
+  human review remains required.
 - Forecast preview API returned deterministic caller-provided DK1/DK2 window
   summaries without `DATABASE_URL`, including high-risk max aggregation,
   empty-window `unknown` handling, DK1/DK2 validation, and timezone-aware
