@@ -36,9 +36,11 @@ Working read-only core:
   for EUR/MWh values from manually loaded backend spot price rows. The chart
   appears only after the existing manual `Load spot prices` flow returns rows,
   keeps the table visible, uses the selected `DK1`/`DK2` price area result,
-  does not add a charting dependency, does not add an API endpoint, does not
-  call EDS/DMI from the browser, performs no database write, and does not add
-  automation, control, dispatch, activation, or operational functionality.
+  uses lightweight inline SVG/HTML/CSS without a charting dependency, handles
+  empty, single-point, multi-point, missing, and invalid values safely, does
+  not add an API endpoint, does not call EDS/DMI from the browser, performs no
+  database write, and does not add automation, control, dispatch, activation,
+  or operational functionality.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
@@ -191,6 +193,18 @@ Latest read-only API/UI smoke-test observations:
   migrations were added, no writes or audit writes were performed, no auth,
   Azure, ML/LLM, report/PDF, control, dispatch, activation, or operational
   functionality was added.
+- Frontend spot price chart validation recorded that `npm run build` passed
+  and `git diff --check` passed. `npm run lint` and `npm run typecheck`
+  scripts did not exist. No backend server was started, no database was
+  accessed, no SQL was executed, and no live Energi Data Service or
+  DMI/weather APIs were called. The chart validation was documentation-only
+  for the existing manual dashboard visualization path: no frontend behavior,
+  backend behavior, API endpoint, database access, auth, Azure infrastructure,
+  ML/LLM behavior, audit write, report/PDF wiring, control, dispatch,
+  activation, or operational functionality was added. A future module may add
+  a simple power balance chart, and another future module may improve
+  dashboard layout. Those future modules must not add ingestion, automation,
+  or backend changes in this documentation step.
 - Manual frontend plus backend energy freshness smoke was observed with the
   backend started locally using
   `DATABASE_URL=postgresql://localhost/flexsignal_ai`, the frontend started

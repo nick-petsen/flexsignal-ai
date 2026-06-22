@@ -6,17 +6,38 @@ The Spot prices card includes a simple SVG chart labeled `Spot price trend`.
 It plots EUR/MWh over timestamp order using only manual read-only spot price
 rows already returned by the existing backend `Load spot prices` request. It
 appears only when returned spot price rows exist, keeps the existing table,
-and uses the currently selected `DK1` or `DK2` result.
+and uses the currently selected `DK1` or `DK2` result through the existing
+price-area selector.
 
-The chart is dashboard visualization only. It does not auto-load, poll, call a
-new endpoint, call Energi Data Service or DMI/weather APIs from the browser,
-execute SQL, write to the database, add migrations, add auth, add Azure
-infrastructure, use ML/LLM behavior, write audit events, wire report/PDF
-flows, or add control, dispatch, activation, closed-loop, live-control, or
-operational functionality.
+The chart uses lightweight inline SVG/HTML/CSS and does not add a charting
+dependency. It handles empty, single-point, multi-point, missing, and invalid
+values safely.
+
+The chart is read-only dashboard visualization only. It does not forecast,
+trade, control assets, auto-load, poll, call a new endpoint, call Energi Data
+Service or DMI/weather APIs from the browser, execute SQL, write to the
+database, add migrations, add auth, add Azure infrastructure, use ML/LLM
+behavior, write audit events, wire report/PDF flows, or add control,
+dispatch, activation, closed-loop, live-control, or operational functionality.
 
 Safety wording in the UI remains read-only: `Manual read-only spot price rows`
 and `Trend from loaded backend rows`.
+
+Observed validation:
+
+- `npm run build` passed.
+- `git diff --check` passed.
+- `npm run lint` did not exist.
+- `npm run typecheck` did not exist.
+- No backend server was started.
+- No database was accessed.
+- No SQL was executed.
+- No live Energi Data Service or DMI/weather APIs were called.
+
+Next steps may add a simple power balance chart or improve dashboard layout in
+separate modules. Those future steps must not add ingestion, automation,
+backend changes, database writes, SQL execution, live API calls, or
+operational behavior without explicit review.
 
 ## DB-Backed Energy Freshness Read API
 
