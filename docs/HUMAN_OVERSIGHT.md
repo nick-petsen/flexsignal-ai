@@ -1,6 +1,6 @@
 # Human Oversight
 
-## Frontend Spot Price Trend Chart
+## Frontend Read-Only Trend Charts
 
 The Spot prices card includes a simple SVG chart labeled `Spot price trend`.
 It plots EUR/MWh over timestamp order using only manual read-only spot price
@@ -9,11 +9,18 @@ appears only when returned spot price rows exist, keeps the existing table,
 and uses the currently selected `DK1` or `DK2` result through the existing
 price-area selector.
 
-The chart uses lightweight inline SVG/HTML/CSS and does not add a charting
-dependency. It handles empty, single-point, multi-point, missing, and invalid
+The Power balance card includes a simple SVG chart labeled
+`Power balance trend`. It plots production MW over timestamp order using only
+manual read-only power balance rows already returned by the existing backend
+`Load power balance` request. It appears only when returned power balance rows
+exist, keeps the existing table, and uses the currently selected `DK1` or
+`DK2` result through the existing price-area selector.
+
+The charts use lightweight inline SVG/HTML/CSS and do not add a charting
+dependency. They handle empty, single-point, multi-point, missing, and invalid
 values safely.
 
-The chart is read-only dashboard visualization only. It does not forecast,
+The charts are read-only dashboard visualization only. They do not forecast,
 trade, control assets, auto-load, poll, call a new endpoint, call Energi Data
 Service or DMI/weather APIs from the browser, execute SQL, write to the
 database, add migrations, add auth, add Azure infrastructure, use ML/LLM
@@ -21,7 +28,8 @@ behavior, write audit events, wire report/PDF flows, or add control,
 dispatch, activation, closed-loop, live-control, or operational functionality.
 
 Safety wording in the UI remains read-only: `Manual read-only spot price rows`
-and `Trend from loaded backend rows`.
+or `Manual read-only power balance rows`, plus
+`Trend from loaded backend rows`.
 
 Observed validation:
 
@@ -34,10 +42,9 @@ Observed validation:
 - No SQL was executed.
 - No live Energi Data Service or DMI/weather APIs were called.
 
-Next steps may add a simple power balance chart or improve dashboard layout in
-separate modules. Those future steps must not add ingestion, automation,
-backend changes, database writes, SQL execution, live API calls, or
-operational behavior without explicit review.
+Future dashboard layout work must not add ingestion, automation, backend
+changes, database writes, SQL execution, live API calls, or operational
+behavior without explicit review.
 
 ## DB-Backed Energy Freshness Read API
 

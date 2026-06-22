@@ -304,6 +304,182 @@ function SpotPriceTrendChart({
   );
 }
 
+function PowerBalanceTrendChart({
+  data
+}: {
+  data: EnergyApiResponse<PowerBalanceRow>;
+}) {
+  if (data.rows.length === 0) {
+    return null;
+  }
+
+  const points = data.rows
+    .map((row) => {
+      const timestampMs = Date.parse(row.timestamp_utc);
+      const productionMw = parseNumber(row.production_mw);
+
+      if (!Number.isFinite(timestampMs) || productionMw === null) {
+        return null;
+      }
+
+      return {
+        timestampUtc: row.timestamp_utc,
+        timestampMs,
+        productionMw,
+        sourceRecordId: row.source_record_id
+      };
+    })
+    .filter((point): point is NonNullable<typeof point> => point !== null)
+    .sort((left, right) => left.timestampMs - right.timestampMs);
+
+  const latestPoint = points.at(-1);
+  const latestLabel = latestPoint
+    ? `${formatNumber(latestPoint.productionMw)} MW`
+    : "n/a";
+
+  if (points.length === 0) {
+    return (
+      <section className="spot-chart" aria-labelledby="power-chart-title">
+        <div className="spot-chart__header">
+          <div>
+            <h3 id="power-chart-title">Power balance trend</h3>
+            <p>
+              Manual read-only power balance rows. Trend from loaded backend
+              rows.
+            </p>
+          </div>
+          <span>Latest production: {latestLabel}</span>
+        </div>
+        <p className="muted">
+          Manual read-only power balance rows were returned, but none contained
+          a valid timestamp and production MW value for charting.
+        </p>
+      </section>
+    );
+  }
+
+  const width = 640;
+  const height = 180;
+  const padding = {
+    top: 16,
+    right: 20,
+    bottom: 28,
+    left: 48
+  };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const productionValues = points.map((point) => point.productionMw);
+  const minProduction = Math.min(...productionValues);
+  const maxProduction = Math.max(...productionValues);
+  const productionRange = maxProduction - minProduction;
+  const yMin = productionRange === 0 ? minProduction - 1 : minProduction;
+  const yMax = productionRange === 0 ? maxProduction + 1 : maxProduction;
+  const yRange = yMax - yMin || 1;
+  const plottedPoints = points.map((point, index) => {
+    const x =
+      points.length === 1
+        ? padding.left + chartWidth / 2
+        : padding.left + (index / (points.length - 1)) * chartWidth;
+    const y =
+      padding.top + ((yMax - point.productionMw) / yRange) * chartHeight;
+
+    return { ...point, x, y };
+  });
+  const polylinePoints = plottedPoints
+    .map((point) => `${point.x},${point.y}`)
+    .join(" ");
+  const firstTimestamp = formatShortTimestamp(points[0].timestampUtc);
+  const lastTimestamp = formatShortTimestamp(
+    points[points.length - 1].timestampUtc
+  );
+
+  return (
+    <section className="spot-chart" aria-labelledby="power-chart-title">
+      <div className="spot-chart__header">
+        <div>
+          <h3 id="power-chart-title">Power balance trend</h3>
+          <p>
+            Manual read-only power balance rows. Trend from loaded backend
+            rows.
+          </p>
+        </div>
+        <span>Latest production: {latestLabel}</span>
+      </div>
+      <svg
+        className="spot-chart__svg"
+        role="img"
+        aria-label={`Manual read-only power balance trend for ${data.price_area} in production MW`}
+        viewBox={`0 0 ${width} ${height}`}
+      >
+        <line
+          className="spot-chart__axis"
+          x1={padding.left}
+          y1={padding.top}
+          x2={padding.left}
+          y2={padding.top + chartHeight}
+        />
+        <line
+          className="spot-chart__axis"
+          x1={padding.left}
+          y1={padding.top + chartHeight}
+          x2={padding.left + chartWidth}
+          y2={padding.top + chartHeight}
+        />
+        <text className="spot-chart__label" x="0" y="18">
+          MW
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left - 8}
+          y={padding.top + 5}
+          textAnchor="end"
+        >
+          {formatNumber(yMax)}
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left - 8}
+          y={padding.top + chartHeight}
+          textAnchor="end"
+        >
+          {formatNumber(yMin)}
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left}
+          y={height - 8}
+          textAnchor="start"
+        >
+          {firstTimestamp}
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left + chartWidth}
+          y={height - 8}
+          textAnchor="end"
+        >
+          {lastTimestamp}
+        </text>
+        {points.length > 1 && (
+          <polyline
+            className="spot-chart__line spot-chart__line--power"
+            points={polylinePoints}
+          />
+        )}
+        {plottedPoints.map((point, index) => (
+          <circle
+            className="spot-chart__point spot-chart__point--power"
+            key={`${point.sourceRecordId}-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={points.length === 1 ? 4 : 3}
+          />
+        ))}
+      </svg>
+    </section>
+  );
+}
+
 function parseNumber(value: string | number | null): number | null {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null;
@@ -1039,12 +1215,13 @@ export default function DashboardPage() {
           />
           <EnergyCard
             title="Power balance"
-            description="Manual read-only request to backend power balance rows."
+            description="Manual read-only power balance rows from the backend request."
             endpointName="power-balance"
             buttonLabel="Load power balance"
             state={powerBalanceState}
             columns={powerBalanceColumns}
             onLoad={handleLoadPowerBalance}
+            renderAfterTable={(data) => <PowerBalanceTrendChart data={data} />}
           />
           <CurrentRiskCard
             state={currentRiskState}

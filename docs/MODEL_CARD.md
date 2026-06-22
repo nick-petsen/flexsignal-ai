@@ -36,28 +36,30 @@ MVP foundation. It is simple, deterministic, testable, and explainable. It is
 not a trained forecasting model, not an LLM decision engine, and not validated
 for production operations.
 
-The frontend spot price trend chart is not part of `rule-engine-v0` and does
-not change scoring, forecasting, backtest pairing, thresholds, input
-composition, or predictive-performance claims. It is a lightweight read-only
-dashboard visualization in/near the existing Spot prices card. The chart uses
-only rows returned by the existing manual `Load spot prices` action, supports
-`DK1` and `DK2` through the existing selected price area, renders only when
-spot price rows exist, keeps the spot price table visible, and uses inline
-SVG/HTML/CSS without a charting dependency.
+The frontend spot price and power balance trend charts are not part of
+`rule-engine-v0` and do not change scoring, forecasting, backtest pairing,
+thresholds, input composition, or predictive-performance claims. They are
+lightweight read-only dashboard visualizations in/near the existing Spot
+prices and Power balance cards. The spot price chart uses only rows returned
+by the existing manual `Load spot prices` action. The power balance chart uses
+only rows returned by the existing manual `Load power balance` action and
+plots production MW over timestamp order. Both support `DK1` and `DK2`
+through the existing selected price area, render only when returned rows
+exist, keep the existing tables visible, and use inline SVG/HTML/CSS without a
+charting dependency.
 
-The chart safely handles empty, single-point, multi-point, missing, and
-invalid values. It does not auto-load, poll, add a backend endpoint, forecast,
+The charts safely handle empty, single-point, multi-point, missing, and
+invalid values. They do not auto-load, poll, add a backend endpoint, forecast,
 trade, control assets, dispatch, activate, automate anything, execute SQL,
 write to the database, call live Energi Data Service, call DMI/weather APIs,
 use ML/LLMs, write audit events, or wire report/PDF behavior.
 
-Observed frontend spot price chart validation recorded `npm run build`
+Observed frontend chart validation recorded `npm run build`
 passing and `git diff --check` passing. `npm run lint` and
 `npm run typecheck` scripts did not exist. No backend server was started, no
 database was accessed, no SQL was executed, and no live EDS/DMI APIs were
-called. A future module may add a simple power balance chart, and another
-future module may improve dashboard layout, without adding ingestion,
-automation, or backend changes in this documentation step.
+called. A future module may improve dashboard layout without adding ingestion,
+automation, or backend changes.
 
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
