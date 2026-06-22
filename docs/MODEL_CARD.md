@@ -68,11 +68,11 @@ dashboard has a manual energy freshness card backed by
 `requires_database_url`, spot price and power balance freshness plan status,
 warnings, and the human-review safety boundary. UI wording explicitly
 communicates freshness query plan preview only, no database query executed, no
-database write performed, live freshness execution not enabled yet, and
-read-only decision support. It does not prove live data freshness, fetch new
-EDS data, execute queries, schedule jobs, add Azure/auth infrastructure, use
-ML/LLMs, write audit events, or add control, dispatch, activation, or
-operational functionality.
+database write performed, no new EDS/DMI fetch, and read-only decision
+support. It does not prove production data freshness, fetch new EDS data,
+execute queries, schedule jobs, add Azure/auth infrastructure, use ML/LLMs,
+write audit events, or add control, dispatch, activation, or operational
+functionality.
 
 A backend-only DB-executed energy freshness reader now exists at
 `backend/app/db/repositories/energy_freshness_reader.py`, and
@@ -91,11 +91,13 @@ during request execution, it returns a safe HTTP 503 warning without exposing
 raw connection details.
 
 The reader and API do not fetch new EDS data, call DMI/weather APIs, write to
-the database, add migrations, modify frontend behavior, schedule jobs, add
-Azure/auth behavior, use ML/LLMs, write audit events, wire report/PDF flows,
-or add control, dispatch, activation, closed-loop, live-control, or
-operational functionality. They prepare future dashboard live data trust
-indicators only and do not change `rule-engine-v0` scoring.
+the database, add migrations, schedule jobs, add Azure/auth behavior, use
+ML/LLMs, write audit events, wire report/PDF flows, or add control, dispatch,
+activation, closed-loop, live-control, or operational functionality. The
+frontend can manually display the endpoint response through the backend API
+only; it does not execute SQL or access the database directly. They prepare
+dashboard data trust indicators only and do not change `rule-engine-v0`
+scoring.
 Implemented functions are `read_spot_price_freshness`,
 `read_power_balance_freshness`, and `read_energy_freshness_summary`.
 SQL safety requires parameterized plans that start with `SELECT`; mutating
@@ -126,11 +128,11 @@ and power balance latest timestamp `2026-06-10T17:00:00+02:00`. Invalid
 
 The local API smoke performed SELECT-only freshness reads, preserved the
 read-only human-review safety boundary, performed no database writes, made no
-live EDS/DMI calls, triggered no ingestion, and involved no frontend changes.
-It proves local DB-backed API freshness reads work for the observed local
-data. It does not change `rule-engine-v0`, establish production monitoring,
-create an Azure deployment, or validate predictive performance. It prepares
-future frontend live freshness card wiring only.
+live EDS/DMI calls, and triggered no ingestion. It proves local DB-backed API
+freshness reads work for the observed local data. It does not change
+`rule-engine-v0`, establish production monitoring, create an Azure deployment,
+or validate predictive performance. The frontend can now display this
+DB-backed read result manually for dashboard data trust indicators.
 
 `scripts/energy_freshness_db_smoke.py` is that controlled manual local DB
 freshness smoke. It defaults to dry-run query-plan JSON and performs
@@ -180,10 +182,8 @@ endpoints, add database code, execute SQL, write to a database, add
 migrations, call live Energi Data Service, call DMI/weather APIs, add auth,
 add Azure infrastructure, add ML/LLM behavior, write audit events, wire
 report/PDF flows, or add control, dispatch, activation, closed-loop,
-live-control, or operational functionality. Future frontend wiring to the
-DB-backed freshness read endpoint and future dashboard UI improvements remain
-separate reviewed modules; keep the current dry-run card wording until
-live-read UI is explicitly added.
+live-control, or operational functionality. Frontend DB-backed freshness
+display is a separate manual dashboard action and remains read-only.
 
 Working read-only paths around the model:
 
@@ -195,9 +195,9 @@ Working read-only paths around the model:
   through the backend API.
 - The frontend can manually request energy freshness dry-run query-plan
   previews through `GET /api/energy/freshness`.
-- `GET /api/energy/freshness/read` exposes DB-backed SELECT-only freshness
-  reads for future dashboard trust indicators, but the frontend is not wired
-  to this endpoint yet.
+- The frontend can manually request
+  `GET /api/energy/freshness/read` for DB-backed SELECT-only freshness reads
+  from stored local/configured database data.
 - Synthetic and local DB read-only backtest previews exist.
 - Local DB backtest row pairing uses `nearest_timestamp_v0_1`.
 
