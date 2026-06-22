@@ -22,10 +22,14 @@
   lockfile; `git diff --check` passed; `npm run lint` and
   `npm run typecheck` scripts did not exist. No backend server was started,
   no database was accessed, no SQL was executed, and no live Energi Data
-  Service or DMI/weather APIs were called. This
-  prepares MVP dashboard readability only and does not add a new endpoint,
-  backend behavior, ML/LLM behavior, automation, control, dispatch, or
-  activation.
+  Service or DMI/weather APIs were called. `npm audit` reported 2 moderate
+  findings, but dependency files were not changed in this scoped UI/docs task.
+  This prepares MVP dashboard readability only and does not add a new
+  endpoint, backend behavior, ML/LLM behavior, automation, control, dispatch,
+  or activation. A future module may manually smoke-test the risk visual in
+  the local frontend/backend dashboard, and another future module may improve
+  dashboard layout and visual hierarchy, without adding ingestion, automation,
+  database writes, backend changes, or ML/LLM behavior in this docs step.
 - Documented observed manual frontend dashboard chart smoke results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started

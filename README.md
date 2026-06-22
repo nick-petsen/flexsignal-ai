@@ -247,10 +247,15 @@ Latest read-only API/UI smoke-test observations:
   `git diff --check` passed. `npm run lint` and `npm run typecheck` scripts
   did not exist. No backend server was started, no database was accessed, no
   SQL was executed, and no live Energi Data Service or DMI/weather APIs were
-  called. The visual uses
-  existing manual current-risk response data only and prepares MVP dashboard
-  readability without backend, endpoint, ML/LLM, automation, control,
-  dispatch, activation, or operational changes.
+  called. `npm audit` reported 2 moderate findings, but dependency files were
+  not changed in this scoped UI/docs task. The visual uses existing manual
+  current-risk response data only and prepares MVP dashboard readability
+  without backend, endpoint, ML/LLM, automation, control, dispatch,
+  activation, or operational changes. A future module may manually smoke-test
+  the risk visual in the local frontend/backend dashboard, and another future
+  module may improve dashboard layout and visual hierarchy, without adding
+  ingestion, automation, database writes, backend changes, or ML/LLM behavior
+  in this docs step.
 - Manual frontend plus backend energy freshness smoke was observed with the
   backend started locally using
   `DATABASE_URL=postgresql://localhost/flexsignal_ai`, the frontend started
