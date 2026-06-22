@@ -182,12 +182,16 @@ Current read-only foundation:
   passing and `git diff --check` passing. `npm run lint` and
   `npm run typecheck` scripts did not exist. No backend server was started,
   no database was accessed, no SQL was executed, and no live EDS/DMI APIs
-  were called. This was documentation-only validation of the existing manual
-  dashboard visualization path and added no ingestion, automation, backend
+  were called. This includes the observed frontend power balance chart
+  validation and was documentation-only validation of the existing manual
+  dashboard visualization path. It added no ingestion, automation, backend
   changes, API endpoints, auth, Azure infrastructure, ML/LLM behavior, audit
   writes, report/PDF wiring, control, dispatch, activation, or operational
-  functionality. A future module may improve dashboard layout without adding
-  ingestion, automation, or backend changes.
+  functionality. The spot price chart and power balance / production chart
+  complete the first MVP pair of read-only dashboard visualizations. A future
+  module may improve dashboard layout and chart readability or add a manual
+  local frontend smoke test for both charts without adding ingestion,
+  automation, DB writes, or backend changes.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.

@@ -15,6 +15,28 @@
   report/PDF flows, forecast, trade, control assets, or add control,
   dispatch, activation, automation, or operational functionality. This
   prepares MVP dashboard visualization only.
+- Documented frontend power balance chart validation results in `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. Observed validation recorded `npm run build`
+  passing and `git diff --check` passing; `npm run lint` and
+  `npm run typecheck` scripts did not exist. No backend server was started,
+  no database was accessed, no SQL was executed, and no live Energi Data
+  Service or DMI/weather APIs were called. The documentation records that the
+  chart renders in/near the existing Power balance card, uses only rows from
+  the manual `Load power balance` action, keeps the existing table visible,
+  renders only when rows exist, supports `DK1`/`DK2` through the selected
+  price area, uses inline SVG/HTML/CSS without a charting dependency, plots
+  `production_mw` over timestamp order, and safely handles empty, single-row,
+  invalid timestamp, and invalid MW values. This documentation step did not
+  add code, change frontend behavior, change backend behavior, add endpoints,
+  access a database, execute SQL, write to a database, call live APIs, add
+  auth, add Azure infrastructure, add ML/LLM behavior, write audit events,
+  wire report/PDF flows, or add control, dispatch, activation, or operational
+  functionality. Together with the spot price chart, this completes the first
+  MVP pair of read-only dashboard visualizations. Future modules may improve
+  dashboard layout and chart readability or add a manual local frontend smoke
+  test for both charts without adding ingestion, automation, DB writes, or
+  backend changes.
 - Added a simple frontend spot price trend chart inside the existing manual
   Spot prices card. The chart renders EUR/MWh over timestamp order from only
   the spot price rows already returned by the existing manual
