@@ -204,6 +204,43 @@ report/PDF flows, or add control, dispatch, activation, closed-loop,
 live-control, or operational functionality. Frontend DB-backed freshness
 display is a separate manual dashboard action and remains read-only.
 
+Observed manual frontend plus backend energy freshness smoke:
+
+- Backend local configuration:
+  `DATABASE_URL=postgresql://localhost/flexsignal_ai`.
+- Frontend local configuration:
+  `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`.
+- Browser opened the local dashboard.
+- Requests were manual button clicks only.
+- No auto-load or polling was observed.
+- DK1 and DK2 spot prices loaded.
+- DK1 and DK2 power balance loaded.
+- DK1 and DK2 current surplus risk loaded.
+- Forecast preview loaded.
+- The energy freshness card loaded DB-backed SELECT-only read results.
+- The energy freshness card also loaded dry-run query-plan previews.
+
+Observed DB-backed freshness read results:
+
+| Area | `dry_run` | `database_query_executed` | `database_write_performed` | `requires_database_url` | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp |
+| --- | --- | --- | --- | --- | ---: | --- | ---: | --- |
+| DK1 | false | true | false | true | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` |
+| DK2 | false | true | false | true | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` |
+
+Observed dry-run freshness plan results: `dry_run=true`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, spot price query plan present, power balance
+query plan present, and no SQL executed by the dry-run endpoint.
+
+UI safety wording remained aligned with the model boundary: DB-backed
+freshness read, SELECT-only read, no database write performed, freshness of
+stored local/configured database data, does not fetch new EDS/DMI data, and
+does not imply ingestion has run. This smoke does not change
+`rule-engine-v0`, does not establish production monitoring, does not fetch
+new data, does not write to the database, does not deploy Azure
+infrastructure, and does not add automatic control, dispatch, activation, or
+operational behavior.
+
 Working read-only paths around the model:
 
 - `POST /api/risk/preview` scores caller-provided DK1/DK2 JSON.

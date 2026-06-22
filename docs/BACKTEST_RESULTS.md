@@ -133,6 +133,29 @@ Current read-only foundation:
   dry-run preview path remains preserved. The frontend does not execute SQL,
   access the database directly, write to the database, trigger ingestion, call
   live EDS/DMI APIs, or affect backtest scoring.
+- Observed manual frontend plus backend energy freshness smoke started the
+  backend locally with `DATABASE_URL=postgresql://localhost/flexsignal_ai`,
+  started the frontend locally with
+  `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`, and opened the local
+  dashboard in a browser. Requests were manual button clicks only; no
+  auto-load or polling was observed. The dashboard loaded DK1/DK2 spot
+  prices, power balance, current surplus risk, forecast preview,
+  DB-backed energy freshness reads, and dry-run query-plan previews. DK1
+  DB-backed freshness returned `dry_run=false`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `requires_database_url=true`, spot price `row_count=53`, spot price latest
+  timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=53`, and
+  power balance latest timestamp `2026-06-10T17:00:00+02:00`. DK2 returned
+  the same execution flags, spot price `row_count=50`, spot price latest
+  timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=50`, and
+  power balance latest timestamp `2026-06-10T17:00:00+02:00`. Dry-run
+  freshness preview returned `dry_run=true`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, and spot price and power balance query plans
+  without executing SQL. UI wording remained explicit that the DB-backed path
+  is a SELECT-only freshness read over stored local/configured database data,
+  performs no database write, does not fetch new EDS/DMI data, and does not
+  imply ingestion has run. This smoke does not affect backtest scoring.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.

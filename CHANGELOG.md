@@ -2,6 +2,34 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend plus backend energy freshness smoke
+  results in `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`,
+  and `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally with
+  `DATABASE_URL=postgresql://localhost/flexsignal_ai`, started the frontend
+  locally with `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`, opened the
+  local dashboard in a browser, and used manual button clicks only. No
+  auto-load or polling was observed. The dashboard loaded DK1/DK2 spot
+  prices, power balance, current surplus risk, forecast preview,
+  DB-backed energy freshness reads, and dry-run freshness query-plan
+  previews. Observed DB-backed DK1 freshness returned `dry_run=false`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `requires_database_url=true`, spot price `row_count=53`, spot price latest
+  timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=53`, power
+  balance latest timestamp `2026-06-10T17:00:00+02:00`, and preserved the
+  safety boundary. Observed DB-backed DK2 freshness returned the same
+  execution flags, spot price `row_count=50`, spot price latest timestamp
+  `2026-06-11T21:45:00+02:00`, power balance `row_count=50`, power balance
+  latest timestamp `2026-06-10T17:00:00+02:00`, and preserved the safety
+  boundary. Observed dry-run freshness preview returned `dry_run=true`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, spot price and power balance query plans,
+  and no SQL execution. UI wording records DB-backed freshness read,
+  SELECT-only read, no database write performed, freshness of stored
+  local/configured database data, no new EDS/DMI fetch, and no implication
+  that ingestion has run. This is documentation only: no code, frontend
+  behavior, backend behavior, endpoint, database access, SQL, database write,
+  live API call, scheduler, Azure, auth, ML/LLM, audit write, report/PDF
+  wiring, control, dispatch, activation, or operational behavior was added.
 - Documented frontend DB-backed energy freshness read wiring validation in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The documentation records that

@@ -184,6 +184,31 @@ Latest read-only API/UI smoke-test observations:
   migrations were added, no writes or audit writes were performed, no auth,
   Azure, ML/LLM, report/PDF, control, dispatch, activation, or operational
   functionality was added.
+- Manual frontend plus backend energy freshness smoke was observed with the
+  backend started locally using
+  `DATABASE_URL=postgresql://localhost/flexsignal_ai`, the frontend started
+  locally using `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`, and the
+  browser opened to the local dashboard. Requests were manual button clicks
+  only; no auto-load or polling was observed. Spot prices, power balance,
+  current surplus risk, forecast preview, DB-backed energy freshness reads,
+  and dry-run freshness query-plan previews loaded for DK1 and DK2.
+- In that manual dashboard smoke, DB-backed freshness read wording remained
+  explicit: DB-backed freshness read, SELECT-only read, no database write
+  performed, freshness of stored local/configured database data, no new
+  EDS/DMI data fetch, and no implication that ingestion has run. Observed
+  DK1 DB-backed freshness returned `dry_run=false`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `requires_database_url=true`, spot price `row_count=53`, spot price latest
+  timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=53`, and
+  power balance latest timestamp `2026-06-10T17:00:00+02:00`. Observed DK2
+  returned the same execution flags, spot price `row_count=50`, spot price
+  latest timestamp `2026-06-11T21:45:00+02:00`, power balance
+  `row_count=50`, and power balance latest timestamp
+  `2026-06-10T17:00:00+02:00`. Dry-run freshness preview returned
+  `dry_run=true`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and spot
+  price and power balance query plans without executing SQL. The read-only
+  safety boundary was preserved.
 - DB-executed energy freshness reader validation covered
   `read_spot_price_freshness`, `read_power_balance_freshness`, and
   `read_energy_freshness_summary`. Focused reader tests passed with

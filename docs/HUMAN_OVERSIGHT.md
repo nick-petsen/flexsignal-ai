@@ -113,6 +113,34 @@ Observed frontend wiring validation:
 - No SQL was executed.
 - No live Energi Data Service or DMI/weather APIs were called.
 
+Observed manual frontend plus backend smoke:
+
+The backend was started locally with
+`DATABASE_URL=postgresql://localhost/flexsignal_ai`, the frontend was started
+locally with `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`, and the local
+dashboard was opened in a browser. Requests were manual button clicks only;
+no automatic loading or polling was observed.
+
+The dashboard loaded spot prices, power balance, current surplus risk,
+forecast preview, DB-backed energy freshness reads, and dry-run freshness
+query-plan previews for DK1 and DK2. The DB-backed card wording identified
+the path as a DB-backed freshness read and SELECT-only read, showed no
+database write performed, described freshness of stored local/configured
+database data, did not imply ingestion had run, and stated that it does not
+fetch new EDS/DMI data.
+
+| Area | `dry_run` | `database_query_executed` | `database_write_performed` | `requires_database_url` | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp |
+| --- | --- | --- | --- | --- | ---: | --- | ---: | --- |
+| DK1 | false | true | false | true | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` |
+| DK2 | false | true | false | true | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` |
+
+The dry-run freshness preview returned `dry_run=true`,
+`database_query_executed=false`, `database_write_performed=false`, and
+`requires_database_url=false`; spot price and power balance query plans were
+present, and no SQL was executed by the dry-run endpoint. The read-only
+human-review safety boundary was preserved for both DB-backed and dry-run
+paths.
+
 Non-goals: this documentation step did not change backend behavior, add a new
 backend endpoint, add database code, execute SQL from the frontend, write to a
 database, add migrations, call live Energi Data Service, call DMI/weather
