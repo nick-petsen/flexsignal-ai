@@ -75,20 +75,25 @@ ML/LLMs, write audit events, or add control, dispatch, activation, or
 operational functionality.
 
 A backend-only DB-executed energy freshness reader now exists at
-`backend/app/db/repositories/energy_freshness_reader.py`. It is separate from
-the dry-run API preview and is not exposed through FastAPI yet. The reader uses
-the existing freshness query-plan builders, validates that plans are
-parameterized SELECT-only SQL for `DK1`/`DK2`, requires an explicit
-caller-provided database connection, and returns structured dictionaries with
-`database_query_executed=true`, `database_write_performed=false`, source label,
+`backend/app/db/repositories/energy_freshness_reader.py`, and
+`GET /api/energy/freshness/read?price_area=DK1|DK2` now exposes that reader
+through a controlled FastAPI route. This DB-backed API is separate from the
+dry-run query-plan preview. It requires `DATABASE_URL` at request time, opens
+a request-scoped database connection, validates `DK1`/`DK2`, executes
+SELECT-only freshness reads, and returns structured dictionaries with
+`dry_run=false`, `database_query_executed=true` on success,
+`database_write_performed=false`, `requires_database_url=true`, source label,
 earliest/latest timestamps, row count, empty-row warnings, and the same
-read-only human-review safety boundary. It does not create database
-connections, read `DATABASE_URL`, call live EDS or DMI/weather APIs, write to
-the database, add migrations, modify API/frontend behavior, schedule jobs, add
+read-only human-review safety boundary. If `DATABASE_URL` is missing during
+request execution, it returns a safe HTTP 503 warning without exposing raw
+connection details.
+
+The reader and API do not fetch new EDS data, call DMI/weather APIs, write to
+the database, add migrations, modify frontend behavior, schedule jobs, add
 Azure/auth behavior, use ML/LLMs, write audit events, wire report/PDF flows,
 or add control, dispatch, activation, closed-loop, live-control, or
-operational functionality. It prepares future DB-backed freshness indicators
-for API/dashboard use only and does not change `rule-engine-v0` scoring.
+operational functionality. They prepare future dashboard live data trust
+indicators only and do not change `rule-engine-v0` scoring.
 Implemented functions are `read_spot_price_freshness`,
 `read_power_balance_freshness`, and `read_energy_freshness_summary`.
 SQL safety requires parameterized plans that start with `SELECT`; mutating
@@ -100,10 +105,9 @@ reader tests passing with `24 passed`, the full backend suite passing with
 `466 passed, 1 warning`, `py_compile` passing, forbidden-pattern grep matching
 only safety-boundary keys, defensive blocked-token validation, and negative
 assertions/unsafe-plan tests, `git diff --check` passing, fake
-connection/cursor tests only, and no live DB writes. Runtime API/frontend
-integration remains deferred; a controlled local DB freshness smoke script now
-exists, and future work may add a DB-backed read-only freshness API endpoint
-after review.
+connection/cursor tests only, and no live DB writes. The DB-backed read API
+uses fake/monkeypatched database connections in tests only; no live DB is
+required for automated validation.
 
 `scripts/energy_freshness_db_smoke.py` is that controlled manual local DB
 freshness smoke. It defaults to dry-run query-plan JSON and performs

@@ -47,13 +47,23 @@ Current read-only foundation:
   freshness dictionaries with `database_query_executed=true`,
   `database_write_performed=false`, source labels, earliest/latest timestamps,
   row counts, empty-row warnings, and the read-only human-review safety
-  boundary. It does not create database connections, read `DATABASE_URL`, call
-  live EDS/DMI sources, write to the database, add migrations, expose an API,
-  modify frontend behavior, schedule jobs, add Azure/auth behavior, use
-  ML/LLMs, write audit events, wire report/PDF flows, or add control,
-  dispatch, activation, or operational functionality. It prepares future
+  boundary. It does not create database connections itself, read
+  `DATABASE_URL`, call live EDS/DMI sources, write to the database, add
+  migrations, modify frontend behavior, schedule jobs, add Azure/auth
+  behavior, use ML/LLMs, write audit events, wire report/PDF flows, or add
+  control, dispatch, activation, or operational functionality. It prepares
   DB-backed API/dashboard freshness indicators only and does not affect
   backtest scoring.
+- `GET /api/energy/freshness/read?price_area=DK1|DK2` exposes that reader as a
+  read-only DB-backed API endpoint. It requires configured `DATABASE_URL` at
+  request time, returns a safe HTTP 503 warning if it is missing, executes
+  SELECT-only freshness reads on success, and returns `dry_run=false`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `requires_database_url=true`, `freshness_result`,
+  `spot_price_freshness`, `power_balance_freshness`, warnings, and the
+  safety boundary. It does not write to the DB, fetch new EDS/DMI data,
+  trigger ingestion, modify frontend behavior, or affect backtest scoring. It
+  prepares future dashboard live data trust indicators.
 - `scripts/energy_freshness_db_smoke.py` provides a manual local DB smoke for
   that freshness reader. It defaults to dry-run query-plan JSON, requires
   `--execute` plus an explicit local `--database-url` for DB-executed reads,
