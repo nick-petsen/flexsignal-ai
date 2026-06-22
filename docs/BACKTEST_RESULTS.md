@@ -186,7 +186,8 @@ Current read-only foundation:
   It does not auto-load, poll, add a backend endpoint, change backend
   behavior, execute SQL, write to the database, call live Energi Data Service
   or DMI/weather APIs, use ML/LLM behavior, add automation, control, dispatch,
-  activation, or affect backtest scoring.
+  activation, forecast by itself, trigger recommendations by itself, or affect
+  backtest scoring. Human review remains required.
 - Observed manual frontend dashboard chart smoke started the backend locally,
   started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
   backend, and opened the local dashboard in a browser. Requests were manual
@@ -221,8 +222,13 @@ Current read-only foundation:
   lockfile. `git diff --check` passed. `npm run lint` and
   `npm run typecheck` scripts did not exist. No backend server was started,
   no database was accessed, no SQL was executed, and no live EDS/DMI APIs
-  were called. The visual uses only the existing
-  manual current-risk response and does not affect backtest scoring.
+  were called. `npm audit` reported 2 moderate findings, but dependency files
+  were not changed in this scoped UI/docs task. The visual uses only the
+  existing manual current-risk response and does not affect backtest scoring.
+  A future module may manually smoke-test the risk visual in the local
+  frontend/backend dashboard, and another future module may improve dashboard
+  layout and visual hierarchy without adding ingestion, automation, database
+  writes, backend changes, ML/LLM behavior, or operational functionality.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.

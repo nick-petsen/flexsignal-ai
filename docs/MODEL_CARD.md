@@ -67,7 +67,8 @@ backtest interpretation. It appears only after the existing manual
 raw risk details visible, and handles missing or invalid score/level fields
 safely. It adds no endpoint, backend behavior, ML/LLM behavior, database
 write, audit write, report/PDF wiring, automation, control, dispatch,
-activation, or operational functionality.
+activation, or operational functionality. It does not forecast by itself or
+trigger recommendations by itself; human review remains required.
 
 Observed manual frontend dashboard chart smoke started the backend locally,
 started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
@@ -102,8 +103,13 @@ passing after `npm ci` installed frontend dependencies from the existing
 lockfile. `git diff --check` passed. `npm run lint` and
 `npm run typecheck` scripts did not exist. No backend server was started, no
 database was accessed, no SQL was executed, and no live EDS/DMI APIs were
-called. This validation did not change
-`rule-engine-v0` behavior or add a backend endpoint.
+called. `npm audit` reported 2 moderate findings, but dependency files were
+not changed in this scoped UI/docs task. This validation did not change
+`rule-engine-v0` behavior or add a backend endpoint. A future module may
+manually smoke-test the risk visual in the local frontend/backend dashboard,
+and another future module may improve dashboard layout and visual hierarchy
+without adding ingestion, automation, database writes, backend changes,
+ML/LLM behavior, or operational functionality.
 
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
