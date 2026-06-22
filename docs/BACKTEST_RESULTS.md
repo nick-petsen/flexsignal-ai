@@ -56,14 +56,17 @@ Current read-only foundation:
   backtest scoring.
 - `GET /api/energy/freshness/read?price_area=DK1|DK2` exposes that reader as a
   read-only DB-backed API endpoint. It requires configured `DATABASE_URL` at
-  request time, returns a safe HTTP 503 warning if it is missing, executes
-  SELECT-only freshness reads on success, and returns `dry_run=false`,
+  request time, returns a safe HTTP 503 warning if it is missing, keeps app
+  import and route exposure independent of `DATABASE_URL`, rejects invalid
+  price areas with HTTP 400, executes SELECT-only freshness reads on success,
+  and returns `price_area`, `dry_run=false`,
   `database_query_executed=true`, `database_write_performed=false`,
   `requires_database_url=true`, `freshness_result`,
   `spot_price_freshness`, `power_balance_freshness`, warnings, and the
-  safety boundary. It does not write to the DB, fetch new EDS/DMI data,
-  trigger ingestion, modify frontend behavior, or affect backtest scoring. It
-  prepares future dashboard live data trust indicators.
+  safety boundary. It does not return the raw database URL, write to the DB,
+  fetch new EDS/DMI data, trigger ingestion, modify frontend behavior, or
+  affect backtest scoring. It prepares future dashboard live data trust
+  indicators.
 - `scripts/energy_freshness_db_smoke.py` provides a manual local DB smoke for
   that freshness reader. It defaults to dry-run query-plan JSON, requires
   `--execute` plus an explicit local `--database-url` for DB-executed reads,
@@ -217,16 +220,72 @@ Data Service, call DMI/weather APIs, connect to a database, read
 infrastructure, add auth, use ML/LLMs, write audit events, or add control,
 dispatch, activation, or operational functionality.
 
-Interpretation: EDS freshness is dry-run preview only. It does not fetch new
-data, execute queries, prove live data freshness, or change backtest scoring.
+Interpretation: EDS freshness preview remains dry-run preview only. It does
+not fetch new data, execute queries, prove live data freshness, or change
+backtest scoring.
 The frontend card prepares dashboard trust indicators by showing the reviewed
 query plans, no-query/no-write flags, warnings, and safety boundary. UI
 wording explicitly communicates freshness query plan preview only, no database
 query executed, no database write performed, live freshness execution not
-enabled yet, and read-only decision support. A future module may add
-DB-backed SELECT execution for energy freshness, and another future module may
-improve the dashboard UI once live freshness reads exist. DB execution and
-live ingestion remain deferred.
+enabled yet, and read-only decision support. DB-backed SELECT execution now
+exists through `GET /api/energy/freshness/read`; a future module may wire the
+frontend to that endpoint. DB writes, ingestion, automation, and operational
+behavior remain deferred.
+
+## DB-Backed Energy Freshness Read API Validation
+
+`GET /api/energy/freshness/read?price_area=DK1|DK2` is the first controlled
+DB-backed freshness API. It is read-only SELECT execution only and prepares
+future dashboard live data trust indicators. It does not change
+`rule-engine-v0`, backtest pairing, score thresholds, or predictive
+performance claims.
+
+Implemented behavior:
+
+- Supports `DK1` and `DK2`.
+- Invalid `price_area` values return HTTP 400.
+- Missing `DATABASE_URL` at request time returns safe HTTP 503.
+- App import without `DATABASE_URL` still exposes the route.
+- Raw `DATABASE_URL` is not returned.
+- Uses `backend/app/db/repositories/energy_freshness_reader.py`.
+- Executes SELECT-only freshness reads.
+- Does not write to the database.
+- Does not fetch new EDS/DMI data.
+- Does not trigger ingestion.
+- Does not modify frontend behavior.
+- Does not add operational behavior.
+
+Response shape includes `price_area`, `dry_run=false`,
+`database_query_executed=true` on success,
+`database_write_performed=false`, `requires_database_url=true`,
+`freshness_result`, `spot_price_freshness`, `power_balance_freshness`,
+warnings, and `safety_boundary`.
+
+Safety boundary:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Observed validation:
+
+| Check | Result |
+| --- | --- |
+| Focused API freshness read tests | `9 passed, 1 warning` |
+| Full backend suite | `483 passed, 1 warning` |
+| `py_compile` | Passed |
+| Forbidden-pattern grep | Matched only defensive/negative assertions in tests |
+| `git diff --check` | Passed |
+| Test DB behavior | Mocked DB only |
+| Live DB writes | None performed |
+
+Interpretation: this improves MVP data trust readiness but still does not
+perform ingestion, verify production freshness, or connect the frontend to the
+executed read endpoint. Keep the existing dry-run card wording until
+live-read UI is explicitly added.
 
 ## DB-Executed Energy Freshness Reader Validation
 
@@ -282,12 +341,11 @@ Observed validation:
 | Live DB writes | None performed |
 
 Interpretation: the reader proves that read-only freshness SELECTs can be
-executed through an explicit connection. It is not exposed through API yet, is
-not connected to the frontend yet, does not fetch new data, does not write
-data, and does not change backtest scoring. Runtime integration remains
-deferred. A controlled local DB freshness smoke script now exists, and a
-future module may add a DB-backed read-only API endpoint that executes
-freshness SELECTs.
+executed through an explicit connection, and the controlled DB-backed read API
+now exposes that path for `DK1`/`DK2`. It is not connected to the frontend
+yet, does not fetch new data, does not write data, and does not change
+backtest scoring. A future module may add frontend wiring to the DB-backed
+read endpoint without adding DB writes, ingestion, or automation.
 
 ## Manual Energy Freshness DB Smoke Validation
 

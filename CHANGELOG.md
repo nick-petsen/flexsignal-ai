@@ -2,6 +2,30 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed validation for
+  `GET /api/energy/freshness/read?price_area=DK1|DK2`, the first controlled
+  DB-backed energy freshness read API. The endpoint supports `DK1` and `DK2`,
+  returns HTTP 400 for invalid `price_area`, returns safe HTTP 503 when
+  `DATABASE_URL` is missing at request time, still exposes the route when the
+  app imports without `DATABASE_URL`, and does not return the raw database
+  URL. Successful responses include `price_area`, `dry_run=false`,
+  `database_query_executed=true`,
+  `database_write_performed=false`, `requires_database_url=true`,
+  `freshness_result`, `spot_price_freshness`, `power_balance_freshness`,
+  warnings, and the read-only human-review safety boundary. The endpoint uses
+  `backend/app/db/repositories/energy_freshness_reader.py` for SELECT-only
+  freshness reads, does not write to the database, does not fetch new EDS/DMI
+  data, does not trigger ingestion, does not modify frontend behavior, and
+  does not add control, dispatch, activation, or operational functionality.
+  Observed validation: focused API freshness read tests passed with
+  `9 passed, 1 warning`; the full backend suite passed with
+  `483 passed, 1 warning`; `py_compile` passed; forbidden-pattern grep matched
+  only defensive/negative assertions in tests; `git diff --check` passed;
+  tests used mocked DB only; and no live DB writes were performed. This
+  improves MVP data trust readiness, does not verify production freshness yet,
+  and is not wired to the frontend yet. A future module may add frontend
+  wiring while keeping DB writes, ingestion, and automation out of scope. This
+  change is documentation only.
 - Added `GET /api/energy/freshness/read?price_area=DK1|DK2`, a read-only
   DB-backed energy freshness API endpoint, plus
   `backend/tests/test_api_energy_freshness_read.py`. The endpoint lazily
@@ -108,9 +132,10 @@
   `npm run typecheck` script did not exist; no backend server was started; no
   frontend dev server was started; no database was accessed; no SQL was
   executed; and no live Energi Data Service or DMI/weather APIs were called.
-  Future DB-backed SELECT execution for energy freshness and future dashboard
-  UI improvements remain separate reviewed modules after live freshness reads
-  exist. This change is documentation only.
+  DB-backed SELECT execution now exists through the separate
+  `GET /api/energy/freshness/read` endpoint. Future frontend wiring to that
+  endpoint and future dashboard UI improvements remain separate reviewed
+  modules. This change is documentation only.
 - Documented observed validation for
   `GET /api/energy/freshness?price_area=DK1|DK2`, a read-only FastAPI energy
   freshness dry-run preview endpoint with focused coverage in

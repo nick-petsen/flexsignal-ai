@@ -69,8 +69,16 @@ Working read-only core:
   caller-provided database connection, validates parameterized SELECT-only
   query plans before cursor execution, rejects invalid price areas outside
   `DK1`/`DK2`, returns structured dictionaries only, and does not create
-  connections, read `DATABASE_URL`, call live EDS/DMI APIs, write data, expose
-  a FastAPI route, or modify frontend behavior.
+  connections, read `DATABASE_URL`, call live EDS/DMI APIs, write data, or
+  modify frontend behavior.
+- `GET /api/energy/freshness/read?price_area=DK1|DK2` now exposes the
+  controlled DB-backed energy freshness read path for future dashboard live
+  data trust indicators. It requires `DATABASE_URL` at request time, returns a
+  safe HTTP 503 if it is missing, rejects invalid price areas with HTTP 400,
+  executes SELECT-only freshness reads through
+  `backend/app/db/repositories/energy_freshness_reader.py`, and does not write
+  to the database, fetch new EDS/DMI data, trigger ingestion, modify the
+  frontend, or add operational behavior.
 - Manual local energy freshness DB smoke now exists at
   `scripts/energy_freshness_db_smoke.py`. It defaults to dry-run query-plan
   JSON, does not connect to a database unless `--execute` is provided, and
@@ -148,6 +156,16 @@ Latest read-only API/UI smoke-test observations:
   keys, defensive blocked-token validation, and negative assertions/unsafe-plan
   tests; `git diff --check` passed. Tests used fake connection/cursor objects
   only, and no live database writes were performed.
+- DB-backed energy freshness read API validation covered
+  `GET /api/energy/freshness/read?price_area=DK1`, DK1/DK2 support, HTTP 400
+  responses for invalid `price_area`, safe HTTP 503 behavior when
+  `DATABASE_URL` is missing at request time, app import and route exposure
+  without `DATABASE_URL`, omission of the raw database URL from responses, and
+  SELECT-only freshness reads with mocked database connections only. Focused
+  API freshness read tests passed with `9 passed, 1 warning`; the full backend
+  suite passed with `483 passed, 1 warning`; `py_compile` passed;
+  forbidden-pattern grep matched only defensive/negative assertions in tests;
+  `git diff --check` passed; no live DB writes were performed.
 - Frontend forecast preview card manually calls `POST /api/forecast/preview`
   with deterministic synthetic/caller-provided demo rows only.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
@@ -330,11 +348,67 @@ Interpretation: the energy freshness preview API and frontend card are
 read-only and expose query-plan previews only. The manual local DB smoke proves
 the existing reader can execute local DB-backed freshness SELECTs when a human
 explicitly supplies `--execute` and a local `--database-url`, but it does not
-create production freshness monitoring, fetch new data, or write data. A
-future reviewed module may add a controlled DB-backed read endpoint that
-executes freshness SELECT queries. Another future module may improve the
-dashboard UI after live freshness reads exist; live ingestion remains
-deferred.
+create production freshness monitoring, fetch new data, or write data. The
+controlled DB-backed read API now executes those freshness SELECT queries for
+`DK1`/`DK2` when `DATABASE_URL` is configured at request time. Another future
+module may wire the frontend to this DB-backed read endpoint; until then, keep
+the existing dry-run card wording. Live ingestion remains deferred.
+
+## DB-Backed Energy Freshness Read API
+
+`GET /api/energy/freshness/read?price_area=DK1|DK2` is the first controlled
+DB-backed freshness API for stored energy data. It prepares future dashboard
+live data trust indicators while preserving the `v0.1` read-only
+decision-support boundary.
+
+The endpoint supports only `DK1` and `DK2`; invalid `price_area` values return
+HTTP 400. `DATABASE_URL` is required at request time only. The app can import
+and expose the route without `DATABASE_URL`; if the variable is missing during
+request execution, the endpoint returns a safe HTTP 503 and does not return the
+raw database URL.
+
+The endpoint uses `backend/app/db/repositories/energy_freshness_reader.py` and
+executes SELECT-only freshness reads. It does not write to the database, fetch
+new Energi Data Service data, call DMI/weather APIs, trigger ingestion, modify
+the frontend, add audit writes, add scheduler/Azure/auth/report/PDF wiring, or
+perform control, dispatch, activation, closed-loop, live-control, or
+operational functionality.
+
+Successful responses include:
+
+- `price_area`
+- `dry_run: false`
+- `database_query_executed: true`
+- `database_write_performed: false`
+- `requires_database_url: true`
+- `freshness_result`
+- `spot_price_freshness`
+- `power_balance_freshness`
+- `warnings`
+- `safety_boundary`
+
+The safety boundary is:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Observed validation:
+
+- Focused API freshness read tests passed: `9 passed, 1 warning`.
+- Full backend suite passed: `483 passed, 1 warning`.
+- `py_compile` passed.
+- Forbidden-pattern grep matched only defensive/negative assertions in tests.
+- `git diff --check` passed.
+- Tests used mocked database connections only.
+- No live DB writes were performed.
+
+Interpretation: this API is read-only SELECT execution only. It improves MVP
+data trust readiness, still does not perform ingestion, does not verify
+production freshness yet, and is not wired to the frontend yet.
 
 ## DB-Executed Energy Freshness Reader
 
@@ -381,13 +455,12 @@ safety-boundary keys, defensive blocked-token validation, and negative
 assertions/unsafe-plan tests. The tests used fake connection/cursor objects
 only; no live DB writes were performed.
 
-Interpretation: the DB-executed freshness reader and observed manual local DB
-smoke prove the system can execute read-only freshness SELECTs through an
-explicit local connection. It is backend foundation only, is not exposed
-through a DB-backed API yet, is not connected to the frontend for executed
-freshness reads, does not fetch new data, and does not write data. Runtime
-integration remains deferred. A future module may add a DB-backed read-only
-API endpoint that executes freshness SELECTs.
+Interpretation: the DB-executed freshness reader, observed manual local DB
+smoke, and controlled DB-backed read API prove the system can execute
+read-only freshness SELECTs for `DK1`/`DK2`. The frontend is not wired to the
+executed freshness endpoint yet, the path does not fetch new data, and it does
+not write data. A future module may add frontend wiring to use the DB-backed
+read endpoint while keeping DB writes, ingestion, and automation out of scope.
 
 ## Audit Event Foundation
 
