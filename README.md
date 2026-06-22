@@ -174,6 +174,16 @@ Latest read-only API/UI smoke-test observations:
   `DB-backed freshness read requires backend DATABASE_URL.` The frontend does
   not execute SQL, write to the database, fetch live EDS/DMI data, trigger
   ingestion, or imply production monitoring exists.
+- Frontend DB-backed energy freshness read wiring validation recorded that
+  `npm run build` passed and `git diff --check` passed. `npm run lint` and
+  `npm run typecheck` scripts did not exist. No backend server was started,
+  no frontend dev server was started, no database was accessed, no SQL was
+  executed, and no live Energi Data Service or DMI/weather APIs were called.
+  The validation was documentation-only for the dashboard read display path:
+  no backend behavior changed, no new endpoint was added, no database code or
+  migrations were added, no writes or audit writes were performed, no auth,
+  Azure, ML/LLM, report/PDF, control, dispatch, activation, or operational
+  functionality was added.
 - DB-executed energy freshness reader validation covered
   `read_spot_price_freshness`, `read_power_balance_freshness`, and
   `read_energy_freshness_summary`. Focused reader tests passed with
@@ -253,6 +263,12 @@ indicators, and PDF export from the UI. Do not add production audit writes
 yet, do not add automatic scheduled report generation, do not fetch data in
 the report builder, do not use an LLM as the forecast or reporting engine, and
 do not add control, dispatch, or activation behavior.
+
+Future documentation modules may add a manual local smoke guide for running
+the backend and frontend together against the controlled DB-backed freshness
+read path. Dashboard graph improvements may also be handled separately. These
+future steps must not add ingestion, automation, database writes, or
+operational control behavior without explicit review.
 
 ## EDS Data Freshness Preview API
 

@@ -123,6 +123,16 @@ Current read-only foundation:
   `requires_database_url`, spot price and power balance freshness plan status,
   warnings, and the safety boundary. It does not execute SQL or prove live
   data freshness.
+- The same dashboard card now also has a manual DB-backed read path through
+  `fetchEnergyFreshnessRead()`, which calls
+  `GET /api/energy/freshness/read?price_area=DK1|DK2` through the backend API
+  base URL helper. It displays SELECT-only stored/configured freshness read
+  results, including latest timestamps, row counts,
+  `database_query_executed`, `database_write_performed`,
+  `requires_database_url`, warnings, and the safety boundary. The existing
+  dry-run preview path remains preserved. The frontend does not execute SQL,
+  access the database directly, write to the database, trigger ingestion, call
+  live EDS/DMI APIs, or affect backtest scoring.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.
@@ -310,6 +320,57 @@ perform ingestion or verify production freshness. It proves local DB-backed
 API freshness reads work for the observed local data, does not mean production
 monitoring or Azure deployment exists, and the frontend can now display those
 read results manually as dashboard data trust indicators.
+
+## Frontend DB-Backed Energy Freshness Read Wiring Validation
+
+The frontend DB-backed read wiring is a dashboard display path for the API
+above. It does not change `rule-engine-v0`, backtest pairing, thresholds,
+input composition, or predictive performance claims.
+
+Implemented behavior:
+
+- `fetchEnergyFreshnessRead(priceArea)` calls
+  `GET /api/energy/freshness/read?price_area=DK1|DK2`.
+- Existing `fetchEnergyFreshness()` dry-run preview behavior remains.
+- The freshness card has controls for DB-backed read mode and dry-run preview
+  mode.
+- The card displays SELECT-only freshness fields from stored/configured DB
+  data: latest timestamps, row counts, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`, warnings, and the
+  safety boundary.
+- Missing backend `DATABASE_URL` HTTP 503 is shown as
+  `DB-backed freshness read requires backend DATABASE_URL.`
+
+Observed validation:
+
+| Check | Result |
+| --- | --- |
+| `npm run build` | Passed |
+| `git diff --check` | Passed |
+| `npm run lint` | Script did not exist |
+| `npm run typecheck` | Script did not exist |
+| Backend server | Not started |
+| Frontend dev server | Not started |
+| Database access | None |
+| SQL execution | None |
+| Live EDS/DMI API calls | None |
+
+Safety interpretation: the frontend does not execute SQL, access the
+database directly, write to the database, trigger ingestion, call live
+Energi Data Service, or call DMI/weather APIs. It only displays
+stored/configured DB freshness returned by the backend. This remains
+read-only decision support, not production monitoring and not operational
+control.
+
+Non-goals: no backend behavior change, no new backend endpoint, no database
+code, no SQL execution from the frontend, no database write, no migration, no
+live Energi Data Service call, no DMI/weather call, no auth, no Azure
+infrastructure, no ML/LLM, no audit write, no report/PDF wiring, and no
+control, dispatch, activation, or operational functionality.
+
+Next steps may document a manual local frontend/backend smoke guide or move
+toward dashboard graph improvements. Ingestion, automation, and DB writes
+remain out of scope for this docs step.
 
 ## DB-Executed Energy Freshness Reader Validation
 

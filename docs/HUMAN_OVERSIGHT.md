@@ -73,6 +73,58 @@ frontend can now manually display this endpoint through the backend API only;
 it does not execute SQL, write to the database, fetch live EDS/DMI data, or
 imply production monitoring exists.
 
+## Frontend DB-Backed Energy Freshness Read Wiring
+
+The dashboard freshness card now supports a manual DB-backed read mode while
+preserving the existing dry-run preview path. The frontend helper
+`fetchEnergyFreshnessRead(priceArea)` calls
+`GET /api/energy/freshness/read?price_area=DK1|DK2` through the backend API
+base URL helper. The existing `fetchEnergyFreshness()` helper continues to
+call the dry-run preview endpoint at
+`GET /api/energy/freshness?price_area=DK1|DK2`.
+
+The DB-backed card display is SELECT-only result presentation. It shows
+`price_area`, `dry_run`, `database_query_executed`,
+`database_write_performed`, `requires_database_url`,
+`spot_price_freshness.latest_timestamp`,
+`spot_price_freshness.row_count`,
+`power_balance_freshness.latest_timestamp`,
+`power_balance_freshness.row_count`, warnings, and the read-only
+human-review safety boundary. If the backend returns HTTP 503 because
+`DATABASE_URL` is missing, the UI maps that to
+`DB-backed freshness read requires backend DATABASE_URL.`
+
+Safety interpretation: the browser does not execute SQL, access the database
+directly, write to the database, trigger ingestion, call live Energi Data
+Service, or call DMI/weather APIs. It only displays stored/configured
+freshness data returned by the backend. This remains read-only decision
+support for human review, not production monitoring and not operational
+control.
+
+Observed frontend wiring validation:
+
+- `npm run build` passed.
+- `git diff --check` passed.
+- `npm run lint` did not exist.
+- `npm run typecheck` did not exist.
+- No backend server was started.
+- No frontend dev server was started.
+- No database was accessed.
+- No SQL was executed.
+- No live Energi Data Service or DMI/weather APIs were called.
+
+Non-goals: this documentation step did not change backend behavior, add a new
+backend endpoint, add database code, execute SQL from the frontend, write to a
+database, add migrations, call live Energi Data Service, call DMI/weather
+APIs, add auth, add Azure infrastructure, add ML/LLM behavior, write audit
+events, wire report/PDF flows, or add control, dispatch, activation, or
+operational functionality.
+
+Next steps may document a manual frontend/backend smoke guide for running the
+backend and frontend together locally, or separately improve dashboard graphs.
+Those future modules must not add ingestion, automation, or database writes
+without explicit review.
+
 ## DB-Executed Energy Freshness Reader
 
 `backend/app/db/repositories/energy_freshness_reader.py` now provides a
