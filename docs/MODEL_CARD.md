@@ -177,6 +177,25 @@ Observed frontend freshness card validation:
 - No SQL was executed.
 - No live Energi Data Service or DMI/weather APIs were called.
 
+Frontend DB-backed energy freshness read wiring validation is documentation
+of the display path only. `fetchEnergyFreshnessRead(priceArea)` exists and
+manually calls
+`GET /api/energy/freshness/read?price_area=DK1|DK2`; the existing
+`fetchEnergyFreshness()` dry-run preview helper remains available for
+`GET /api/energy/freshness?price_area=DK1|DK2`. The dashboard card provides
+controls for both DB-backed read mode and dry-run preview mode.
+
+The DB-backed read card displays SELECT-only freshness fields returned by the
+backend: latest timestamps and row counts for spot price and power balance,
+`database_query_executed`, `database_write_performed`,
+`requires_database_url`, warnings, and the read-only human-review safety
+boundary. Missing backend `DATABASE_URL` HTTP 503 responses are mapped to
+`DB-backed freshness read requires backend DATABASE_URL.` The frontend does
+not execute SQL, access the database directly, write to the database, trigger
+ingestion, call live EDS/DMI APIs, or change `rule-engine-v0`. It only
+displays stored/configured DB freshness returned by the backend and remains
+read-only decision support, not production monitoring or operational control.
+
 This documentation step did not change backend behavior, add backend
 endpoints, add database code, execute SQL, write to a database, add
 migrations, call live Energi Data Service, call DMI/weather APIs, add auth,

@@ -2,6 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Documented frontend DB-backed energy freshness read wiring validation in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The documentation records that
+  `fetchEnergyFreshnessRead(priceArea)` manually calls
+  `GET /api/energy/freshness/read?price_area=DK1|DK2`, while the existing
+  `fetchEnergyFreshness()` dry-run preview path remains preserved. The
+  dashboard freshness card has controls for DB-backed reads and dry-run
+  previews, displays SELECT-only stored/configured freshness fields, latest
+  timestamps, row counts, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`, warnings, and the
+  read-only human-review safety boundary, and maps missing backend
+  `DATABASE_URL` HTTP 503 responses to
+  `DB-backed freshness read requires backend DATABASE_URL.` Observed
+  validation recorded `npm run build` passing, `git diff --check` passing,
+  `npm run lint` and `npm run typecheck` scripts not existing, no backend
+  server started, no frontend dev server started, no database access, no SQL
+  execution, and no live EDS/DMI API calls. This change is documentation
+  only: no backend behavior change, no new endpoint, no database code, no SQL
+  execution from the frontend, no database write, no migration, no live EDS or
+  DMI/weather call, no auth, no Azure infrastructure, no ML/LLM, no audit
+  write, no report/PDF wiring, and no control, dispatch, activation, or
+  operational functionality.
 - Updated the frontend energy freshness card to support manual DB-backed
   freshness reads through the existing
   `GET /api/energy/freshness/read?price_area=DK1|DK2` endpoint while keeping
