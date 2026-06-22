@@ -2,6 +2,23 @@
 
 ## v0.1.0 - TODO
 
+- Added `GET /api/energy/freshness/read?price_area=DK1|DK2`, a read-only
+  DB-backed energy freshness API endpoint, plus
+  `backend/tests/test_api_energy_freshness_read.py`. The endpoint lazily
+  requires `DATABASE_URL` at request time, returns a safe HTTP 503 warning if
+  it is missing, rejects unsupported price areas with HTTP 400, opens a
+  request-scoped database connection only for valid requests, and delegates to
+  `backend/app/db/repositories/energy_freshness_reader.py` for SELECT-only
+  spot price and power balance freshness reads. Successful responses include
+  `dry_run=false`, `database_query_executed=true`,
+  `database_write_performed=false`, `requires_database_url=true`,
+  `freshness_result`, `spot_price_freshness`, `power_balance_freshness`,
+  warnings, and the read-only human-review safety boundary. The endpoint does
+  not write to the database, add migrations, modify frontend code, call live
+  EDS/DMI APIs, trigger ingestion, add scheduler/Azure/auth behavior, use
+  ML/LLMs, write audit events, wire report/PDF flows, or add control,
+  dispatch, activation, or operational functionality. It prepares future
+  dashboard live data trust indicators only.
 - Documented observed manual local energy freshness DB smoke results for
   `scripts/energy_freshness_db_smoke.py`. The smoke used explicit
   `--execute` and a local `--database-url`, performed SELECT-only freshness

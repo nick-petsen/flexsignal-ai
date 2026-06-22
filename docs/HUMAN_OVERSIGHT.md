@@ -1,5 +1,30 @@
 # Human Oversight
 
+## DB-Backed Energy Freshness Read API
+
+`GET /api/energy/freshness/read?price_area=DK1|DK2` exposes the controlled
+DB-backed read path for `eds-data-freshness-read-model-v0`. It is read-only
+decision support for future dashboard live data trust indicators.
+
+The endpoint requires `DATABASE_URL` only when the request is executed; app
+import still exposes the route without that environment variable. If
+`DATABASE_URL` is missing at request time, the API returns HTTP 503 with a
+safe warning and does not expose the raw value. When configured, it opens a
+request-scoped database connection, delegates to
+`backend/app/db/repositories/energy_freshness_reader.py`, and returns spot
+price and power balance freshness summaries for `DK1` or `DK2`.
+
+The API executes SELECT-only freshness reads against stored data. It does not
+write to the database, add migrations, fetch new Energi Data Service data,
+call weather APIs, trigger ingestion, schedule jobs, write audit events,
+modify the frontend, or perform control, dispatch, activation, closed-loop,
+live-control, or operational functionality.
+
+The response includes `dry_run=false`, `database_query_executed=true` on
+success, `database_write_performed=false`, `requires_database_url=true`,
+`freshness_result`, `spot_price_freshness`, `power_balance_freshness`,
+warnings, and the explicit read-only human-review safety boundary.
+
 ## DB-Executed Energy Freshness Reader
 
 `backend/app/db/repositories/energy_freshness_reader.py` now provides a
@@ -40,11 +65,12 @@ safety boundary is:
 
 Boundary: this reader does not create database connections, read
 `DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs, write to
-the database, add migrations, expose a FastAPI endpoint, modify the frontend,
-schedule jobs, add Azure/auth behavior, use ML/LLMs, write audit events, wire
-report/PDF flows, or add control, dispatch, activation, closed-loop, live
-control, or operational functionality. It prepares a future DB-backed
-freshness API/dashboard indicator only; it is not exposed through an API yet.
+the database, add migrations, modify the frontend, schedule jobs, add
+Azure/auth behavior, use ML/LLMs, write audit events, wire report/PDF flows,
+or add control, dispatch, activation, closed-loop, live-control, or
+operational functionality. The FastAPI read endpoint now creates the
+request-scoped connection and calls this reader for SELECT-only freshness
+reads.
 
 Observed validation:
 
