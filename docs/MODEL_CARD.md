@@ -79,14 +79,16 @@ A backend-only DB-executed energy freshness reader now exists at
 `GET /api/energy/freshness/read?price_area=DK1|DK2` now exposes that reader
 through a controlled FastAPI route. This DB-backed API is separate from the
 dry-run query-plan preview. It requires `DATABASE_URL` at request time, opens
-a request-scoped database connection, validates `DK1`/`DK2`, executes
-SELECT-only freshness reads, and returns structured dictionaries with
-`dry_run=false`, `database_query_executed=true` on success,
-`database_write_performed=false`, `requires_database_url=true`, source label,
-earliest/latest timestamps, row count, empty-row warnings, and the same
-read-only human-review safety boundary. If `DATABASE_URL` is missing during
-request execution, it returns a safe HTTP 503 warning without exposing raw
-connection details.
+a request-scoped database connection, validates `DK1`/`DK2`, returns HTTP 400
+for invalid price areas, executes SELECT-only freshness reads, and returns
+structured dictionaries with `price_area`, `dry_run=false`,
+`database_query_executed=true` on success,
+`database_write_performed=false`, `requires_database_url=true`,
+`freshness_result`, `spot_price_freshness`, `power_balance_freshness`,
+warnings, and the same read-only human-review safety boundary. App import
+still exposes the route without `DATABASE_URL`. If `DATABASE_URL` is missing
+during request execution, it returns a safe HTTP 503 warning without exposing
+raw connection details.
 
 The reader and API do not fetch new EDS data, call DMI/weather APIs, write to
 the database, add migrations, modify frontend behavior, schedule jobs, add
@@ -100,13 +102,13 @@ SQL safety requires parameterized plans that start with `SELECT`; mutating
 tokens including `INSERT`, `UPDATE`, `DELETE`, `UPSERT`, `CREATE`, `ALTER`,
 `DROP`, `TRUNCATE`, and `MERGE` are blocked before cursor execution. The
 combined summary returns `spot_price_freshness`, `power_balance_freshness`,
-`warnings`, and the safety boundary. Observed validation recorded focused
-reader tests passing with `24 passed`, the full backend suite passing with
-`466 passed, 1 warning`, `py_compile` passing, forbidden-pattern grep matching
-only safety-boundary keys, defensive blocked-token validation, and negative
-assertions/unsafe-plan tests, `git diff --check` passing, fake
-connection/cursor tests only, and no live DB writes. The DB-backed read API
-uses fake/monkeypatched database connections in tests only; no live DB is
+`warnings`, and the safety boundary. Observed DB-backed API validation
+recorded focused API freshness read tests passing with
+`9 passed, 1 warning`, the full backend suite passing with
+`483 passed, 1 warning`, `py_compile` passing, forbidden-pattern grep matching
+only defensive/negative assertions in tests, `git diff --check` passing,
+mocked database connections only, and no live DB writes. The DB-backed read
+API uses fake/monkeypatched database connections in tests only; no live DB is
 required for automated validation.
 
 `scripts/energy_freshness_db_smoke.py` is that controlled manual local DB
@@ -157,9 +159,10 @@ endpoints, add database code, execute SQL, write to a database, add
 migrations, call live Energi Data Service, call DMI/weather APIs, add auth,
 add Azure infrastructure, add ML/LLM behavior, write audit events, wire
 report/PDF flows, or add control, dispatch, activation, closed-loop,
-live-control, or operational functionality. Future DB-backed SELECT execution
-for energy freshness and future dashboard UI improvements remain separate
-reviewed modules after live freshness reads exist.
+live-control, or operational functionality. Future frontend wiring to the
+DB-backed freshness read endpoint and future dashboard UI improvements remain
+separate reviewed modules; keep the current dry-run card wording until
+live-read UI is explicitly added.
 
 Working read-only paths around the model:
 
@@ -171,6 +174,9 @@ Working read-only paths around the model:
   through the backend API.
 - The frontend can manually request energy freshness dry-run query-plan
   previews through `GET /api/energy/freshness`.
+- `GET /api/energy/freshness/read` exposes DB-backed SELECT-only freshness
+  reads for future dashboard trust indicators, but the frontend is not wired
+  to this endpoint yet.
 - Synthetic and local DB read-only backtest previews exist.
 - Local DB backtest row pairing uses `nearest_timestamp_v0_1`.
 

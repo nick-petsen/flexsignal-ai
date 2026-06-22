@@ -6,6 +6,9 @@
 DB-backed read path for `eds-data-freshness-read-model-v0`. It is read-only
 decision support for future dashboard live data trust indicators.
 
+The endpoint supports only `DK1` and `DK2`; invalid `price_area` values return
+HTTP 400.
+
 The endpoint requires `DATABASE_URL` only when the request is executed; app
 import still exposes the route without that environment variable. If
 `DATABASE_URL` is missing at request time, the API returns HTTP 503 with a
@@ -20,10 +23,35 @@ call weather APIs, trigger ingestion, schedule jobs, write audit events,
 modify the frontend, or perform control, dispatch, activation, closed-loop,
 live-control, or operational functionality.
 
-The response includes `dry_run=false`, `database_query_executed=true` on
-success, `database_write_performed=false`, `requires_database_url=true`,
+The response includes `price_area`, `dry_run=false`,
+`database_query_executed=true` on success,
+`database_write_performed=false`, `requires_database_url=true`,
 `freshness_result`, `spot_price_freshness`, `power_balance_freshness`,
-warnings, and the explicit read-only human-review safety boundary.
+warnings, and the explicit read-only human-review safety boundary:
+
+- `read_only_decision_support: true`
+- `no_automatic_control: true`
+- `no_dispatch: true`
+- `no_activation: true`
+- `no_operational_energy_system_integration: true`
+- `human_review_required: true`
+
+Observed validation:
+
+- Focused API freshness read tests passed: `9 passed, 1 warning`.
+- Full backend suite passed: `483 passed, 1 warning`.
+- `py_compile` passed.
+- Forbidden-pattern grep matched only defensive/negative assertions in tests.
+- `git diff --check` passed.
+- Tests used mocked database connections only.
+- No live DB writes were performed.
+
+Interpretation: this is the first controlled DB-backed freshness API. It
+performs read-only SELECT execution only, improves MVP data trust readiness,
+does not perform ingestion, does not verify production freshness yet, and is
+not wired to the frontend yet. A future module may add frontend wiring to use
+this endpoint; keep the existing dry-run card wording until live-read UI is
+explicitly added.
 
 ## DB-Executed Energy Freshness Reader
 
@@ -83,12 +111,12 @@ Observed validation:
 - Tests used fake connection/cursor objects only.
 - No live DB writes were performed.
 
-Interpretation: this is backend foundation only. It proves read-only
-freshness SELECT execution through an explicit connection, but it is not
-exposed through API yet, is not connected to the frontend yet, does not fetch
-new data, and does not write data. Runtime integration remains deferred. A
-controlled local DB freshness smoke script now exists, and a future module
-may add a DB-backed read-only API endpoint that executes freshness SELECTs.
+Interpretation: this reader now has a controlled DB-backed read API wrapper.
+It proves read-only freshness SELECT execution through explicit database
+connections, but it is not connected to the frontend yet, does not fetch new
+data, and does not write data. A future module may add frontend wiring to the
+DB-backed read endpoint without adding DB writes, ingestion, automation, or
+operational behavior.
 
 ## Manual Energy Freshness DB Smoke
 
