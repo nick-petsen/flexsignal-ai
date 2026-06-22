@@ -50,6 +50,9 @@ Working read-only core:
   values safely, does not add an API endpoint, does not call EDS/DMI from the
   browser, performs no database write, and does not add automation, control,
   dispatch, activation, or operational functionality.
+- Together, the spot price chart and power balance / production chart complete
+  the first MVP pair of read-only dashboard visualizations. Both depend only
+  on existing manual load actions and existing backend responses.
 - Frontend dashboard behavior has been manually checked for DK1 and DK2.
 - `rule-engine-v0` exists for deterministic surplus-risk scoring.
 - `forecast-window-v0` exists as pure backend Python aggregation over
@@ -213,6 +216,18 @@ Latest read-only API/UI smoke-test observations:
   activation, or operational functionality was added. A future module may
   improve dashboard layout without adding ingestion, automation, or backend
   changes in this documentation step.
+- Frontend power balance chart validation recorded that `npm run build`
+  passed and `git diff --check` passed. `npm run lint` and
+  `npm run typecheck` scripts did not exist. No backend server was started,
+  no database was accessed, no SQL was executed, and no live Energi Data
+  Service or DMI/weather APIs were called. The validation was
+  documentation-only for the existing manual Power balance visualization path:
+  no frontend behavior, backend behavior, API endpoint, database access, auth,
+  Azure infrastructure, ML/LLM behavior, audit write, report/PDF wiring,
+  control, dispatch, activation, or operational functionality was added.
+  Future modules may improve dashboard layout and chart readability or add a
+  manual local frontend smoke test for both charts, without adding ingestion,
+  automation, DB writes, or backend changes in this documentation step.
 - Manual frontend plus backend energy freshness smoke was observed with the
   backend started locally using
   `DATABASE_URL=postgresql://localhost/flexsignal_ai`, the frontend started

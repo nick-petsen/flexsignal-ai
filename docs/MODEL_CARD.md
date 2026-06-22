@@ -54,12 +54,18 @@ trade, control assets, dispatch, activate, automate anything, execute SQL,
 write to the database, call live Energi Data Service, call DMI/weather APIs,
 use ML/LLMs, write audit events, or wire report/PDF behavior.
 
+Together, the spot price chart and power balance / production chart complete
+the first MVP pair of read-only dashboard visualizations. They are display
+surfaces only and are not forecasting models or model inputs.
+
 Observed frontend chart validation recorded `npm run build`
 passing and `git diff --check` passing. `npm run lint` and
 `npm run typecheck` scripts did not exist. No backend server was started, no
 database was accessed, no SQL was executed, and no live EDS/DMI APIs were
-called. A future module may improve dashboard layout without adding ingestion,
-automation, or backend changes.
+called. This includes the observed frontend power balance chart validation. A
+future module may improve dashboard layout and chart readability or add a
+manual local frontend smoke test for both charts without adding ingestion,
+automation, DB writes, or backend changes.
 
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It

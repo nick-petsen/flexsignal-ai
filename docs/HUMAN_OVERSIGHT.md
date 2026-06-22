@@ -20,6 +20,10 @@ The charts use lightweight inline SVG/HTML/CSS and do not add a charting
 dependency. They handle empty, single-point, multi-point, missing, and invalid
 values safely.
 
+Together these charts complete the first MVP pair of read-only dashboard
+visualizations: spot price and power balance / production. They are both
+driven by existing manual load actions and existing backend responses.
+
 The charts are read-only dashboard visualization only. They do not forecast,
 trade, control assets, auto-load, poll, call a new endpoint, call Energi Data
 Service or DMI/weather APIs from the browser, execute SQL, write to the
@@ -42,7 +46,8 @@ Observed validation:
 - No SQL was executed.
 - No live Energi Data Service or DMI/weather APIs were called.
 
-Future dashboard layout work must not add ingestion, automation, backend
+Future dashboard layout and chart readability work, or a manual local frontend
+smoke test for both charts, must not add ingestion, automation, backend
 changes, database writes, SQL execution, live API calls, or operational
 behavior without explicit review.
 
