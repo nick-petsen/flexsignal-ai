@@ -67,6 +67,15 @@ Current read-only foundation:
   fetch new EDS/DMI data, trigger ingestion, modify frontend behavior, or
   affect backtest scoring. It prepares future dashboard live data trust
   indicators.
+- Observed local API smoke started the backend with
+  `DATABASE_URL=postgresql://localhost/flexsignal_ai` and called
+  `GET /api/energy/freshness/read?price_area=DK1`, `DK2`, and invalid `SE3`.
+  DK1 and DK2 returned HTTP 200 with `dry_run=false`,
+  `database_query_executed=true`, `database_write_performed=false`,
+  `requires_database_url=true`, and SELECT-only freshness results. Invalid
+  `SE3` returned HTTP 400 `Unsupported price_area`. No database writes, live
+  EDS/DMI calls, ingestion, frontend changes, or backtest scoring changes were
+  involved.
 - `scripts/energy_freshness_db_smoke.py` provides a manual local DB smoke for
   that freshness reader. It defaults to dry-run query-plan JSON, requires
   `--execute` plus an explicit local `--database-url` for DB-executed reads,
@@ -282,10 +291,27 @@ Observed validation:
 | Test DB behavior | Mocked DB only |
 | Live DB writes | None performed |
 
+Observed local API smoke:
+
+| Endpoint price area | HTTP | `dry_run` | `database_query_executed` | `database_write_performed` | `requires_database_url` | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp |
+| --- | ---: | --- | --- | --- | --- | ---: | --- | ---: | --- |
+| DK1 | 200 | false | true | false | true | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` |
+| DK2 | 200 | false | true | false | true | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` |
+
+The backend was started locally with
+`DATABASE_URL=postgresql://localhost/flexsignal_ai`. Invalid `price_area=SE3`
+returned HTTP 400 with `Unsupported price_area`. The endpoint performed
+SELECT-only freshness reads, no database writes were performed, no live
+EDS/DMI calls were made, no ingestion was triggered, no frontend changes were
+involved, and the read-only safety boundary was preserved.
+
 Interpretation: this improves MVP data trust readiness but still does not
 perform ingestion, verify production freshness, or connect the frontend to the
-executed read endpoint. Keep the existing dry-run card wording until
-live-read UI is explicitly added.
+executed read endpoint. It proves local DB-backed API freshness reads work for
+the observed local data, does not mean production monitoring or Azure
+deployment exists, and prepares future frontend live freshness card wiring
+only. Keep the existing dry-run card wording until live-read UI is explicitly
+added.
 
 ## DB-Executed Energy Freshness Reader Validation
 

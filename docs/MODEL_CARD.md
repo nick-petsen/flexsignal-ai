@@ -111,6 +111,27 @@ mocked database connections only, and no live DB writes. The DB-backed read
 API uses fake/monkeypatched database connections in tests only; no live DB is
 required for automated validation.
 
+Observed local DB-backed freshness read API smoke started the backend locally
+with `DATABASE_URL=postgresql://localhost/flexsignal_ai` and called
+`GET /api/energy/freshness/read?price_area=DK1`, `DK2`, and invalid `SE3`.
+DK1 returned HTTP 200 with `dry_run=false`,
+`database_query_executed=true`, `database_write_performed=false`,
+`requires_database_url=true`, spot price `row_count=53`, spot price latest
+timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=53`, and
+power balance latest timestamp `2026-06-10T17:00:00+02:00`. DK2 returned
+HTTP 200 with the same execution flags, spot price `row_count=50`, spot price
+latest timestamp `2026-06-11T21:45:00+02:00`, power balance `row_count=50`,
+and power balance latest timestamp `2026-06-10T17:00:00+02:00`. Invalid
+`SE3` returned HTTP 400 with `Unsupported price_area`.
+
+The local API smoke performed SELECT-only freshness reads, preserved the
+read-only human-review safety boundary, performed no database writes, made no
+live EDS/DMI calls, triggered no ingestion, and involved no frontend changes.
+It proves local DB-backed API freshness reads work for the observed local
+data. It does not change `rule-engine-v0`, establish production monitoring,
+create an Azure deployment, or validate predictive performance. It prepares
+future frontend live freshness card wiring only.
+
 `scripts/energy_freshness_db_smoke.py` is that controlled manual local DB
 freshness smoke. It defaults to dry-run query-plan JSON and performs
 DB-executed freshness SELECTs only when both `--execute` and an explicit local

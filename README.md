@@ -92,6 +92,14 @@ Working read-only core:
   `--execute` and a local `--database-url`. Reads were SELECT-only, no
   database writes were performed, no live EDS/DMI calls were made, and no
   backend or frontend server was started.
+- Observed local API smoke results confirm
+  `GET /api/energy/freshness/read?price_area=DK1|DK2` can perform DB-backed
+  SELECT-only freshness reads when the backend is started locally with
+  `DATABASE_URL=postgresql://localhost/flexsignal_ai`. DK1 and DK2 returned
+  HTTP 200 with `dry_run=false`, `database_query_executed=true`,
+  `database_write_performed=false`, and `requires_database_url=true`; invalid
+  `SE3` returned HTTP 400 `Unsupported price_area`. No database writes, live
+  EDS/DMI calls, ingestion, or frontend changes were involved.
 - `POST /api/audit/preview` exists as a reviewed read-only audit persistence
   dry-run preview API. It exposes runtime planner output for inspection only
   and does not add automatic audit logging or wire audit persistence into
@@ -166,6 +174,12 @@ Latest read-only API/UI smoke-test observations:
   suite passed with `483 passed, 1 warning`; `py_compile` passed;
   forbidden-pattern grep matched only defensive/negative assertions in tests;
   `git diff --check` passed; no live DB writes were performed.
+- Local DB-backed energy freshness read API smoke used a locally started
+  backend with `DATABASE_URL=postgresql://localhost/flexsignal_ai` and called
+  `GET /api/energy/freshness/read?price_area=DK1`, `DK2`, and `SE3`. DK1 and
+  DK2 returned HTTP 200 with SELECT-only freshness results; `SE3` returned
+  HTTP 400 `Unsupported price_area`. No writes, live EDS/DMI calls, ingestion,
+  or frontend changes were involved.
 - Frontend forecast preview card manually calls `POST /api/forecast/preview`
   with deterministic synthetic/caller-provided demo rows only.
 - Frontend manually loaded DK1 and DK2 spot prices, power balance, and current
@@ -405,6 +419,25 @@ Observed validation:
 - `git diff --check` passed.
 - Tests used mocked database connections only.
 - No live DB writes were performed.
+
+Observed local API smoke:
+
+The backend was started locally with
+`DATABASE_URL=postgresql://localhost/flexsignal_ai` and the DB-backed read
+endpoint was called directly. The endpoint performed SELECT-only freshness
+reads, no database writes were performed, no live EDS/DMI calls were made, no
+ingestion was triggered, and no frontend changes were involved.
+
+| Endpoint price area | HTTP | `dry_run` | `database_query_executed` | `database_write_performed` | `requires_database_url` | Spot price rows | Spot price latest timestamp | Power balance rows | Power balance latest timestamp |
+| --- | ---: | --- | --- | --- | --- | ---: | --- | ---: | --- |
+| DK1 | 200 | false | true | false | true | 53 | `2026-06-11T21:45:00+02:00` | 53 | `2026-06-10T17:00:00+02:00` |
+| DK2 | 200 | false | true | false | true | 50 | `2026-06-11T21:45:00+02:00` | 50 | `2026-06-10T17:00:00+02:00` |
+
+Invalid `price_area=SE3` returned HTTP 400 with `Unsupported price_area`.
+The read-only human-review safety boundary was preserved. This proves local
+DB-backed API freshness reads work against the observed local data. It does
+not yet mean production monitoring or Azure deployment exists, and it prepares
+future frontend live freshness card wiring only.
 
 Interpretation: this API is read-only SELECT execution only. It improves MVP
 data trust readiness, still does not perform ingestion, does not verify
