@@ -32,6 +32,14 @@ Working read-only core:
   surplus risk, a forecast-window preview, an energy freshness dry-run
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
+- The existing Current surplus risk card includes a simple visual
+  decision-support risk score. It appears only after the manual
+  `Load current risk` response exists, uses only that existing response,
+  displays valid `risk_score` values as a 0-100 HTML/CSS bar, displays
+  `risk_level`, keeps the raw text/details visible, and handles missing or
+  invalid score/level fields safely. The visual uses no charting dependency,
+  adds no endpoint, changes no backend behavior, uses no ML/LLM, writes no
+  data, and adds no automation or operational behavior.
 - The frontend spot prices card includes a simple read-only SVG trend chart
   for EUR/MWh values from manually loaded backend spot price rows. The chart
   appears only after the existing manual `Load spot prices` flow returns rows,
@@ -154,6 +162,12 @@ Latest read-only API/UI smoke-test observations:
 
 - DK1 current-risk API returned medium risk with score `35`.
 - DK2 current-risk API returned low risk with score `20`.
+- Frontend current-risk card validation covered the new visual
+  decision-support risk score. The card still uses only the existing manual
+  `Load current risk` response, keeps raw risk details visible, does not
+  auto-load or poll, adds no new API endpoint, changes no backend behavior,
+  uses no ML/LLM, and adds no automation, control, dispatch, activation, or
+  operational functionality.
 - Forecast preview API returned deterministic caller-provided DK1/DK2 window
   summaries without `DATABASE_URL`, including high-risk max aggregation,
   empty-window `unknown` handling, DK1/DK2 validation, and timezone-aware
@@ -228,6 +242,15 @@ Latest read-only API/UI smoke-test observations:
   Future modules may improve dashboard layout and chart readability or add a
   manual local frontend smoke test for both charts, without adding ingestion,
   automation, DB writes, or backend changes in this documentation step.
+- Frontend risk score visual validation recorded that `npm run build` passed
+  after `npm ci` installed frontend dependencies from the existing lockfile.
+  `git diff --check` passed. `npm run lint` and `npm run typecheck` scripts
+  did not exist. No backend server was started, no database was accessed, no
+  SQL was executed, and no live Energi Data Service or DMI/weather APIs were
+  called. The visual uses
+  existing manual current-risk response data only and prepares MVP dashboard
+  readability without backend, endpoint, ML/LLM, automation, control,
+  dispatch, activation, or operational changes.
 - Manual frontend plus backend energy freshness smoke was observed with the
   backend started locally using
   `DATABASE_URL=postgresql://localhost/flexsignal_ai`, the frontend started

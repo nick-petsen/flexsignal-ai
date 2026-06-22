@@ -614,62 +614,134 @@ function CurrentRiskCard({
 }
 
 function RiskResult({ data }: { data: CurrentRiskResponse }) {
+  const reasonCodes = Array.isArray(data.reason_codes)
+    ? data.reason_codes
+    : [];
+  const sourceTablesUsed = Array.isArray(data.metadata?.source_tables_used)
+    ? data.metadata.source_tables_used
+    : [];
+
   return (
-    <dl className="risk-list">
-      <div>
-        <dt>risk_level</dt>
-        <dd>{formatValue(data.risk_level)}</dd>
-      </div>
-      <div>
-        <dt>risk_score</dt>
-        <dd>{formatValue(data.risk_score)}</dd>
-      </div>
-      <div>
-        <dt>confidence_score</dt>
-        <dd>{formatValue(data.confidence_score)}</dd>
-      </div>
-      <div>
-        <dt>reason_codes</dt>
-        <dd>
-          {data.reason_codes.length > 0
-            ? data.reason_codes.join(", ")
-            : "n/a"}
-        </dd>
-      </div>
-      <div>
-        <dt>explanation</dt>
-        <dd>{formatValue(data.explanation)}</dd>
-      </div>
-      <div>
-        <dt>recommended_human_action</dt>
-        <dd>{formatValue(data.recommended_human_action)}</dd>
-      </div>
-      <div>
-        <dt>model_version</dt>
-        <dd>{formatValue(data.model_version)}</dd>
-      </div>
-      <div>
-        <dt>decision_support_only</dt>
-        <dd>{formatValue(data.decision_support_only)}</dd>
-      </div>
-      <div>
-        <dt>metadata.source_tables_used</dt>
-        <dd>
-          {data.metadata.source_tables_used.length > 0
-            ? data.metadata.source_tables_used.join(", ")
-            : "n/a"}
-        </dd>
-      </div>
-      <div>
-        <dt>metadata.spot_price_row_found</dt>
-        <dd>{formatValue(data.metadata.spot_price_row_found)}</dd>
-      </div>
-      <div>
-        <dt>metadata.power_balance_row_found</dt>
-        <dd>{formatValue(data.metadata.power_balance_row_found)}</dd>
-      </div>
-    </dl>
+    <div>
+      <CurrentRiskScoreVisual data={data} />
+      <dl className="risk-list">
+        <div>
+          <dt>risk_level</dt>
+          <dd>{formatValue(data.risk_level)}</dd>
+        </div>
+        <div>
+          <dt>risk_score</dt>
+          <dd>{formatValue(data.risk_score)}</dd>
+        </div>
+        <div>
+          <dt>confidence_score</dt>
+          <dd>{formatValue(data.confidence_score)}</dd>
+        </div>
+        <div>
+          <dt>reason_codes</dt>
+          <dd>{reasonCodes.length > 0 ? reasonCodes.join(", ") : "n/a"}</dd>
+        </div>
+        <div>
+          <dt>explanation</dt>
+          <dd>{formatValue(data.explanation)}</dd>
+        </div>
+        <div>
+          <dt>recommended_human_action</dt>
+          <dd>{formatValue(data.recommended_human_action)}</dd>
+        </div>
+        <div>
+          <dt>model_version</dt>
+          <dd>{formatValue(data.model_version)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only</dt>
+          <dd>{formatValue(data.decision_support_only)}</dd>
+        </div>
+        <div>
+          <dt>metadata.source_tables_used</dt>
+          <dd>
+            {sourceTablesUsed.length > 0 ? sourceTablesUsed.join(", ") : "n/a"}
+          </dd>
+        </div>
+        <div>
+          <dt>metadata.spot_price_row_found</dt>
+          <dd>{formatValue(data.metadata?.spot_price_row_found)}</dd>
+        </div>
+        <div>
+          <dt>metadata.power_balance_row_found</dt>
+          <dd>{formatValue(data.metadata?.power_balance_row_found)}</dd>
+        </div>
+      </dl>
+    </div>
   );
+}
+
+function CurrentRiskScoreVisual({ data }: { data: CurrentRiskResponse }) {
+  const riskScore = parseRiskScore(data.risk_score);
+  const riskLevel = formatValue(data.risk_level);
+  const scoreLabel =
+    riskScore === null ? "n/a" : `${formatNumber(riskScore)} / 100`;
+  const barWidth = riskScore === null ? 0 : riskScore;
+
+  return (
+    <section
+      className="risk-score"
+      aria-labelledby="current-risk-score-title"
+    >
+      <div className="risk-score__header">
+        <div>
+          <h3 id="current-risk-score-title">Decision-support risk score</h3>
+          <p>Read-only recommendation context. Human review required.</p>
+        </div>
+        <div
+          className="risk-score__value"
+          aria-label={`Risk score ${scoreLabel}`}
+        >
+          {scoreLabel}
+        </div>
+      </div>
+      <div className="risk-score__meta">
+        <span>risk_level: {riskLevel}</span>
+      </div>
+      <div
+        className="risk-score__bar"
+        role="meter"
+        aria-label="Decision-support surplus risk score from 0 to 100"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={riskScore ?? undefined}
+        aria-valuetext={
+          riskScore === null
+            ? `Risk score unavailable. Risk level ${riskLevel}.`
+            : `Risk score ${formatNumber(
+                riskScore
+              )} out of 100. Risk level ${riskLevel}.`
+        }
+      >
+        <div
+          className="risk-score__fill"
+          style={{ width: `${barWidth}%` }}
+        />
+      </div>
+      {riskScore === null && (
+        <p className="muted risk-score__fallback">
+          risk_score is missing or outside the expected 0-100 range.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function parseRiskScore(value: unknown): number | null {
+  const parsed = parseNumber(
+    typeof value === "string" || typeof value === "number" ? value : null
+  );
+
+  if (parsed === null || parsed < 0 || parsed > 100) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function ForecastPreviewCard({

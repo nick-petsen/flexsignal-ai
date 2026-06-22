@@ -2,6 +2,30 @@
 
 ## v0.1.0 - TODO
 
+- Added a simple frontend visual surplus risk score inside the existing
+  manual Current surplus risk card. The visual appears only after the
+  existing `Load current risk` flow returns a result, uses only that existing
+  current-risk backend response, displays `risk_score` as a 0-100
+  decision-support score when valid, displays `risk_level`, keeps the raw
+  text/details visible, and handles missing or invalid score/level fields
+  without crashing. It uses lightweight HTML/CSS only with no charting
+  dependency, no new API endpoint, no backend behavior change, no database
+  code, no SQL, no database write, no live Energi Data Service or DMI/weather
+  browser call, no auth, no Azure infrastructure, no ML/LLM, no audit write,
+  no report/PDF wiring, and no automation/control behavior. UI wording
+  preserves read-only decision support with `Decision-support risk score`,
+  `Human review required`, and `Read-only recommendation context`.
+- Documented frontend risk score visual validation results in `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. Observed validation recorded `npm run build`
+  passing after `npm ci` installed frontend dependencies from the existing
+  lockfile; `git diff --check` passed; `npm run lint` and
+  `npm run typecheck` scripts did not exist. No backend server was started,
+  no database was accessed, no SQL was executed, and no live Energi Data
+  Service or DMI/weather APIs were called. This
+  prepares MVP dashboard readability only and does not add a new endpoint,
+  backend behavior, ML/LLM behavior, automation, control, dispatch, or
+  activation.
 - Documented observed manual frontend dashboard chart smoke results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started

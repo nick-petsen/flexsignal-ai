@@ -58,6 +58,17 @@ Together, the spot price chart and power balance / production chart complete
 the first MVP pair of read-only dashboard visualizations. They are display
 surfaces only and are not forecasting models or model inputs.
 
+The Current surplus risk card also includes a simple visual
+decision-support risk score. It is not part of `rule-engine-v0` and does not
+change scoring, thresholds, input composition, pairing, forecasting, or
+backtest interpretation. It appears only after the existing manual
+`Load current risk` response exists, uses only that response, displays valid
+`risk_score` values as a 0-100 HTML/CSS bar, displays `risk_level`, keeps the
+raw risk details visible, and handles missing or invalid score/level fields
+safely. It adds no endpoint, backend behavior, ML/LLM behavior, database
+write, audit write, report/PDF wiring, automation, control, dispatch,
+activation, or operational functionality.
+
 Observed manual frontend dashboard chart smoke started the backend locally,
 started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
 backend, and opened the local dashboard in a browser. Requests were manual
@@ -85,6 +96,14 @@ called. This includes the observed frontend power balance chart validation. A
 future module may improve dashboard layout and chart readability or add a
 manual local frontend smoke test for both charts without adding ingestion,
 automation, DB writes, or backend changes.
+
+Observed frontend risk score visual validation recorded `npm run build`
+passing after `npm ci` installed frontend dependencies from the existing
+lockfile. `git diff --check` passed. `npm run lint` and
+`npm run typecheck` scripts did not exist. No backend server was started, no
+database was accessed, no SQL was executed, and no live EDS/DMI APIs were
+called. This validation did not change
+`rule-engine-v0` behavior or add a backend endpoint.
 
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It

@@ -1,5 +1,38 @@
 # Human Oversight
 
+## Frontend Current Risk Score Visual
+
+The Current surplus risk card includes a simple visual labeled
+`Decision-support risk score`. It appears only after the existing manual
+`Load current risk` request returns a risk result.
+
+The visual uses only the current-risk response already returned by the
+backend. It displays valid `risk_score` values as a 0-100 HTML/CSS bar,
+displays `risk_level`, keeps the raw text/details visible below the visual,
+and handles missing or invalid score/level fields safely.
+
+The UI wording remains explicit: `Decision-support risk score`,
+`Read-only recommendation context`, and `Human review required`.
+
+Safety interpretation: the visual is dashboard readability only. It does not
+auto-load, poll, add a backend endpoint, change backend behavior, execute SQL,
+write to the database, call Energi Data Service or DMI/weather APIs from the
+browser, use ML/LLM behavior, write audit events, wire report/PDF flows, or
+add automation, control, dispatch, activation, closed-loop, live-control, or
+operational functionality.
+
+Observed validation:
+
+- `npm run build` passed after `npm ci` installed frontend dependencies from
+  the existing lockfile.
+- `git diff --check` passed.
+- `npm run lint` did not exist.
+- `npm run typecheck` did not exist.
+- No backend server was started.
+- No database was accessed.
+- No SQL was executed.
+- No live Energi Data Service or DMI/weather APIs were called.
+
 ## Frontend Read-Only Trend Charts
 
 The Spot prices card includes a simple SVG chart labeled `Spot price trend`.
