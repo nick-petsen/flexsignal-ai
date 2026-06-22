@@ -333,6 +333,14 @@ tr:last-child td {
   stroke-width: 2;
 }
 
+.spot-chart__line--power {
+  stroke: #0f766e;
+}
+
+.spot-chart__point--power {
+  fill: #0f766e;
+}
+
 .spot-chart__label,
 .spot-chart__tick {
   fill: var(--muted);
