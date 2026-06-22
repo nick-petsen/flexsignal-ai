@@ -2,6 +2,17 @@
 
 ## v0.1.0 - TODO
 
+- Added a simple frontend spot price trend chart inside the existing manual
+  Spot prices card. The chart renders EUR/MWh over timestamp order from only
+  the spot price rows already returned by the existing manual
+  `Load spot prices` backend request, keeps the table visible, supports the
+  selected `DK1`/`DK2` result, handles empty and invalid chart values safely,
+  and adds no charting dependency. It does not auto-load, poll, add a backend
+  endpoint, call live Energi Data Service or DMI/weather APIs from the
+  browser, execute SQL, write to the database, add migrations, add auth,
+  add Azure infrastructure, use ML/LLM behavior, write audit events, wire
+  report/PDF flows, or add control, dispatch, activation, or operational
+  functionality. This prepares MVP dashboard visualization only.
 - Documented observed manual frontend plus backend energy freshness smoke
   results in `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`,
   and `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally with

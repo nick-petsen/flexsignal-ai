@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   backendApiBaseUrl,
   fetchCurrentRisk,
@@ -59,6 +59,7 @@ type EnergyCardProps<Row> = {
   state: EnergyRequestState<Row>;
   columns: Column<Row>[];
   onLoad: () => void;
+  renderAfterTable?: (data: EnergyApiResponse<Row>) => ReactNode;
 };
 
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
@@ -86,7 +87,8 @@ function EnergyCard<Row extends { source_record_id: string }>({
   buttonLabel,
   state,
   columns,
-  onLoad
+  onLoad,
+  renderAfterTable
 }: EnergyCardProps<Row>) {
   const isLoading = state.status === "loading";
 
@@ -121,11 +123,214 @@ function EnergyCard<Row extends { source_record_id: string }>({
           <p className="error">Backend unavailable: {state.message}</p>
         )}
         {state.status === "success" && (
-          <ResultTable data={state.data} columns={columns} />
+          <>
+            <ResultTable data={state.data} columns={columns} />
+            {renderAfterTable?.(state.data)}
+          </>
         )}
       </div>
     </section>
   );
+}
+
+function SpotPriceTrendChart({
+  data
+}: {
+  data: EnergyApiResponse<SpotPriceRow>;
+}) {
+  if (data.rows.length === 0) {
+    return null;
+  }
+
+  const points = data.rows
+    .map((row) => {
+      const timestampMs = Date.parse(row.timestamp_utc);
+      const price = parseNumber(row.price_eur_per_mwh);
+
+      if (!Number.isFinite(timestampMs) || price === null) {
+        return null;
+      }
+
+      return {
+        timestampUtc: row.timestamp_utc,
+        timestampMs,
+        price,
+        sourceRecordId: row.source_record_id
+      };
+    })
+    .filter((point): point is NonNullable<typeof point> => point !== null)
+    .sort((left, right) => left.timestampMs - right.timestampMs);
+
+  const latestPoint = points.at(-1);
+  const latestLabel = latestPoint
+    ? `${formatNumber(latestPoint.price)} EUR/MWh`
+    : "n/a";
+
+  if (points.length === 0) {
+    return (
+      <section className="spot-chart" aria-labelledby="spot-chart-title">
+        <div className="spot-chart__header">
+          <div>
+            <h3 id="spot-chart-title">Spot price trend</h3>
+            <p>
+              Manual read-only spot price rows. Trend from loaded backend rows.
+            </p>
+          </div>
+          <span>Latest: {latestLabel}</span>
+        </div>
+        <p className="muted">
+          Manual read-only spot price rows were returned, but none contained a
+          valid timestamp and EUR/MWh value for charting.
+        </p>
+      </section>
+    );
+  }
+
+  const width = 640;
+  const height = 180;
+  const padding = {
+    top: 16,
+    right: 20,
+    bottom: 28,
+    left: 48
+  };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const prices = points.map((point) => point.price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const priceRange = maxPrice - minPrice;
+  const yMin = priceRange === 0 ? minPrice - 1 : minPrice;
+  const yMax = priceRange === 0 ? maxPrice + 1 : maxPrice;
+  const yRange = yMax - yMin || 1;
+  const plottedPoints = points.map((point, index) => {
+    const x =
+      points.length === 1
+        ? padding.left + chartWidth / 2
+        : padding.left + (index / (points.length - 1)) * chartWidth;
+    const y =
+      padding.top + ((yMax - point.price) / yRange) * chartHeight;
+
+    return { ...point, x, y };
+  });
+  const polylinePoints = plottedPoints
+    .map((point) => `${point.x},${point.y}`)
+    .join(" ");
+  const firstTimestamp = formatShortTimestamp(points[0].timestampUtc);
+  const lastTimestamp = formatShortTimestamp(
+    points[points.length - 1].timestampUtc
+  );
+
+  return (
+    <section className="spot-chart" aria-labelledby="spot-chart-title">
+      <div className="spot-chart__header">
+        <div>
+          <h3 id="spot-chart-title">Spot price trend</h3>
+          <p>
+            Manual read-only spot price rows. Trend from loaded backend rows.
+          </p>
+        </div>
+        <span>Latest: {latestLabel}</span>
+      </div>
+      <svg
+        className="spot-chart__svg"
+        role="img"
+        aria-label={`Manual read-only spot price trend for ${data.price_area} in EUR per MWh`}
+        viewBox={`0 0 ${width} ${height}`}
+      >
+        <line
+          className="spot-chart__axis"
+          x1={padding.left}
+          y1={padding.top}
+          x2={padding.left}
+          y2={padding.top + chartHeight}
+        />
+        <line
+          className="spot-chart__axis"
+          x1={padding.left}
+          y1={padding.top + chartHeight}
+          x2={padding.left + chartWidth}
+          y2={padding.top + chartHeight}
+        />
+        <text className="spot-chart__label" x="0" y="18">
+          EUR/MWh
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left - 8}
+          y={padding.top + 5}
+          textAnchor="end"
+        >
+          {formatNumber(yMax)}
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left - 8}
+          y={padding.top + chartHeight}
+          textAnchor="end"
+        >
+          {formatNumber(yMin)}
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left}
+          y={height - 8}
+          textAnchor="start"
+        >
+          {firstTimestamp}
+        </text>
+        <text
+          className="spot-chart__tick"
+          x={padding.left + chartWidth}
+          y={height - 8}
+          textAnchor="end"
+        >
+          {lastTimestamp}
+        </text>
+        {points.length > 1 && (
+          <polyline className="spot-chart__line" points={polylinePoints} />
+        )}
+        {plottedPoints.map((point, index) => (
+          <circle
+            className="spot-chart__point"
+            key={`${point.sourceRecordId}-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={points.length === 1 ? 4 : 3}
+          />
+        ))}
+      </svg>
+    </section>
+  );
+}
+
+function parseNumber(value: string | number | null): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat("en", {
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+function formatShortTimestamp(timestampUtc: string): string {
+  const timestampMs = Date.parse(timestampUtc);
+
+  if (!Number.isFinite(timestampMs)) {
+    return "n/a";
+  }
+
+  return new Date(timestampMs).toISOString().slice(5, 16).replace("T", " ");
 }
 
 function ResultTable<Row extends { source_record_id: string }>({
@@ -824,12 +1029,13 @@ export default function DashboardPage() {
         <div className="summary">
           <EnergyCard
             title="Spot prices"
-            description="Manual read-only request to backend spot price rows."
+            description="Manual read-only spot price rows from the backend request."
             endpointName="spot-prices"
             buttonLabel="Load spot prices"
             state={spotPricesState}
             columns={spotPriceColumns}
             onLoad={handleLoadSpotPrices}
+            renderAfterTable={(data) => <SpotPriceTrendChart data={data} />}
           />
           <EnergyCard
             title="Power balance"

@@ -1,5 +1,23 @@
 # Human Oversight
 
+## Frontend Spot Price Trend Chart
+
+The Spot prices card includes a simple SVG chart labeled `Spot price trend`.
+It plots EUR/MWh over timestamp order using only manual read-only spot price
+rows already returned by the existing backend `Load spot prices` request. It
+appears only when returned spot price rows exist, keeps the existing table,
+and uses the currently selected `DK1` or `DK2` result.
+
+The chart is dashboard visualization only. It does not auto-load, poll, call a
+new endpoint, call Energi Data Service or DMI/weather APIs from the browser,
+execute SQL, write to the database, add migrations, add auth, add Azure
+infrastructure, use ML/LLM behavior, write audit events, wire report/PDF
+flows, or add control, dispatch, activation, closed-loop, live-control, or
+operational functionality.
+
+Safety wording in the UI remains read-only: `Manual read-only spot price rows`
+and `Trend from loaded backend rows`.
+
 ## DB-Backed Energy Freshness Read API
 
 `GET /api/energy/freshness/read?price_area=DK1|DK2` exposes the controlled
