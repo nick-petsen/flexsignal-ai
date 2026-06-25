@@ -115,6 +115,14 @@ Current read-only foundation:
 - The frontend dashboard has a manual read-only forecast preview card that
   calls `POST /api/forecast/preview` with deterministic
   synthetic/caller-provided demo rows only.
+- The frontend Forecast preview card includes a simple read-only forecast
+  window visual that appears only after the existing manual
+  `Load forecast preview` response exists. It displays returned `0-24h`,
+  `24-48h`, and `48-72h` windows with `risk_level`, max risk score as a
+  0-100 score, visible horizontal risk bars, `top_reason_codes`, and
+  `recommended_human_action`, while keeping raw/text forecast details visible
+  below the visual. It uses only deterministic synthetic/caller-provided
+  preview data and does not affect backtest scoring.
 - The frontend dashboard has a manual energy freshness card that calls
   `GET /api/energy/freshness?price_area=DK1|DK2` through
   `fetchEnergyFreshness()` and the existing `NEXT_PUBLIC_API_BASE_URL`
@@ -246,6 +254,26 @@ Current read-only foundation:
   no live EDS/DMI API, used no ML/LLM behavior, and added no automatic
   control, dispatch, activation, or operational functionality. It does not
   affect backtest scoring; human review remains required.
+- Observed manual frontend forecast window visual smoke started the backend
+  locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+  pointing to the backend, and opened the local dashboard in a browser.
+  Forecast preview was loaded manually by button click only; no auto-load or
+  polling was observed. The visual displayed `0-24h`, `24-48h`, and
+  `48-72h` windows. Each window displayed `risk_level`, max risk score as a
+  0-100 score, a visible horizontal risk bar, `top_reason_codes`, and
+  `recommended_human_action`; raw/text forecast details remained visible
+  below the visual. Observed values were `0-24h`: low, `30/100`; `24-48h`:
+  high, `75/100`; `48-72h`: low, `10/100`;
+  `model_version=rule-engine-v0+forecast-window-v0`;
+  `decision_support_only=true`; and
+  `generated_at_utc=2026-01-01T00:00:00Z`. The visual uses only the existing
+  manual `Load forecast preview` response with synthetic/caller-provided
+  preview data. This deterministic preview remains read-only decision
+  support: human review is required, no backend endpoint was added, no
+  backend behavior changed, no database write occurred, no SQL was executed,
+  no live EDS/DMI call was made, no ML/LLM behavior was used, and no
+  automatic control, dispatch, or activation was added. It does not affect
+  backtest scoring.
 - DK1 and DK2 local DB backtests complete with no failed rows on the expanded
   local samples documented below.
 - Results are descriptive summaries of deterministic rule-engine outputs.

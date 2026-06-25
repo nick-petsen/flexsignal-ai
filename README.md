@@ -32,6 +32,16 @@ Working read-only core:
   surplus risk, a forecast-window preview, an energy freshness dry-run
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
+- The frontend Forecast preview card includes a simple read-only forecast
+  window visual. It appears only after the existing manual
+  `Load forecast preview` response exists, uses only that deterministic
+  synthetic/caller-provided preview response, displays the `0-24h`, `24-48h`,
+  and `48-72h` windows with `risk_level`, max risk score as a 0-100 score,
+  visible horizontal risk bars, `top_reason_codes`, and
+  `recommended_human_action`, and keeps the raw/text forecast details visible
+  below the visual. It adds no endpoint, changes no backend behavior, writes
+  no data, executes no SQL, calls no live APIs, uses no ML/LLM behavior, and
+  adds no automation, control, dispatch, activation, or operational behavior.
 - The existing Current surplus risk card includes a simple visual
   decision-support risk score. It appears only after the manual
   `Load current risk` response exists, uses only that existing response,
@@ -183,6 +193,26 @@ Latest read-only API/UI smoke-test observations:
   smoke added no endpoint, backend behavior change, DB write, SQL, live
   EDS/DMI call, ML/LLM behavior, automatic control, dispatch, or activation;
   human review remains required.
+- Manual frontend forecast window visual smoke was observed with the backend
+  started locally, the frontend started locally with
+  `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, and the browser opened
+  to the local dashboard. Forecast preview was loaded manually by button
+  click only; no auto-load or polling was observed. The forecast window
+  visual displayed `0-24h`, `24-48h`, and `48-72h` windows. Each window
+  displayed `risk_level`, max risk score as a 0-100 score, a visible
+  horizontal risk bar, `top_reason_codes`, and
+  `recommended_human_action`; raw/text forecast details remained visible
+  below the visual. Observed values were `0-24h`: low, `30/100`; `24-48h`:
+  high, `75/100`; `48-72h`: low, `10/100`;
+  `model_version=rule-engine-v0+forecast-window-v0`;
+  `decision_support_only=true`; and
+  `generated_at_utc=2026-01-01T00:00:00Z`. The visual uses only the existing
+  manual `Load forecast preview` response with synthetic/caller-provided
+  preview data. This deterministic preview remains read-only decision
+  support: human review is required, no new backend endpoint was added, no
+  backend behavior changed, no database write occurred, no SQL was executed,
+  no live EDS/DMI call was made, no ML/LLM behavior was used, and no
+  automatic control, dispatch, or activation was added.
 - Forecast preview API returned deterministic caller-provided DK1/DK2 window
   summaries without `DATABASE_URL`, including high-risk max aggregation,
   empty-window `unknown` handling, DK1/DK2 validation, and timezone-aware

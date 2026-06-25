@@ -58,6 +58,38 @@ Together, the spot price chart and power balance / production chart complete
 the first MVP pair of read-only dashboard visualizations. They are display
 surfaces only and are not forecasting models or model inputs.
 
+The Forecast preview card includes a simple visual for existing
+`forecast-window-v0` output. It is not part of `rule-engine-v0` and does not
+change scoring, thresholds, input composition, row pairing, forecasting
+logic, or backtest interpretation. It appears only after the existing manual
+`Load forecast preview` response exists, uses only that deterministic
+synthetic/caller-provided preview response, displays `0-24h`, `24-48h`, and
+`48-72h` windows with `risk_level`, max risk score as a 0-100 score, visible
+horizontal risk bars, `top_reason_codes`, and `recommended_human_action`, and
+keeps raw/text forecast details visible below the visual.
+
+Observed manual frontend forecast window visual smoke started the backend
+locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+pointing to the backend, and opened the local dashboard in a browser.
+Forecast preview was loaded manually by button click only; no auto-load or
+polling was observed. The visual displayed `0-24h` as low with max risk score
+`30/100`, `24-48h` as high with max risk score `75/100`, and `48-72h` as low
+with max risk score `10/100`. Each window displayed a visible horizontal risk
+bar, `top_reason_codes`, and `recommended_human_action`; raw/text forecast
+details remained visible below the visual. The displayed response included
+`model_version=rule-engine-v0+forecast-window-v0`,
+`decision_support_only=true`, and
+`generated_at_utc=2026-01-01T00:00:00Z`.
+
+The manual smoke does not change `rule-engine-v0`, scoring thresholds, input
+composition, backtest pairing, predictive-performance claims, or production
+forecast validation status. The visual uses only the existing manual
+`Load forecast preview` response with synthetic/caller-provided preview data.
+It adds no new backend endpoint, changes no backend behavior, performs no
+database write, executes no SQL, calls no live EDS/DMI API, uses no ML/LLM
+behavior, and adds no automatic control, dispatch, activation, or operational
+functionality. Human review remains required.
+
 The Current surplus risk card also includes a simple visual
 decision-support risk score. It is not part of `rule-engine-v0` and does not
 change scoring, thresholds, input composition, pairing, forecasting, or
