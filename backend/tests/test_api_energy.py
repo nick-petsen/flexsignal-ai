@@ -165,6 +165,7 @@ def test_app_exposes_no_mutating_write_methods() -> None:
         "/api/risk/preview",
         "/api/forecast/preview",
         "/api/audit/preview",
+        "/api/report/summary/preview",
     }
 
     exposed_mutating_routes = [

@@ -77,6 +77,12 @@ Working read-only core:
   caller-provided rows for 0-24h, 24-48h, and 48-72h windows.
 - `report-summary-v0` exists as pure backend Python data-structure logic over
   caller-provided current-risk and forecast-window outputs.
+- `POST /api/report/summary/preview` exposes a read-only report-summary
+  preview API using deterministic synthetic or caller-provided preview data
+  only. It prepares a future UI report/PDF flow but does not generate PDFs
+  yet, write files, access a database, require `DATABASE_URL`, execute SQL,
+  call live EDS/DMI APIs, use ML/LLM behavior, write audit events, or add
+  control, dispatch, activation, or operational functionality.
 - `report-summary-v0` Markdown rendering exists as pure backend Python logic
   that converts caller-provided report dictionaries into Markdown strings.
 - Manual local PDF export v0 exists for synthetic/caller-provided
@@ -1308,6 +1314,21 @@ code, use ML, or use LLMs. The rendered Markdown remains read-only decision
 support only, requires human review, and must not be used for automatic
 control, dispatch, activation, or autonomous decisions.
 
+`POST /api/report/summary/preview` exposes `report-summary-v0` as a
+backend-only read-only preview API. It accepts deterministic synthetic defaults
+or caller-provided current-risk and forecast-window dictionaries, returns
+structured JSON with `report_preview_generated=true`, `pdf_generated=false`,
+`file_written=false`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`,
+`decision_support_only=true`, `report_summary`, recommendations, explanation
+text, and the explicit human-review safety boundary.
+
+The report summary preview API prepares a future UI report/PDF flow, but it
+does not generate PDF files yet, write files, fetch data, access a database,
+run SQL, require `DATABASE_URL`, call live Energi Data Service, call
+DMI/weather APIs, use ML, use LLMs, add audit writes, or perform automatic
+control, dispatch, activation, or operational functionality.
+
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc=2026-01-01T00:00:00Z`
 and in-script caller-provided current-risk and forecast-window data only.
@@ -1416,11 +1437,13 @@ Observed synthetic results:
 | `missing-current-risk` | `python3 scripts/report_summary_preview.py --scenario missing-current-risk --pretty` | DK1 | unavailable | available, 3 windows | The payload remained safe, added the limitation `missing or incomplete current risk input`, and still included the forecast-window summary. |
 | `missing-forecast` | `python3 scripts/report_summary_preview.py --scenario missing-forecast --pretty` | DK1 | available, medium, score 45 | unavailable, 0 windows | The payload remained safe, added the limitation `missing or incomplete forecast input`, and still included the current-risk summary. |
 
-Interpretation: `report-summary-v0` preview works locally with synthetic
-caller-provided data and creates deterministic report payloads. It does not
-generate PDF files yet, fetch data, read or write a database, expose an API,
-use the frontend, use ML, or use LLMs. It remains read-only decision support
-only and must not be used for automatic control, dispatch, or activation.
+Interpretation: the manual `report-summary-v0` script preview works locally
+with synthetic caller-provided data and creates deterministic report payloads.
+It does not generate PDF files yet, fetch data, read or write a database, use
+the frontend, use ML, or use LLMs. The backend API preview now exposes the
+same read-only report-summary foundation for future UI/PDF flow preparation
+without generating PDFs, writing files, accessing a database, executing SQL,
+calling live EDS/DMI APIs, or adding control, dispatch, or activation.
 
 ### Report Markdown Preview Results
 

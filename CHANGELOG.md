@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Added `POST /api/report/summary/preview` as a backend-only read-only report
+  summary preview API. The endpoint uses deterministic synthetic or
+  caller-provided preview data with the existing `report-summary-v0`
+  foundation, returns explicit safety and execution flags, and prepares a
+  future UI report/PDF flow without generating PDFs yet. It does not modify
+  frontend code, write files, access a database, require `DATABASE_URL`,
+  execute SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
+  behavior, add scheduler/Azure/auth/audit writes, or add control, dispatch,
+  activation, or operational functionality. Focused backend tests cover route
+  existence, HTTP 200 response, import without `DATABASE_URL`, response
+  flags, allowed POST-only preview behavior, and no file/PDF/DB/SQL/external
+  API/action behavior.
 - Documented observed manual frontend forecast window visual smoke results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
