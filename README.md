@@ -83,6 +83,22 @@ Working read-only core:
   yet, write files, access a database, require `DATABASE_URL`, execute SQL,
   call live EDS/DMI APIs, use ML/LLM behavior, write audit events, or add
   control, dispatch, activation, or operational functionality.
+- Observed manual API smoke for `POST /api/report/summary/preview` confirmed
+  the endpoint returns valid JSON without `DATABASE_URL`, using deterministic
+  synthetic/caller-provided preview data only. The response included
+  `report_preview_generated=true`, `pdf_generated=false`,
+  `file_written=false`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`,
+  `decision_support_only=true`, plus `report_summary`, recommendations,
+  explanation, and safety boundary fields. The observed report summary used
+  `report_version=report-summary-v0`, `price_area=DK1`,
+  `generated_at_utc=2026-01-01T00:00:00Z`, available medium current risk,
+  available `forecast_window_summary` with
+  `model_version=rule-engine-v0+forecast-window-v0`, and forecast windows for
+  `0-24h`, `24-48h`, and `48-72h`. No PDF was generated, no file was written,
+  no database query or write was performed, no SQL was executed, no live
+  EDS/DMI API was called, no ML/LLM behavior was used, and no control,
+  dispatch, or activation behavior occurred. Human review remains required.
 - `report-summary-v0` Markdown rendering exists as pure backend Python logic
   that converts caller-provided report dictionaries into Markdown strings.
 - Manual local PDF export v0 exists for synthetic/caller-provided
@@ -1328,6 +1344,39 @@ does not generate PDF files yet, write files, fetch data, access a database,
 run SQL, require `DATABASE_URL`, call live Energi Data Service, call
 DMI/weather APIs, use ML, use LLMs, add audit writes, or perform automatic
 control, dispatch, activation, or operational functionality.
+
+Observed manual API smoke for the report summary preview endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/report/summary/preview \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+The HTTP response returned valid JSON. Observed execution and safety flags
+were `report_preview_generated=true`, `pdf_generated=false`,
+`file_written=false`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, and
+`decision_support_only=true`. The response included `report_summary`,
+recommendations, explanation, and `safety_boundary`.
+
+Observed `report_summary` fields:
+
+- `report_version=report-summary-v0`
+- `price_area=DK1`
+- `generated_at_utc=2026-01-01T00:00:00Z`
+- `current_risk_summary.status=available`
+- `current_risk_summary.risk_level=medium`
+- `forecast_window_summary.status=available`
+- `forecast_window_summary.model_version=rule-engine-v0+forecast-window-v0`
+- Forecast windows were present for `0-24h`, `24-48h`, and `48-72h`.
+
+Safety interpretation: the endpoint works without `DATABASE_URL` and uses
+deterministic synthetic/caller-provided preview data. No PDF was generated, no
+file was written, no database query was executed, no database write was
+performed, no SQL was executed, no live EDS/DMI API was called, no ML/LLM
+behavior was used, and no control, dispatch, or activation behavior occurred.
+Human review remains required.
 
 `scripts/report_summary_preview.py` is a manual synthetic local JSON preview
 for `report-summary-v0`. It uses fixed `generated_at_utc=2026-01-01T00:00:00Z`

@@ -2,6 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual API smoke results for
+  `POST /api/report/summary/preview` in `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke used `Content-Type:
+  application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/summary/preview`. The HTTP response
+  returned valid JSON with `report_preview_generated=true`,
+  `pdf_generated=false`, `file_written=false`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, `decision_support_only=true`,
+  `report_summary`, recommendations, explanation, and `safety_boundary`.
+  Observed `report_summary` fields included
+  `report_version=report-summary-v0`, `price_area=DK1`,
+  `generated_at_utc=2026-01-01T00:00:00Z`, available medium current risk,
+  available forecast-window summary with
+  `model_version=rule-engine-v0+forecast-window-v0`, and windows for
+  `0-24h`, `24-48h`, and `48-72h`. This documentation step added no code,
+  changed no backend or frontend behavior, added no endpoint, accessed no
+  database, ran no SQL, called no live API, generated no PDF, wrote no files
+  beyond the requested docs, used no ML/LLM behavior, and added no scheduler,
+  Azure, auth, audit writes, control, dispatch, activation, or operational
+  functionality. Human review remains required.
 - Added `POST /api/report/summary/preview` as a backend-only read-only report
   summary preview API. The endpoint uses deterministic synthetic or
   caller-provided preview data with the existing `report-summary-v0`

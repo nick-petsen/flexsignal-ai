@@ -866,6 +866,37 @@ Energi Data Service, call DMI/weather APIs, train ML models, use LLMs, add
 scheduler/auth/Azure behavior, or perform automatic control, dispatch,
 activation, or operational functionality.
 
+### Report Summary Preview API Smoke
+
+Observed manual API smoke called:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/report/summary/preview \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+The HTTP response returned valid JSON with
+`report_preview_generated=true`, `pdf_generated=false`,
+`file_written=false`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, and
+`decision_support_only=true`. The response included `report_summary`,
+recommendations, explanation, and `safety_boundary`.
+
+Observed `report_summary` output used `report_version=report-summary-v0`,
+`price_area=DK1`, and `generated_at_utc=2026-01-01T00:00:00Z`.
+`current_risk_summary` was available with `risk_level=medium`.
+`forecast_window_summary` was available with
+`model_version=rule-engine-v0+forecast-window-v0`, and forecast windows were
+present for `0-24h`, `24-48h`, and `48-72h`.
+
+Interpretation: this API smoke confirms the preview endpoint can return the
+deterministic report-summary payload without `DATABASE_URL`. It does not
+change `rule-engine-v0`, train or validate a model, generate a PDF, write a
+file, query or write a database, execute SQL, call live EDS/DMI APIs, use
+ML/LLM behavior, or perform control, dispatch, or activation. Human review
+remains required.
+
 `scripts/report_markdown_preview.py` is a manual synthetic local Markdown
 preview for `report-summary-v0`. It uses fixed `generated_at_utc` output and
 only in-script caller-provided current-risk and forecast-window data for
