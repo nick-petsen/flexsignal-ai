@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added a simple frontend forecast-window visual inside the existing manual
+  "Forecast preview" card. The visual appears only after the existing "Load
+  forecast preview" action returns data, uses only that existing
+  deterministic synthetic/caller-provided preview response, displays returned
+  windows such as `0-24h`, `24-48h`, and `48-72h` with `risk_level`, max or
+  average risk score, top reason codes, and `recommended_human_action`, and
+  keeps the raw text/details visible below the visual. The risk bars use
+  lightweight HTML/CSS only with no charting dependency. This adds no API
+  endpoint, backend behavior, database code, SQL execution, database write,
+  migration, live Energi Data Service call, DMI/weather call, auth, Azure
+  infrastructure, ML/LLM behavior, audit write, report/PDF wiring,
+  auto-loading, polling, automatic control, closed-loop workflow, or
+  operational functionality. It prepares MVP 24-72h forecast readability as
+  read-only decision support with human review required.
 - Documented observed manual frontend risk score visual smoke results in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
