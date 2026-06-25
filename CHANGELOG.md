@@ -2,6 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend forecast window visual smoke results in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
+  the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend, opened the local dashboard in a browser, and loaded forecast
+  preview by manual button click only. No auto-load or polling was observed.
+  The forecast window visual displayed `0-24h`, `24-48h`, and `48-72h`
+  windows. Each window displayed `risk_level`, max risk score as a 0-100
+  score, a visible horizontal risk bar, `top_reason_codes`, and
+  `recommended_human_action`; raw/text forecast details remained visible
+  below the visual. Observed values were `0-24h`: low, `30/100`; `24-48h`:
+  high, `75/100`; `48-72h`: low, `10/100`;
+  `model_version=rule-engine-v0+forecast-window-v0`;
+  `decision_support_only=true`; and
+  `generated_at_utc=2026-01-01T00:00:00Z`. The visual uses only the existing
+  manual `Load forecast preview` response with synthetic/caller-provided
+  preview data. This documentation step added no code, changed no frontend or
+  backend behavior, added no backend endpoint, did not access a database,
+  executed no SQL, wrote nothing to the database, called no live APIs, and
+  added no scheduler, Azure, auth, ML/LLM, audit write, report/PDF wiring,
+  automatic control, dispatch, activation, or operational functionality.
+  Human review remains required.
 - Added a simple frontend forecast-window visual inside the existing manual
   "Forecast preview" card. The visual appears only after the existing "Load
   forecast preview" action returns data, uses only that existing

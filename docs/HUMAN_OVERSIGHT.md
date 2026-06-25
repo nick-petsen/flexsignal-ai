@@ -1,5 +1,46 @@
 # Human Oversight
 
+## Frontend Forecast Window Visual
+
+The Forecast preview card includes a simple visual for the existing
+`forecast-window-v0` response. It appears only after the existing manual
+`Load forecast preview` request returns data.
+
+The visual uses only the deterministic synthetic/caller-provided preview
+response already returned by the backend. It displays the `0-24h`, `24-48h`,
+and `48-72h` windows with `risk_level`, max risk score as a 0-100 score, a
+visible horizontal risk bar, `top_reason_codes`, and
+`recommended_human_action`. Raw/text forecast details remain visible below
+the visual.
+
+Observed manual frontend forecast window visual smoke:
+
+- Backend was started locally.
+- Frontend was started locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend.
+- Browser opened the local dashboard.
+- Forecast preview was loaded manually by button click.
+- No auto-load or polling was observed.
+- The forecast window visual was displayed.
+- The `0-24h` window displayed `risk_level=low` and max risk score `30/100`.
+- The `24-48h` window displayed `risk_level=high` and max risk score
+  `75/100`.
+- The `48-72h` window displayed `risk_level=low` and max risk score `10/100`.
+- Each window displayed a visible horizontal risk bar, `top_reason_codes`,
+  and `recommended_human_action`.
+- Raw/text forecast details remained visible below the visual.
+- The response displayed `model_version=rule-engine-v0+forecast-window-v0`,
+  `decision_support_only=true`, and
+  `generated_at_utc=2026-01-01T00:00:00Z`.
+
+Manual smoke safety interpretation: the visual uses only the existing manual
+`Load forecast preview` response. The forecast preview uses
+synthetic/caller-provided preview data and is deterministic preview for
+read-only decision support. Human review remains required. It adds no new
+backend endpoint, changes no backend behavior, performs no database write,
+executes no SQL, calls no live EDS/DMI API, uses no ML/LLM behavior, performs
+no automatic control, performs no dispatch, and performs no activation.
+
 ## Frontend Current Risk Score Visual
 
 The Current surplus risk card includes a simple visual labeled
