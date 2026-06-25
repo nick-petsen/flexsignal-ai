@@ -2,6 +2,22 @@
 
 ## v0.1.0 - TODO
 
+- Added frontend Report summary preview support using the existing
+  `POST /api/report/summary/preview` backend endpoint. The new API helper
+  posts JSON body `{}` through the existing `NEXT_PUBLIC_API_BASE_URL`
+  pattern and handles non-200 responses with the shared frontend API error
+  handling. The dashboard now includes a manual `Report summary preview` card
+  with a `Load report summary preview` button, loading and error states, and
+  no auto-load or polling. The card displays JSON preview only after manual
+  click, including preview execution flags, report title, `price_area`,
+  `generated_at_utc`, current risk summary, forecast window summary,
+  `key_findings`, `recommended_human_actions`, `safety_notes`, `limitations`,
+  `explanation`, and `safety_boundary`. This frontend/docs change does not
+  modify backend behavior, add endpoints, generate PDFs, write files, access a
+  database from the frontend, run SQL, call live EDS/DMI APIs, add auth,
+  migrations, Azure infrastructure, ML/LLM behavior, audit writes, or add
+  operational functionality. It prepares a future PDF export UI flow while
+  preserving read-only decision support and human review.
 - Documented observed manual API smoke results for
   `POST /api/report/summary/preview` in `README.md`,
   `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
