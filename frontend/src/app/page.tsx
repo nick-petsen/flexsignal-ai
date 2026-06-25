@@ -1073,12 +1073,15 @@ function SafetyBoundarySummary({
 }
 
 function ForecastPreviewResult({ data }: { data: ForecastPreviewResponse }) {
+  const windows = Array.isArray(data.windows) ? data.windows : [];
+
   return (
     <div>
       <p className="preview-note">
-        Synthetic/caller-provided preview data only. This is not production
-        forecast validation.
+        Synthetic/caller-provided preview data only. Deterministic preview for
+        read-only decision support. Human review required.
       </p>
+      {windows.length > 0 && <ForecastWindowVisual windows={windows} />}
       <dl className="risk-list">
         <div>
           <dt>model_version</dt>
@@ -1094,11 +1097,109 @@ function ForecastPreviewResult({ data }: { data: ForecastPreviewResponse }) {
         </div>
       </dl>
       <div className="forecast-windows">
-        {data.windows.map((window) => (
-          <ForecastWindow key={window.window_label} window={window} />
+        {windows.map((window, index) => (
+          <ForecastWindow
+            key={`${formatValue(window.window_label)}-${index}`}
+            window={window}
+          />
         ))}
       </div>
     </div>
+  );
+}
+
+function ForecastWindowVisual({
+  windows
+}: {
+  windows: ForecastWindowSummary[];
+}) {
+  return (
+    <section
+      className="forecast-visual"
+      aria-labelledby="forecast-visual-title"
+    >
+      <div className="forecast-visual__header">
+        <div>
+          <h3 id="forecast-visual-title">Forecast window visual</h3>
+          <p>Deterministic preview. Human review required.</p>
+        </div>
+        <span>Read-only decision support</span>
+      </div>
+      <div className="forecast-visual__windows">
+        {windows.map((window, index) => (
+          <ForecastWindowVisualItem
+            key={`${formatValue(window.window_label)}-${index}`}
+            window={window}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ForecastWindowVisualItem({
+  window
+}: {
+  window: ForecastWindowSummary;
+}) {
+  const riskScore = parseForecastRiskScore(window);
+  const scoreLabel =
+    riskScore === null ? "Score unavailable" : `${formatNumber(riskScore)}/100`;
+  const scoreSource =
+    parseRiskScore(window.max_risk_score) !== null
+      ? "max_risk_score"
+      : "average_risk_score";
+  const riskLevel = formatValue(window.risk_level);
+  const riskLevelClass = getRiskLevelClass(window.risk_level);
+  const reasonCodes = formatReasonCodes(window.top_reason_codes);
+
+  return (
+    <article className="forecast-visual__window">
+      <div className="forecast-visual__window-header">
+        <div>
+          <h4>{formatValue(window.window_label)}</h4>
+          <span className={`risk-score__level ${riskLevelClass}`}>
+            {riskLevel}
+          </span>
+        </div>
+        <div className="forecast-visual__score">
+          <strong>{scoreLabel}</strong>
+          <span>{scoreSource}</span>
+        </div>
+      </div>
+      <div
+        className="forecast-visual__bar"
+        role="meter"
+        aria-label={`${formatValue(
+          window.window_label
+        )} forecast preview risk score from 0 to 100`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={riskScore ?? undefined}
+        aria-valuetext={
+          riskScore === null
+            ? `${formatValue(window.window_label)} risk score unavailable.`
+            : `${formatValue(window.window_label)} risk score ${formatNumber(
+                riskScore
+              )} out of 100.`
+        }
+      >
+        <div
+          className="forecast-visual__fill"
+          style={{ width: `${riskScore ?? 0}%` }}
+        />
+      </div>
+      <dl className="forecast-visual__details">
+        <div>
+          <dt>top_reason_codes</dt>
+          <dd>{reasonCodes}</dd>
+        </div>
+        <div>
+          <dt>recommended_human_action</dt>
+          <dd>{formatValue(window.recommended_human_action)}</dd>
+        </div>
+      </dl>
+    </article>
   );
 }
 
@@ -1139,13 +1240,30 @@ function ForecastWindow({ window }: { window: ForecastWindowSummary }) {
 function formatReasonCodes(
   reasonCodes: ForecastWindowSummary["top_reason_codes"]
 ): string {
-  if (reasonCodes.length === 0) {
+  if (!Array.isArray(reasonCodes) || reasonCodes.length === 0) {
     return "n/a";
   }
 
   return reasonCodes
-    .map((reasonCode) => `${reasonCode.reason_code} (${reasonCode.count})`)
-    .join(", ");
+    .filter((reasonCode) => reasonCode && typeof reasonCode === "object")
+    .slice(0, 3)
+    .map((reasonCode) => {
+      const reasonCodeLabel = formatValue(reasonCode.reason_code);
+      const countLabel = formatValue(reasonCode.count);
+
+      return countLabel === "n/a"
+        ? reasonCodeLabel
+        : `${reasonCodeLabel} (${countLabel})`;
+    })
+    .filter((reasonCodeLabel) => reasonCodeLabel !== "n/a")
+    .join(", ") || "n/a";
+}
+
+function parseForecastRiskScore(window: ForecastWindowSummary): number | null {
+  return (
+    parseRiskScore(window.max_risk_score) ??
+    parseRiskScore(window.average_risk_score)
+  );
 }
 
 function errorMessage(error: unknown): string {

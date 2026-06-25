@@ -1485,6 +1485,14 @@ timezone-aware `generated_at_utc`, uses only the backend API base URL helper,
 does not auto-load or poll, does not call Energi Data Service or DMI/weather
 APIs from the browser, and does not read or write a database.
 
+The same card now displays the returned forecast windows visually after that
+manual response exists. The visual shows windows such as `0-24h`, `24-48h`,
+and `48-72h` with `risk_level`, max or average risk score, top reason codes,
+and `recommended_human_action`, keeps the raw text/details visible, and uses
+lightweight HTML/CSS risk bars only. It adds no new API endpoint, backend
+behavior, ML/LLM behavior, auto-loading, polling, automation, or control
+workflow.
+
 The endpoint is read-only decision support only. It does not fetch Energi Data
 Service data, call DMI/weather APIs, read or write a database, persist payloads,
 start jobs, train ML models, use LLMs, require secrets, or perform automatic
