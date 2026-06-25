@@ -8,6 +8,7 @@ import {
   fetchEnergyFreshnessRead,
   fetchForecastPreview,
   fetchPowerBalance,
+  fetchReportSummaryPreview,
   fetchSpotPrices,
   type CurrentRiskResponse,
   type EnergyApiResponse,
@@ -18,6 +19,7 @@ import {
   type ForecastWindowSummary,
   type PowerBalanceRow,
   type PriceArea,
+  type ReportSummaryPreviewResponse,
   type SafetyBoundary,
   type SpotPriceRow
 } from "../lib/api";
@@ -44,6 +46,12 @@ type FreshnessRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: EnergyFreshnessResponse }
+  | { status: "error"; message: string };
+
+type ReportRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: ReportSummaryPreviewResponse }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -809,6 +817,55 @@ function ForecastPreviewCard({
   );
 }
 
+function ReportSummaryPreviewCard({
+  state,
+  onLoad
+}: {
+  state: ReportRequestState;
+  onLoad: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="report-summary-preview-title">
+      <div className="card__header">
+        <div>
+          <h2 id="report-summary-preview-title">Report summary preview</h2>
+          <p className="card__description">
+            JSON preview only from the backend report summary preview endpoint.
+          </p>
+        </div>
+        <span className="status">Read-only</span>
+      </div>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onLoad}
+        disabled={isLoading}
+      >
+        {isLoading ? "Loading..." : "Load report summary preview"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>POST /api/report/summary/preview</code>.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">Loading report summary preview...</p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Backend unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <ReportSummaryPreviewResult data={state.data} />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function EnergyFreshnessCard({
   state,
   onLoadDryRun,
@@ -945,6 +1002,177 @@ function EnergyFreshnessResult({ data }: { data: EnergyFreshnessResponse }) {
   );
 }
 
+function ReportSummaryPreviewResult({
+  data
+}: {
+  data: ReportSummaryPreviewResponse;
+}) {
+  const summary = data.report_summary ?? {};
+
+  return (
+    <div>
+      <p className="preview-note">
+        JSON preview only. No PDF generated. No file written. Read-only
+        decision support. Human review required.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>report_preview_generated</dt>
+          <dd>{formatValue(data.report_preview_generated)}</dd>
+        </div>
+        <div>
+          <dt>pdf_generated</dt>
+          <dd>{formatValue(data.pdf_generated)}</dd>
+        </div>
+        <div>
+          <dt>file_written</dt>
+          <dd>{formatValue(data.file_written)}</dd>
+        </div>
+        <div>
+          <dt>database_query_executed</dt>
+          <dd>{formatValue(data.database_query_executed)}</dd>
+        </div>
+        <div>
+          <dt>database_write_performed</dt>
+          <dd>{formatValue(data.database_write_performed)}</dd>
+        </div>
+        <div>
+          <dt>requires_database_url</dt>
+          <dd>{formatValue(data.requires_database_url)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only</dt>
+          <dd>{formatValue(data.decision_support_only)}</dd>
+        </div>
+      </dl>
+
+      <section className="report-preview-section">
+        <h3>Report</h3>
+        <dl className="risk-list">
+          <div>
+            <dt>report title</dt>
+            <dd>{formatValue(summary.title)}</dd>
+          </div>
+          <div>
+            <dt>price_area</dt>
+            <dd>{formatValue(summary.price_area)}</dd>
+          </div>
+          <div>
+            <dt>generated_at_utc</dt>
+            <dd>{formatValue(summary.generated_at_utc)}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <ReportCurrentRiskSummary data={summary.current_risk_summary} />
+      <ReportForecastWindowSummary data={summary.forecast_window_summary} />
+      <StringList title="key_findings" values={summary.key_findings} />
+      <StringList
+        title="recommended_human_actions"
+        values={summary.recommended_human_actions}
+      />
+      <StringList title="safety_notes" values={summary.safety_notes} />
+      <StringList title="limitations" values={summary.limitations} />
+
+      <section className="report-preview-section">
+        <h3>explanation</h3>
+        <p className="muted">{formatValue(data.explanation)}</p>
+      </section>
+      <SafetyBoundarySummary safetyBoundary={data.safety_boundary} />
+    </div>
+  );
+}
+
+function ReportCurrentRiskSummary({
+  data
+}: {
+  data: ReportSummaryPreviewResponse["report_summary"]["current_risk_summary"];
+}) {
+  const reasonCodes = Array.isArray(data?.reason_codes)
+    ? data.reason_codes
+    : [];
+
+  return (
+    <section className="report-preview-section">
+      <h3>current risk summary</h3>
+      <dl className="risk-list">
+        <div>
+          <dt>status</dt>
+          <dd>{formatValue(data?.status)}</dd>
+        </div>
+        <div>
+          <dt>risk_level</dt>
+          <dd>{formatValue(data?.risk_level)}</dd>
+        </div>
+        <div>
+          <dt>risk_score</dt>
+          <dd>{formatValue(data?.risk_score)}</dd>
+        </div>
+        <div>
+          <dt>confidence_score</dt>
+          <dd>{formatValue(data?.confidence_score)}</dd>
+        </div>
+        <div>
+          <dt>reason_codes</dt>
+          <dd>{reasonCodes.length > 0 ? reasonCodes.join(", ") : "n/a"}</dd>
+        </div>
+        <div>
+          <dt>recommended_human_action</dt>
+          <dd>{formatValue(data?.recommended_human_action)}</dd>
+        </div>
+        <div>
+          <dt>model_version</dt>
+          <dd>{formatValue(data?.model_version)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only</dt>
+          <dd>{formatValue(data?.decision_support_only)}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+function ReportForecastWindowSummary({
+  data
+}: {
+  data: ReportSummaryPreviewResponse["report_summary"]["forecast_window_summary"];
+}) {
+  const windows = Array.isArray(data?.windows) ? data.windows : [];
+
+  return (
+    <section className="report-preview-section">
+      <h3>forecast window summary</h3>
+      <dl className="risk-list">
+        <div>
+          <dt>status</dt>
+          <dd>{formatValue(data?.status)}</dd>
+        </div>
+        <div>
+          <dt>model_version</dt>
+          <dd>{formatValue(data?.model_version)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only</dt>
+          <dd>{formatValue(data?.decision_support_only)}</dd>
+        </div>
+      </dl>
+      <div className="forecast-windows">
+        {windows.length === 0 ? (
+          <p className="muted">windows: n/a</p>
+        ) : (
+          windows.map((window, index) => (
+            <ForecastWindow
+              key={`${formatValue(window.window_label)}-${index}`}
+              window={window}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
 function FreshnessPlanSummary({
   label,
   plan
@@ -1010,6 +1238,29 @@ function FreshnessReadSummary({
         </div>
       </dl>
     </article>
+  );
+}
+
+function StringList({
+  title,
+  values
+}: {
+  title: string;
+  values?: string[];
+}) {
+  return (
+    <section className="report-preview-section">
+      <h3>{title}</h3>
+      {!values || values.length === 0 ? (
+        <p className="muted">n/a</p>
+      ) : (
+        <ul className="plain-list">
+          {values.map((value) => (
+            <li key={value}>{value}</li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -1292,6 +1543,10 @@ export default function DashboardPage() {
   const [freshnessState, setFreshnessState] = useState<FreshnessRequestState>({
     status: "idle"
   });
+  const [reportPreviewState, setReportPreviewState] =
+    useState<ReportRequestState>({
+      status: "idle"
+    });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
@@ -1300,6 +1555,7 @@ export default function DashboardPage() {
     setCurrentRiskState({ status: "idle" });
     setForecastPreviewState({ status: "idle" });
     setFreshnessState({ status: "idle" });
+    setReportPreviewState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -1371,6 +1627,19 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleLoadReportSummaryPreview() {
+    setReportPreviewState({ status: "loading" });
+    try {
+      const data = await fetchReportSummaryPreview();
+      setReportPreviewState({ status: "success", data });
+    } catch (error) {
+      setReportPreviewState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
   return (
     <main className="dashboard">
       <div className="dashboard__inner">
@@ -1435,6 +1704,10 @@ export default function DashboardPage() {
           <ForecastPreviewCard
             state={forecastPreviewState}
             onLoad={handleLoadForecastPreview}
+          />
+          <ReportSummaryPreviewCard
+            state={reportPreviewState}
+            onLoad={handleLoadReportSummaryPreview}
           />
           <EnergyFreshnessCard
             state={freshnessState}

@@ -32,6 +32,16 @@ Working read-only core:
   surplus risk, a forecast-window preview, an energy freshness dry-run
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
+- Frontend dashboard can manually load a Report summary preview card through
+  `POST /api/report/summary/preview`. The card displays JSON preview only
+  after the manual button click, including preview execution flags, report
+  title, `price_area`, `generated_at_utc`, current risk summary, forecast
+  window summary, findings, recommended human actions, safety notes,
+  limitations, explanation, and safety boundary. It does not generate PDF
+  output, write files, access a database from the frontend, call live
+  Energi Data Service or DMI/weather APIs, auto-load, poll, add endpoints,
+  or change backend behavior. It prepares a future PDF export UI flow while
+  preserving read-only decision support and human review.
 - The frontend Forecast preview card includes a simple read-only forecast
   window visual. It appears only after the existing manual
   `Load forecast preview` response exists, uses only that deterministic

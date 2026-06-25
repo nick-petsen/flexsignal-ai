@@ -170,6 +170,54 @@ export type PowerBalanceRow = {
   ingested_at_utc: string;
 };
 
+export type ReportCurrentRiskSummary = {
+  status?: string;
+  risk_level?: string;
+  risk_score?: number | null;
+  confidence_score?: number | null;
+  reason_codes?: string[];
+  recommended_human_action?: string;
+  model_version?: string;
+  decision_support_only?: boolean;
+};
+
+export type ReportForecastWindowSummary = {
+  status?: string;
+  model_version?: string;
+  windows?: ForecastWindowSummary[];
+  highest_risk_level?: string;
+  highest_risk_window_label?: string | null;
+  decision_support_only?: boolean;
+};
+
+export type ReportSummary = {
+  title?: string;
+  price_area?: PriceArea;
+  generated_at_utc?: string;
+  decision_support_only?: boolean;
+  human_review_required?: boolean;
+  current_risk_summary?: ReportCurrentRiskSummary;
+  forecast_window_summary?: ReportForecastWindowSummary;
+  key_findings?: string[];
+  recommended_human_actions?: string[];
+  safety_notes?: string[];
+  limitations?: string[];
+};
+
+export type ReportSummaryPreviewResponse = {
+  report_preview_generated: boolean;
+  pdf_generated: boolean;
+  file_written: boolean;
+  database_query_executed: boolean;
+  database_write_performed: boolean;
+  requires_database_url: boolean;
+  decision_support_only: boolean;
+  report_summary: ReportSummary;
+  recommendations: string[];
+  explanation: string;
+  safety_boundary: SafetyBoundary;
+};
+
 const READ_LIMIT = 5;
 
 export async function fetchSpotPrices(
@@ -269,6 +317,26 @@ export async function fetchEnergyFreshnessRead(
   }
 
   return body;
+}
+
+export async function fetchReportSummaryPreview(): Promise<ReportSummaryPreviewResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/report/summary/preview`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  return body as ReportSummaryPreviewResponse;
 }
 
 async function fetchEnergyApi<Row>(

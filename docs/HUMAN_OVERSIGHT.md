@@ -1,5 +1,26 @@
 # Human Oversight
 
+## Frontend Report Summary Preview
+
+The dashboard includes a Report summary preview card for the existing
+`POST /api/report/summary/preview` endpoint. It appears as JSON preview only
+after the manual `Load report summary preview` button is clicked.
+
+The frontend posts an empty JSON body `{}` through the existing backend API
+base URL helper. It displays `report_preview_generated`, `pdf_generated`,
+`file_written`, `database_query_executed`, `database_write_performed`,
+`requires_database_url`, `decision_support_only`, report title, `price_area`,
+`generated_at_utc`, current risk summary, forecast window summary,
+`key_findings`, `recommended_human_actions`, `safety_notes`, `limitations`,
+`explanation`, and `safety_boundary`.
+
+Safety interpretation: the card is read-only decision support for human
+review. It does not auto-load, poll, generate PDF output, write files, access
+a database from the frontend, run SQL, call live Energi Data Service or
+DMI/weather APIs, add backend endpoints, change backend behavior, add ML/LLM
+behavior, write audit events, or add operational behavior. It prepares a
+future PDF export UI flow without performing PDF generation.
+
 ## Frontend Forecast Window Visual
 
 The Forecast preview card includes a simple visual for the existing
