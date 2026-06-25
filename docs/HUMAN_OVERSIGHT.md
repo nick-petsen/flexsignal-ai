@@ -522,6 +522,41 @@ live-control, or operational functionality. DB-backed SELECT execution now
 exists through the backend read endpoint, and the dashboard has a manual
 display path for those read results. Live ingestion remains deferred.
 
+## Report Summary Preview API Smoke
+
+Observed manual API smoke command:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/report/summary/preview \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+The HTTP response returned valid JSON with
+`report_preview_generated=true`, `pdf_generated=false`,
+`file_written=false`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, and
+`decision_support_only=true`. The response included `report_summary`,
+recommendations, explanation, and `safety_boundary`.
+
+Observed report summary:
+
+- `report_version=report-summary-v0`
+- `price_area=DK1`
+- `generated_at_utc=2026-01-01T00:00:00Z`
+- `current_risk_summary.status=available`
+- `current_risk_summary.risk_level=medium`
+- `forecast_window_summary.status=available`
+- `forecast_window_summary.model_version=rule-engine-v0+forecast-window-v0`
+- Forecast windows were present for `0-24h`, `24-48h`, and `48-72h`.
+
+Safety interpretation: the endpoint works without `DATABASE_URL` and uses
+deterministic synthetic/caller-provided preview data. No PDF was generated, no
+file was written, no database query was executed, no database write was
+performed, no SQL was executed, no live EDS/DMI API was called, no ML/LLM
+behavior was used, and no control, dispatch, or activation behavior occurred.
+Human review remains required.
+
 ## Audit Event Foundation
 
 `audit-event-v0` is an in-memory/data-structure foundation for future
