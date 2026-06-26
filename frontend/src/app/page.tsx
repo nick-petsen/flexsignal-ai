@@ -9,6 +9,7 @@ import {
   fetchForecastPreview,
   fetchPowerBalance,
   fetchReportMarkdownPreview,
+  fetchReportPdfPreview,
   fetchReportSummaryPreview,
   fetchSpotPrices,
   type CurrentRiskResponse,
@@ -21,6 +22,7 @@ import {
   type PowerBalanceRow,
   type PriceArea,
   type ReportMarkdownPreviewResponse,
+  type ReportPdfPreviewResponse,
   type ReportSummaryPreviewResponse,
   type SafetyBoundary,
   type SpotPriceRow
@@ -60,6 +62,12 @@ type ReportMarkdownRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: ReportMarkdownPreviewResponse }
+  | { status: "error"; message: string };
+
+type ReportPdfRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: ReportPdfPreviewResponse }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -926,6 +934,58 @@ function ReportMarkdownPreviewCard({
   );
 }
 
+function ReportPdfPreviewCard({
+  state,
+  onLoad
+}: {
+  state: ReportPdfRequestState;
+  onLoad: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="report-pdf-preview-title">
+      <div className="card__header">
+        <div>
+          <h2 id="report-pdf-preview-title">
+            Report PDF dry-run preview
+          </h2>
+          <p className="card__description">
+            PDF dry-run preview only from the backend report PDF preview
+            endpoint.
+          </p>
+        </div>
+        <span className="status">Read-only</span>
+      </div>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onLoad}
+        disabled={isLoading}
+      >
+        {isLoading ? "Loading..." : "Load PDF dry-run preview"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>POST /api/report/pdf/preview</code>.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">Loading PDF dry-run preview only...</p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Backend unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <ReportPdfPreviewResult data={state.data} />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function EnergyFreshnessCard({
   state,
   onLoadDryRun,
@@ -1210,6 +1270,99 @@ function ReportMarkdownPreviewResult({
         <pre className="markdown-preview"><code>{formatValue(data.markdown)}</code></pre>
       </section>
 
+      <SafetyBoundarySummary safetyBoundary={data.safety_boundary} />
+    </div>
+  );
+}
+
+function ReportPdfPreviewResult({
+  data
+}: {
+  data: ReportPdfPreviewResponse;
+}) {
+  const summary = data.report_summary ?? {};
+
+  return (
+    <div>
+      <p className="preview-note">
+        PDF dry-run preview only. No PDF generated. No file written. No
+        download available. Read-only decision support. Human review required.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>pdf_preview_planned</dt>
+          <dd>{formatValue(data.pdf_preview_planned)}</dd>
+        </div>
+        <div>
+          <dt>pdf_generated</dt>
+          <dd>{formatValue(data.pdf_generated)}</dd>
+        </div>
+        <div>
+          <dt>file_written</dt>
+          <dd>{formatValue(data.file_written)}</dd>
+        </div>
+        <div>
+          <dt>markdown_preview_generated</dt>
+          <dd>{formatValue(data.markdown_preview_generated)}</dd>
+        </div>
+        <div>
+          <dt>database_query_executed</dt>
+          <dd>{formatValue(data.database_query_executed)}</dd>
+        </div>
+        <div>
+          <dt>database_write_performed</dt>
+          <dd>{formatValue(data.database_write_performed)}</dd>
+        </div>
+        <div>
+          <dt>requires_database_url</dt>
+          <dd>{formatValue(data.requires_database_url)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only</dt>
+          <dd>{formatValue(data.decision_support_only)}</dd>
+        </div>
+        <div>
+          <dt>planned_source</dt>
+          <dd>{formatValue(data.planned_source)}</dd>
+        </div>
+        <div>
+          <dt>planned_output_format</dt>
+          <dd>{formatValue(data.planned_output_format)}</dd>
+        </div>
+        <div>
+          <dt>markdown_character_count</dt>
+          <dd>{formatValue(data.markdown_character_count)}</dd>
+        </div>
+      </dl>
+
+      <section className="report-preview-section">
+        <h3>Report</h3>
+        <dl className="risk-list">
+          <div>
+            <dt>report title</dt>
+            <dd>{formatValue(summary.title)}</dd>
+          </div>
+          <div>
+            <dt>price_area</dt>
+            <dd>{formatValue(summary.price_area)}</dd>
+          </div>
+          <div>
+            <dt>generated_at_utc</dt>
+            <dd>{formatValue(summary.generated_at_utc)}</dd>
+          </div>
+        </dl>
+      </section>
+
+      {data.markdown_excerpt ? (
+        <section className="report-preview-section">
+          <h3>markdown_excerpt</h3>
+          <pre className="markdown-preview">
+            <code>{data.markdown_excerpt}</code>
+          </pre>
+        </section>
+      ) : null}
+
+      <WarningList warnings={data.warnings} />
       <SafetyBoundarySummary safetyBoundary={data.safety_boundary} />
     </div>
   );
@@ -1683,6 +1836,10 @@ export default function DashboardPage() {
     useState<ReportMarkdownRequestState>({
       status: "idle"
     });
+  const [reportPdfPreviewState, setReportPdfPreviewState] =
+    useState<ReportPdfRequestState>({
+      status: "idle"
+    });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
@@ -1693,6 +1850,7 @@ export default function DashboardPage() {
     setFreshnessState({ status: "idle" });
     setReportPreviewState({ status: "idle" });
     setReportMarkdownPreviewState({ status: "idle" });
+    setReportPdfPreviewState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -1790,6 +1948,19 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleLoadReportPdfPreview() {
+    setReportPdfPreviewState({ status: "loading" });
+    try {
+      const data = await fetchReportPdfPreview();
+      setReportPdfPreviewState({ status: "success", data });
+    } catch (error) {
+      setReportPdfPreviewState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
   return (
     <main className="dashboard">
       <div className="dashboard__inner">
@@ -1862,6 +2033,10 @@ export default function DashboardPage() {
           <ReportMarkdownPreviewCard
             state={reportMarkdownPreviewState}
             onLoad={handleLoadReportMarkdownPreview}
+          />
+          <ReportPdfPreviewCard
+            state={reportPdfPreviewState}
+            onLoad={handleLoadReportPdfPreview}
           />
           <EnergyFreshnessCard
             state={freshnessState}

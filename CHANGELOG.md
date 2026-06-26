@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added frontend Report PDF dry-run preview support using the existing
+  `POST /api/report/pdf/preview` backend endpoint. The new API helper posts
+  JSON body `{}` through the existing `NEXT_PUBLIC_API_BASE_URL` pattern and
+  handles non-200 responses with the shared frontend API error handling. The
+  dashboard now includes a manual `Report PDF dry-run preview` card with a
+  `Load PDF dry-run preview` button, loading and error states, and no
+  auto-load or polling. The card displays PDF dry-run preview only after
+  manual click, including `pdf_preview_planned`, `pdf_generated`,
+  `file_written`, `markdown_preview_generated`, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`,
+  `decision_support_only`, `planned_source`, `planned_output_format`,
+  `markdown_character_count`, optional `markdown_excerpt`, warnings,
+  report title, `price_area`, `generated_at_utc`, and `safety_boundary`. This
+  frontend/docs change does not modify backend behavior, add endpoints,
+  generate PDFs, add downloads, write files, access a database from the
+  frontend, run SQL, call live EDS/DMI APIs, add auth, migrations, Azure
+  infrastructure, ML/LLM behavior, or audit writes. It prepares a future
+  controlled PDF export flow while preserving read-only decision support and
+  human review.
 - Documented observed manual API smoke results for
   `POST /api/report/pdf/preview` in `README.md`,
   `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
