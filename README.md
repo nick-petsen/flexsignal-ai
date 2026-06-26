@@ -81,6 +81,24 @@ Working read-only core:
   safety boundary, and warnings. It does not generate PDF bytes, write files,
   access a database, run SQL, call live EDS/DMI APIs, use ML/LLM behavior, add
   audit writes, or add control, dispatch, activation, or operational behavior.
+- Observed manual API smoke for `POST /api/report/pdf/preview` used
+  `Content-Type: application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
+  valid JSON with `pdf_preview_planned=true`, `pdf_generated=false`,
+  `file_written=false`, `markdown_preview_generated=true`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, `decision_support_only=true`,
+  `planned_source=report-summary-v0 + markdown preview`,
+  `planned_output_format=pdf`, `report_summary`, `markdown_excerpt`,
+  `markdown_character_count=3621`, warnings, and `safety_boundary`. Observed
+  warnings stated dry-run preview only, no PDF generated, no file written, no
+  database read/write, no live EDS/DMI calls, and no control, dispatch, or
+  activation. Safety interpretation: the endpoint works without
+  `DATABASE_URL`, only plans a future PDF export, generated no PDF bytes,
+  called no PDF renderer, returned no file path or download, wrote no file,
+  executed no database query or write, executed no SQL, called no live EDS/DMI
+  API, used no ML/LLM behavior, and performed no control, dispatch, or
+  activation behavior. Human review remains required.
 - The frontend Forecast preview card includes a simple read-only forecast
   window visual. It appears only after the existing manual
   `Load forecast preview` response exists, uses only that deterministic
@@ -1456,6 +1474,40 @@ not generate PDF bytes, write files, fetch data, access a database, run SQL,
 require `DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs,
 use ML, use LLMs, add audit writes, or perform automatic control, dispatch,
 activation, or operational functionality.
+
+Observed manual API smoke for the PDF dry-run preview endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/report/pdf/preview \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+The HTTP response returned valid JSON. Observed execution and safety flags
+were `pdf_preview_planned=true`, `pdf_generated=false`, `file_written=false`,
+`markdown_preview_generated=true`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, and
+`decision_support_only=true`. The response included
+`planned_source=report-summary-v0 + markdown preview`,
+`planned_output_format=pdf`, `report_summary`, `markdown_excerpt`,
+`markdown_character_count=3621`, warnings, and `safety_boundary`.
+
+Observed warnings:
+
+- dry-run preview only.
+- no PDF generated.
+- no file written.
+- no database read/write.
+- no live EDS/DMI calls.
+- no control, dispatch, or activation.
+
+Manual smoke safety interpretation: the endpoint works without
+`DATABASE_URL` and only plans a future PDF export. No PDF bytes were
+generated, no PDF renderer was called, no file path or download was returned,
+no file was written, no database query was executed, no database write was
+performed, no SQL was executed, no live EDS/DMI API was called, no ML/LLM
+behavior was used, and no control, dispatch, or activation behavior occurred.
+Human review remains required.
 
 Observed manual API smoke for the report summary preview endpoint:
 

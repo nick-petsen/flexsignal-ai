@@ -156,6 +156,40 @@ DMI/weather APIs, use ML/LLM behavior, add auth, scheduler/Azure
 infrastructure, audit writes, or operational functionality. It must not be
 used for automatic control, dispatch, or activation.
 
+Observed manual backend PDF dry-run preview API smoke:
+
+- Command: `POST http://127.0.0.1:8000/api/report/pdf/preview`.
+- Request used `Content-Type: application/json` and body `{}`.
+- HTTP response returned valid JSON.
+- Response included `pdf_preview_planned=true`, `pdf_generated=false`,
+  `file_written=false`, `markdown_preview_generated=true`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, and `decision_support_only=true`.
+- Response included `planned_source=report-summary-v0 + markdown preview`.
+- Response included `planned_output_format=pdf`.
+- `report_summary` was present.
+- `markdown_excerpt` was present.
+- `markdown_character_count=3621`.
+- `warnings` was present.
+- `safety_boundary` was present.
+
+Observed warnings:
+
+- dry-run preview only.
+- no PDF generated.
+- no file written.
+- no database read/write.
+- no live EDS/DMI calls.
+- no control, dispatch, or activation.
+
+Manual smoke safety interpretation: the endpoint works without
+`DATABASE_URL` and only plans a future PDF export. No PDF bytes were
+generated, no PDF renderer was called, no file path or download was returned,
+no file was written, no database query was executed, no database write was
+performed, no SQL was executed, no live EDS/DMI API was called, no ML/LLM
+behavior was used, and no control, dispatch, or activation behavior occurred.
+Human review remains required.
+
 ## Frontend Forecast Window Visual
 
 The Forecast preview card includes a simple visual for the existing
