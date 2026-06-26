@@ -15,6 +15,14 @@ LOCAL_DEVELOPMENT_CORS_ORIGINS = (
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 )
+EXPOSED_PDF_EXPORT_HEADERS = (
+    "Content-Disposition",
+    "X-FlexSignal-Decision-Support-Only",
+    "X-FlexSignal-File-Written",
+    "X-FlexSignal-Database-Query-Executed",
+    "X-FlexSignal-Database-Write-Performed",
+    "X-FlexSignal-Requires-Database-Url",
+)
 
 
 def _include_materialized_router(application: FastAPI, router: APIRouter) -> None:
@@ -30,6 +38,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=LOCAL_DEVELOPMENT_CORS_ORIGINS,
     allow_methods=("GET", "POST", "OPTIONS"),
+    expose_headers=EXPOSED_PDF_EXPORT_HEADERS,
 )
 _include_materialized_router(app, energy_router)
 _include_materialized_router(app, energy_freshness_router)

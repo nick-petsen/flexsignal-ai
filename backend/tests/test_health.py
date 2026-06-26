@@ -4,6 +4,14 @@ from app.main import app
 
 
 client = TestClient(app)
+EXPECTED_EXPOSED_REPORT_PDF_HEADERS = {
+    "content-disposition",
+    "x-flexsignal-decision-support-only",
+    "x-flexsignal-file-written",
+    "x-flexsignal-database-query-executed",
+    "x-flexsignal-database-write-performed",
+    "x-flexsignal-requires-database-url",
+}
 
 
 def test_health_returns_ok() -> None:
@@ -19,9 +27,14 @@ def test_health_includes_local_development_cors_headers() -> None:
         "/health",
         headers={"Origin": "http://localhost:3000"},
     )
+    exposed_headers = {
+        header.strip().lower()
+        for header in response.headers["access-control-expose-headers"].split(",")
+    }
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert EXPECTED_EXPOSED_REPORT_PDF_HEADERS <= exposed_headers
 
 
 def test_local_development_cors_preflight_allows_read_only_api_methods() -> None:
