@@ -331,6 +331,45 @@ APIs, add frontend wiring, add auth or Azure infrastructure, use ML/LLMs, or
 control, dispatch, or activate anything. It does not change `rule-engine-v0`,
 forecasting, scoring thresholds, input composition, backtest interpretation,
 or predictive-performance claims. Human review remains required.
+
+Observed manual local API smoke for
+`POST /api/audit/pdf-export/persist` used
+`Content-Type: application/json` and body `{"price_area":"DK1"}` against
+`http://127.0.0.1:8000/api/audit/pdf-export/persist`. The HTTP response
+returned `HTTP/1.1 200 OK` with `content-type=application/json` and included
+`audit_event_created=true`, `audit_event_persisted=true`,
+`database_query_executed=false`, `database_write_performed=true`,
+`requires_database_url=true`, `event_type=report_pdf_export_requested`,
+`event_id=audit_evt_b0fb4e51563ca068ab4c2bba`, `table=audit_events`,
+`conflict_behavior=ON CONFLICT (event_id) DO NOTHING`,
+`action=manual_pdf_export`, `resource_type=report`,
+`resource_id=report-summary-v0-DK1-872ff94f403e4ddd`,
+`decision_support_only=true`, `read_only_decision_support=true`,
+`no_automatic_control=true`, `no_dispatch=true`, `no_activation=true`,
+`no_operational_energy_system_integration=true`,
+`human_review_required=true`, `pdf_generated_in_memory=true`,
+`server_side_file_written=false`, and
+`no_control_dispatch_activation=true`.
+
+The observed database confirmation queried `audit_events` ordered by
+`occurred_at_utc` and found the latest row
+`event_id=audit_evt_b0fb4e51563ca068ab4c2bba`,
+`event_type=report_pdf_export_requested`, `action=manual_pdf_export`,
+`resource_type=report`, and
+`occurred_at_utc=2026-06-27 00:39:47.295648+02`. This was the first verified
+runtime audit DB write, limited to `audit_events` only. The endpoint required
+`DATABASE_URL` at request time, persisted a manual PDF export request, and
+generated no PDF, wrote no file, read or wrote no energy data tables, called
+no live EDS/DMI APIs, used no ML/LLM behavior, and performed no control,
+dispatch, activation, or operational energy-system integration. Human review
+remains required, and frontend persistence wiring is still absent. Top-level
+`database_write_performed=true` describes the audit persistence operation;
+`event.metadata.database_write_performed=false` describes the underlying PDF
+export action, which did not itself perform a database write. Local smoke
+note: Alembic with SQLAlchemy/psycopg3 may require a `postgresql+psycopg://`
+URL for migration commands, runtime smoke used
+`postgresql://$(whoami)@localhost:5432/flexsignal_ai`, and the `audit_events`
+timestamp column is `occurred_at_utc`, not `created_at`.
 Implemented functions are `read_spot_price_freshness`,
 `read_power_balance_freshness`, and `read_energy_freshness_summary`.
 SQL safety requires parameterized plans that start with `SELECT`; mutating
