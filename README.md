@@ -42,6 +42,17 @@ Working read-only core:
   Energi Data Service or DMI/weather APIs, auto-load, poll, add endpoints,
   or change backend behavior. It prepares a future PDF export UI flow while
   preserving read-only decision support and human review.
+- Frontend dashboard can manually load a Report Markdown preview card through
+  `POST /api/report/markdown/preview`. The card displays Markdown preview
+  only after the manual button click, including `markdown_preview_generated`,
+  `pdf_generated`, `file_written`, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`,
+  `decision_support_only`, report title, `price_area`,
+  `generated_at_utc`, rendered Markdown text, and `safety_boundary`. It does
+  not generate PDF output, write files, access a database from the frontend,
+  call live Energi Data Service or DMI/weather APIs, auto-load, poll, add
+  endpoints, or change backend behavior. It prepares a future PDF export UI
+  flow while preserving read-only decision support and human review.
 - The frontend Forecast preview card includes a simple read-only forecast
   window visual. It appears only after the existing manual
   `Load forecast preview` response exists, uses only that deterministic
@@ -99,7 +110,7 @@ Working read-only core:
   `report_summary`, and the same safety boundary flags. It prepares a future
   PDF export flow but does not generate PDF output, write files, access a
   database, require `DATABASE_URL`, execute SQL, call live EDS/DMI APIs, use
-  ML/LLM behavior, write audit events, modify frontend behavior, or add
+  ML/LLM behavior, write audit events, or add
   control, dispatch, activation, or operational functionality.
 - Observed manual API smoke for `POST /api/report/markdown/preview` used
   `Content-Type: application/json` and body `{}` against

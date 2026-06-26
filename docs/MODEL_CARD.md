@@ -219,6 +219,16 @@ performed, no SQL was executed, no live EDS/DMI API was called, no ML/LLM
 behavior was used, and no control, dispatch, or activation behavior occurred.
 Human review remains required.
 
+Frontend Report Markdown preview support now displays the same existing
+`POST /api/report/markdown/preview` response after a manual button click only.
+The card shows Markdown preview only, execution flags, report title,
+`price_area`, `generated_at_utc`, rendered Markdown text, and
+`safety_boundary`. This does not change model logic, scoring thresholds,
+predictive-performance claims, production forecast validation status, backend
+behavior, or the read-only decision-support boundary. The frontend does not
+generate PDF output, write files, access a database, run SQL, call live
+EDS/DMI APIs, or use ML/LLM behavior.
+
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
 returns parameterized SELECT query plans for DK1/DK2 `spot_prices` and
@@ -562,14 +572,14 @@ decision support only, requires human review, and must not be used for
 automatic control, dispatch, activation, or autonomous decisions.
 
 `POST /api/report/markdown/preview` exposes the report-summary and Markdown
-renderer path through a backend-only read-only preview API. It uses
+renderer path through a read-only backend preview API. It uses
 deterministic synthetic or caller-provided preview data only and returns JSON
 with Markdown, `report_summary`, execution flags, and the safety boundary. It
 prepares a future PDF export flow but does not generate PDF output, write
 files, access a database, require `DATABASE_URL`, run SQL, call live Energi
-Data Service or DMI/weather APIs, use ML/LLM behavior, add frontend behavior,
-write audit events, or add control, dispatch, activation, or operational
-functionality.
+Data Service or DMI/weather APIs, use ML/LLM behavior, write audit events, or
+add operational functionality. The frontend can manually display this response
+without changing backend behavior.
 
 `render_report_markdown_pdf_bytes(...)` is the manual PDF renderer for
 caller-provided Markdown report content. It returns PDF bytes and does not

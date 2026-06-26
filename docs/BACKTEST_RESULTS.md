@@ -91,14 +91,14 @@ Current read-only foundation:
   builder over caller-provided current-risk and forecast-window outputs.
 - `report-summary-v0` Markdown rendering exists as deterministic pure Python
   formatting over caller-provided report dictionaries.
-- `POST /api/report/markdown/preview` exposes a backend-only read-only
+- `POST /api/report/markdown/preview` exposes a read-only backend
   Markdown preview using deterministic synthetic or caller-provided preview
   data only. It returns JSON with Markdown and `report_summary`, prepares a
   future PDF export flow, and does not generate PDF output, write files,
   access a database, require `DATABASE_URL`, execute SQL, call live EDS/DMI
-  APIs, use ML/LLM behavior, add frontend behavior, or add control, dispatch,
-  activation, or operational functionality. It does not affect backtest
-  scoring.
+  APIs, use ML/LLM behavior, or add operational functionality. The frontend
+  can manually display this response without changing backend behavior. It
+  does not affect backtest scoring.
 - Observed manual API smoke for `POST /api/report/markdown/preview` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/markdown/preview`. The HTTP response
@@ -118,6 +118,13 @@ Current read-only foundation:
   database write, executed no SQL, called no live EDS/DMI API, used no ML/LLM
   behavior, and performed no control, dispatch, or activation behavior. Human
   review remains required. This smoke does not affect backtest scoring.
+- Frontend Report Markdown preview support displays the existing
+  `POST /api/report/markdown/preview` response after a manual button click
+  only. It shows Markdown preview only, execution flags, report title,
+  `price_area`, `generated_at_utc`, rendered Markdown text, and
+  `safety_boundary`. This frontend display path does not change backtest
+  scoring, model validation, backend behavior, PDF generation, file writing,
+  database access, SQL execution, live EDS/DMI API usage, or ML/LLM behavior.
 - Manual local PDF export v0 exists for synthetic/caller-provided report
   previews through an explicit `--output` path only.
 - `audit-event-v0` exists as a deterministic pure Python in-memory
