@@ -2,6 +2,32 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual API smoke results for
+  `POST /api/report/markdown/preview` in `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke used `Content-Type:
+  application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/markdown/preview`. The HTTP response
+  returned valid JSON with `markdown_preview_generated=true`, non-empty
+  Markdown, `pdf_generated=false`, `file_written=false`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, `decision_support_only=true`,
+  `report_summary`, and `safety_boundary`. Observed Markdown content included
+  the report title, report metadata, `price_area=DK1`,
+  `generated_at_utc=2026-01-01T00:00:00Z`, current risk summary, forecast
+  window summary, `0-24h`, `24-48h`, and `48-72h` forecast windows, key
+  findings, recommended human actions, safety notes, limitations, source
+  notes, and read-only / human-review wording. Safety interpretation: the
+  endpoint works without `DATABASE_URL`, uses deterministic
+  synthetic/caller-provided preview data, generated Markdown preview only,
+  generated no PDF, wrote no file, executed no database query, performed no
+  database write, executed no SQL, called no live EDS/DMI API, used no ML/LLM
+  behavior, and performed no control, dispatch, or activation behavior. Human
+  review remains required. This documentation-only step added no code,
+  changed no backend or frontend behavior, added no endpoint, accessed no
+  database, ran no SQL, called no live API, generated no PDF, wrote no files
+  beyond the requested docs, and added no scheduler, Azure, auth, audit
+  writes, control, dispatch, activation, or operational functionality.
 - Added `POST /api/report/markdown/preview` as a backend-only read-only
   Markdown report preview API. The endpoint uses deterministic synthetic or
   caller-provided preview data, reuses the existing `report-summary-v0` and

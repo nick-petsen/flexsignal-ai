@@ -64,6 +64,32 @@ or DMI/weather APIs, use ML/LLM behavior, add auth, scheduler/Azure
 infrastructure, audit writes, frontend behavior, control, dispatch,
 activation, or operational functionality.
 
+Observed manual backend Markdown preview API smoke:
+
+- Command: `POST http://127.0.0.1:8000/api/report/markdown/preview`.
+- Request used `Content-Type: application/json` and body `{}`.
+- HTTP response returned valid JSON.
+- Response included `markdown_preview_generated=true`,
+  `pdf_generated=false`, `file_written=false`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, and `decision_support_only=true`.
+- `markdown` was a non-empty string.
+- `report_summary` was present.
+- `safety_boundary` was present.
+- Observed Markdown content included the report title, report metadata,
+  `price_area=DK1`, `generated_at_utc=2026-01-01T00:00:00Z`, current risk
+  summary, forecast window summary, `0-24h`, `24-48h`, and `48-72h` forecast
+  windows, key findings, recommended human actions, safety notes,
+  limitations, source notes, and read-only / human-review wording.
+
+Manual smoke safety interpretation: the endpoint works without
+`DATABASE_URL` and uses deterministic synthetic/caller-provided preview data.
+Markdown preview was generated. No PDF was generated, no file was written, no
+database query was executed, no database write was performed, no SQL was
+executed, no live EDS/DMI API was called, no ML/LLM behavior was used, and no
+control, dispatch, or activation behavior occurred. Human review remains
+required.
+
 ## Frontend Forecast Window Visual
 
 The Forecast preview card includes a simple visual for the existing
