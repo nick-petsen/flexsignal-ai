@@ -2,6 +2,32 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual API smoke results for
+  `POST /api/report/pdf/preview` in `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke used `Content-Type:
+  application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
+  valid JSON with `pdf_preview_planned=true`, `pdf_generated=false`,
+  `file_written=false`, `markdown_preview_generated=true`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, `decision_support_only=true`,
+  `planned_source=report-summary-v0 + markdown preview`,
+  `planned_output_format=pdf`, `report_summary`, `markdown_excerpt`,
+  `markdown_character_count=3621`, warnings, and `safety_boundary`. Observed
+  warnings stated dry-run preview only, no PDF generated, no file written, no
+  database read/write, no live EDS/DMI calls, and no control, dispatch, or
+  activation. Safety interpretation: the endpoint works without
+  `DATABASE_URL`, only plans a future PDF export, generated no PDF bytes,
+  called no PDF renderer, returned no file path or download, wrote no file,
+  executed no database query or write, executed no SQL, called no live EDS/DMI
+  API, used no ML/LLM behavior, and performed no control, dispatch, or
+  activation behavior. Human review remains required. This documentation-only
+  step added no code, changed no backend or frontend behavior, added no
+  endpoint, accessed no database, ran no SQL, called no live API, generated no
+  PDF, wrote no files beyond the requested docs, and added no scheduler,
+  Azure, auth, audit writes, control, dispatch, activation, or operational
+  functionality.
 - Added `POST /api/report/pdf/preview` as a backend-only read-only PDF
   dry-run preview API. The endpoint uses deterministic synthetic or
   caller-provided preview data, reuses the existing `report-summary-v0` plus

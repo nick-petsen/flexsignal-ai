@@ -623,6 +623,32 @@ not generate PDF bytes, write files, access a database, require
 use ML/LLM behavior, write audit events, add auth, scheduler/Azure
 infrastructure, or add operational functionality.
 
+Observed manual API smoke for `POST /api/report/pdf/preview` used
+`Content-Type: application/json` and body `{}` against
+`http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
+valid JSON with `pdf_preview_planned=true`, `pdf_generated=false`,
+`file_written=false`, `markdown_preview_generated=true`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, and `decision_support_only=true`. The response
+included `planned_source=report-summary-v0 + markdown preview`,
+`planned_output_format=pdf`, `report_summary`, `markdown_excerpt`,
+`markdown_character_count=3621`, warnings, and `safety_boundary`.
+
+Observed warnings stated dry-run preview only, no PDF generated, no file
+written, no database read/write, no live EDS/DMI calls, and no control,
+dispatch, or activation.
+
+The manual backend PDF dry-run preview smoke does not change
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation logic,
+Markdown rendering logic, PDF rendering logic, scoring thresholds, input
+composition, backtest pairing, predictive-performance claims, or production
+forecast validation status. The endpoint works without `DATABASE_URL` and
+only plans a future PDF export. No PDF bytes were generated, no PDF renderer
+was called, no file path or download was returned, no file was written, no
+database query or write was performed, no SQL was executed, no live EDS/DMI
+API was called, no ML/LLM behavior was used, and no control, dispatch, or
+activation behavior occurred. Human review remains required.
+
 `render_report_markdown_pdf_bytes(...)` is the manual PDF renderer for
 caller-provided Markdown report content. It returns PDF bytes and does not
 write files, fetch data, access a database, expose an API, use frontend code,

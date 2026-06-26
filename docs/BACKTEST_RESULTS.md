@@ -143,6 +143,29 @@ Current read-only foundation:
   query or write, execute SQL from the frontend, call live EDS/DMI APIs, add
   ML/LLM behavior, or add control, dispatch, activation, or operational
   behavior. Human review remains required.
+- `POST /api/report/pdf/preview` exposes a read-only backend PDF dry-run
+  preview using deterministic synthetic or caller-provided preview data only.
+  It reuses `report-summary-v0` plus Markdown preview output, prepares a
+  future PDF export path only, and does not affect backtest scoring.
+- Observed manual API smoke for `POST /api/report/pdf/preview` used
+  `Content-Type: application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
+  valid JSON with `pdf_preview_planned=true`, `pdf_generated=false`,
+  `file_written=false`, `markdown_preview_generated=true`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, `decision_support_only=true`,
+  `planned_source=report-summary-v0 + markdown preview`,
+  `planned_output_format=pdf`, `report_summary`, `markdown_excerpt`,
+  `markdown_character_count=3621`, warnings, and `safety_boundary`. Observed
+  warnings stated dry-run preview only, no PDF generated, no file written, no
+  database read/write, no live EDS/DMI calls, and no control, dispatch, or
+  activation. Safety interpretation: the endpoint works without
+  `DATABASE_URL`, only plans a future PDF export, generated no PDF bytes,
+  called no PDF renderer, returned no file path or download, wrote no file,
+  executed no database query or write, executed no SQL, called no live EDS/DMI
+  API, used no ML/LLM behavior, and performed no control, dispatch, or
+  activation behavior. Human review remains required. This smoke does not
+  affect backtest scoring.
 - Manual local PDF export v0 exists for synthetic/caller-provided report
   previews through an explicit `--output` path only.
 - `audit-event-v0` exists as a deterministic pure Python in-memory
