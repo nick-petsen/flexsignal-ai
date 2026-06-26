@@ -125,6 +125,17 @@ Working read-only core:
   not write files, access a database, require `DATABASE_URL`, run SQL, call
   live EDS/DMI APIs, use ML/LLM behavior, add audit writes, or add operational
   asset-command behavior.
+- Backend `POST /api/audit/pdf-export/persist` exists as a backend-only audit
+  persistence API for manual PDF export request events. It creates the same
+  `audit-event-v0` style `report_pdf_export_requested` event used by the audit
+  preview, defaults to `price_area=DK1`, and writes one row to
+  `audit_events` only with `ON CONFLICT (event_id) DO NOTHING`. It requires
+  `DATABASE_URL` at request time and app import still works without it; a
+  missing `DATABASE_URL` returns a safe HTTP 503 without exposing the raw URL.
+  It does not generate a PDF, write files, wire frontend behavior, access
+  energy data tables, call live EDS/DMI APIs, add auth, add Azure
+  infrastructure, use ML/LLMs, or control, dispatch, or activate anything.
+  Human review remains required.
 - Frontend dashboard supports manual PDF download through the existing
   `POST /api/report/pdf/export` backend endpoint. The user-triggered browser
   download posts JSON body `{}`, expects `application/pdf`, uses backend

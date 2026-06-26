@@ -165,6 +165,7 @@ def test_app_exposes_no_mutating_write_methods() -> None:
         "/api/risk/preview",
         "/api/forecast/preview",
         "/api/audit/preview",
+        "/api/audit/pdf-export/persist",
         "/api/report/summary/preview",
         "/api/report/markdown/preview",
         "/api/report/pdf/preview",

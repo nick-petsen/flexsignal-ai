@@ -2,6 +2,33 @@
 
 ## v0.1.0 - TODO
 
+- Added backend-only manual PDF export audit persistence through
+  `POST /api/audit/pdf-export/persist`. The endpoint creates the reviewed
+  `report_pdf_export_requested` `audit-event-v0` event with
+  `action=manual_pdf_export`, `resource_type=report`, default
+  `price_area=DK1`,
+  `resource_id=report-summary-v0-DK1-872ff94f403e4ddd`,
+  `decision_support_only=true`, `human_review_required=true`,
+  `pdf_generated_in_memory=true`, `server_side_file_written=false`,
+  `database_query_executed=false`, and
+  `no_control_dispatch_activation=true`, then writes one row to
+  `audit_events` only through the existing audit writer/repository foundation
+  with `ON CONFLICT (event_id) DO NOTHING`. It requires `DATABASE_URL` at
+  request time only; app import still works without `DATABASE_URL`, and
+  missing configuration returns safe HTTP 503 without exposing the raw URL.
+  Successful responses include `audit_event_created=true`,
+  `audit_event_persisted=true`, `database_write_performed=true`,
+  `requires_database_url=true`, `event_id`, `event_type`,
+  `table=audit_events`, `conflict_behavior`, and the preserved safety
+  boundary. Added focused backend tests for route existence, import without
+  `DATABASE_URL`, safe missing-configuration handling, invalid price-area
+  handling, the single `audit_events` insert path, response flags, blocked
+  PUT/PATCH/DELETE methods, and no PDF/file/external API/control behavior.
+  This does not modify frontend code, generate PDFs, write files, access
+  energy data tables, call live EDS/DMI APIs, add scheduler/Azure/auth
+  behavior, use ML/LLMs, or add control, dispatch, activation, or operational
+  functionality. Human review remains required and frontend wiring is not
+  added yet.
 - Documented observed manual API smoke results for manual PDF export audit
   preview in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
   `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke used

@@ -318,6 +318,19 @@ frontend can manually display the endpoint response through the backend API
 only; it does not execute SQL or access the database directly. They prepare
 dashboard data trust indicators only and do not change `rule-engine-v0`
 scoring.
+
+`POST /api/audit/pdf-export/persist` now provides backend-only persistence for
+the manual PDF export request audit event. It creates the
+`report_pdf_export_requested` `audit-event-v0` event used by the audit preview
+and writes one row to `audit_events` only, with
+`ON CONFLICT (event_id) DO NOTHING`. It requires `DATABASE_URL` at request
+time only; app import still works without it, and missing configuration
+returns a safe HTTP 503 without exposing the raw URL. This endpoint does not
+generate a PDF, write files, access energy data tables, call live EDS/DMI
+APIs, add frontend wiring, add auth or Azure infrastructure, use ML/LLMs, or
+control, dispatch, or activate anything. It does not change `rule-engine-v0`,
+forecasting, scoring thresholds, input composition, backtest interpretation,
+or predictive-performance claims. Human review remains required.
 Implemented functions are `read_spot_price_freshness`,
 `read_power_balance_freshness`, and `read_energy_freshness_summary`.
 SQL safety requires parameterized plans that start with `SELECT`; mutating

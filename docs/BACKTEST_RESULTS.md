@@ -301,6 +301,23 @@ Current read-only foundation:
   used; and no control, dispatch, or activation occurred. Runtime audit
   persistence remains a later separately reviewed step, human review remains
   required, and this smoke does not affect backtest scoring.
+- `POST /api/audit/pdf-export/persist` provides the reviewed backend-only
+  persistence step for the manual PDF export request audit event. It creates
+  the same `report_pdf_export_requested` `audit-event-v0` shape, defaults to
+  `price_area=DK1`, and writes one row to `audit_events` only through the
+  audit writer/repository foundation with
+  `ON CONFLICT (event_id) DO NOTHING`. The endpoint requires `DATABASE_URL`
+  at request time only; app import still works without it, and a missing
+  value returns a safe HTTP 503 without exposing the raw URL. It returns
+  `audit_event_created=true`, `audit_event_persisted=true`,
+  `database_write_performed=true`, `requires_database_url=true`,
+  `table=audit_events`, and the preserved safety boundary on successful
+  mocked/synthetic persistence. It does not generate PDF output, write files,
+  wire frontend behavior, read or write `spot_prices`, `power_balance`,
+  forecast, or other energy data tables, call live EDS/DMI APIs, add
+  scheduler/Azure/auth behavior, use ML/LLMs, or add control, dispatch,
+  activation, or operational functionality. It does not affect backtest
+  scoring.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that
