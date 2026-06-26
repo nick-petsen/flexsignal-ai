@@ -623,6 +623,16 @@ not generate PDF bytes, write files, access a database, require
 use ML/LLM behavior, write audit events, add auth, scheduler/Azure
 infrastructure, or add operational functionality.
 
+`POST /api/report/pdf/export` exposes a backend-only in-memory PDF export API
+for the same deterministic synthetic or caller-provided preview inputs. It
+builds `report-summary-v0`, renders Markdown, and returns non-empty
+`application/pdf` bytes with headers stating decision support only, no file
+written, no database query, no database write, and no `DATABASE_URL`
+requirement. It does not write files, return a file path, access a database,
+run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
+behavior, write audit events, add frontend download behavior, or add
+operational functionality.
+
 Frontend Report PDF dry-run preview support now displays the same existing
 `POST /api/report/pdf/preview` response after a manual button click only. The
 frontend posts JSON body `{}` through `NEXT_PUBLIC_API_BASE_URL`, does not

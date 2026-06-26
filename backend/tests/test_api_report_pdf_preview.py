@@ -181,6 +181,7 @@ def test_no_mutating_http_methods_beyond_allowed_preview_post_patterns() -> None
         "/api/report/summary/preview",
         "/api/report/markdown/preview",
         PREVIEW_PATH,
+        "/api/report/pdf/export",
     } <= route_paths
     assert not any(
         getattr(route, "methods", set()) & {"PUT", "PATCH", "DELETE"}
@@ -209,7 +210,6 @@ def test_report_api_imports_no_file_pdf_db_sql_or_external_api_modules() -> None
         "app.db.transaction",
         "app.integrations",
         "app.integrations.energi_data_service",
-        "app.reporting.pdf",
         "pathlib",
         "requests",
         "httpx",
@@ -220,7 +220,6 @@ def test_report_api_imports_no_file_pdf_db_sql_or_external_api_modules() -> None
     forbidden_names = {
         "Path",
         "open",
-        "render_report_markdown_pdf_bytes",
     }
 
     assert imported_modules.isdisjoint(forbidden_modules)
@@ -271,7 +270,6 @@ def test_report_api_performs_no_file_pdf_db_sql_external_or_action_calls() -> No
     forbidden_direct_calls = {
         "open",
         "print",
-        "render_report_markdown_pdf_bytes",
     }
     forbidden_sql_operations = {"INSERT", "UPDATE", "DELETE", "UPSERT", "DROP"}
 

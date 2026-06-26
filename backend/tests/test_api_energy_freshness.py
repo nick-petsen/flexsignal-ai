@@ -180,13 +180,14 @@ def test_no_mutating_database_behavior_is_added() -> None:
 
 def test_route_safety_still_allows_no_put_patch_delete_or_extra_posts() -> None:
     mutating_methods = {"PUT", "PATCH", "DELETE"}
-    allowed_preview_posts = {
+    allowed_safe_post_routes = {
         "/api/risk/preview",
         "/api/forecast/preview",
         "/api/audit/preview",
         "/api/report/summary/preview",
         "/api/report/markdown/preview",
         "/api/report/pdf/preview",
+        "/api/report/pdf/export",
     }
 
     exposed_mutating_routes = [
@@ -200,7 +201,7 @@ def test_route_safety_still_allows_no_put_patch_delete_or_extra_posts() -> None:
         if (
             hasattr(route, "methods")
             and "POST" in route.methods
-            and route.path not in allowed_preview_posts
+            and route.path not in allowed_safe_post_routes
         )
     ]
 

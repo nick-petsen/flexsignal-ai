@@ -118,6 +118,13 @@ Working read-only core:
   safety boundary, and warnings. It does not generate PDF bytes, write files,
   access a database, run SQL, call live EDS/DMI APIs, use ML/LLM behavior, add
   audit writes, or add control, dispatch, activation, or operational behavior.
+- Backend `POST /api/report/pdf/export` exists as a read-only in-memory PDF
+  export API. It uses deterministic synthetic or caller-provided preview data
+  only, builds `report-summary-v0`, renders Markdown, returns
+  `application/pdf` bytes with safe headers, and returns no file path. It does
+  not write files, access a database, require `DATABASE_URL`, run SQL, call
+  live EDS/DMI APIs, use ML/LLM behavior, add frontend download behavior, add
+  audit writes, or add control, dispatch, activation, or operational behavior.
 - Observed manual API smoke for `POST /api/report/pdf/preview` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
@@ -1511,6 +1518,25 @@ not generate PDF bytes, write files, fetch data, access a database, run SQL,
 require `DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs,
 use ML, use LLMs, add audit writes, or perform automatic control, dispatch,
 activation, or operational functionality.
+
+`POST /api/report/pdf/export` exposes a backend-only read-only PDF export API.
+It accepts deterministic synthetic defaults or caller-provided current-risk
+and forecast-window dictionaries, builds `report-summary-v0`, renders Markdown
+content, and returns non-empty `application/pdf` bytes in memory. Response
+headers include `Content-Disposition:
+attachment; filename="flexsignal-report-preview.pdf"`,
+`X-FlexSignal-Decision-Support-Only: true`,
+`X-FlexSignal-File-Written: false`,
+`X-FlexSignal-Database-Query-Executed: false`,
+`X-FlexSignal-Database-Write-Performed: false`, and
+`X-FlexSignal-Requires-Database-Url: false`.
+
+The in-memory PDF export API does not write files, return or create a file
+path, fetch data, access a database, run SQL, require `DATABASE_URL`, call live
+Energi Data Service, call DMI/weather APIs, use ML, use LLMs, add audit writes,
+add frontend download behavior, or perform automatic control, dispatch,
+activation, or operational functionality. The generated PDF content remains
+read-only decision support for human review only.
 
 The frontend can manually display this response in a Report PDF dry-run
 preview card by posting `{}` to `POST /api/report/pdf/preview` through

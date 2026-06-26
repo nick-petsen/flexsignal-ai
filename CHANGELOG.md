@@ -2,6 +2,15 @@
 
 ## v0.1.0 - TODO
 
+- Added `POST /api/report/pdf/export` as a backend-only read-only PDF export
+  endpoint. It uses deterministic synthetic or caller-provided preview data,
+  builds `report-summary-v0`, renders Markdown, and returns non-empty
+  `application/pdf` bytes in memory with download-safe headers and explicit
+  safety headers. It writes no files, returns no file path, accesses no
+  database, requires no `DATABASE_URL`, executes no SQL, calls no live
+  Energi Data Service or DMI/weather APIs, uses no ML/LLM behavior, adds no
+  frontend download flow, writes no audit events, and adds no control,
+  dispatch, activation, or operational functionality.
 - Documented observed manual frontend Report PDF dry-run preview smoke
   results in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
   `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke started

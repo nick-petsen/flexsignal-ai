@@ -217,6 +217,21 @@ DMI/weather APIs, use ML/LLM behavior, add auth, scheduler/Azure
 infrastructure, audit writes, or operational functionality. It must not be
 used for automatic control, dispatch, or activation.
 
+## Backend Report PDF In-Memory Export API
+
+`POST /api/report/pdf/export` returns a read-only `application/pdf` response
+for synthetic or caller-provided preview data. It builds `report-summary-v0`,
+renders Markdown, and renders non-empty PDF bytes in memory only. The response
+uses an attachment filename of `flexsignal-report-preview.pdf` and includes
+headers stating decision support only, no file written, no database query, no
+database write, and no `DATABASE_URL` requirement.
+
+Safety interpretation: this endpoint is still decision support for human
+review only. It does not write files, return a file path, access a database,
+run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
+behavior, add frontend download behavior, add audit writes, or perform
+automatic control, dispatch, activation, or operational functionality.
+
 Observed manual backend PDF dry-run preview API smoke:
 
 - Command: `POST http://127.0.0.1:8000/api/report/pdf/preview`.

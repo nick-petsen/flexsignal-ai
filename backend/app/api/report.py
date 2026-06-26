@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.reporting.markdown import render_report_summary_markdown
+from app.reporting.pdf import render_report_markdown_pdf_bytes
 from app.reporting.summary import build_report_summary
 
 
@@ -62,7 +63,28 @@ PDF_PREVIEW_SOURCE_NOTES = [
     "read-only decision support; human review required",
 ]
 
+PDF_EXPORT_SOURCE_NOTES = [
+    "PDF export uses synthetic or caller-provided preview data only",
+    "PDF bytes generated in memory only",
+    "no file written",
+    "no file path returned",
+    "no database read/write",
+    "no live EDS/DMI calls",
+    "no ML or LLM behavior",
+    "no control, dispatch, or activation",
+    "read-only decision support; human review required",
+]
+
 MARKDOWN_EXCERPT_CHARACTER_LIMIT = 800
+PDF_EXPORT_FILENAME = "flexsignal-report-preview.pdf"
+PDF_EXPORT_HEADERS = {
+    "Content-Disposition": f'attachment; filename="{PDF_EXPORT_FILENAME}"',
+    "X-FlexSignal-Decision-Support-Only": "true",
+    "X-FlexSignal-File-Written": "false",
+    "X-FlexSignal-Database-Query-Executed": "false",
+    "X-FlexSignal-Database-Write-Performed": "false",
+    "X-FlexSignal-Requires-Database-Url": "false",
+}
 
 
 class ReportSummaryPreviewRequest(BaseModel):
@@ -250,6 +272,40 @@ def preview_report_pdf(
         "safety_boundary": dict(SAFETY_BOUNDARY),
         "warnings": list(PDF_PREVIEW_WARNINGS),
     }
+
+
+@router.post("/pdf/export")
+def export_report_pdf(
+    payload: ReportSummaryPreviewRequest | None = None,
+) -> Response:
+    request = payload or ReportSummaryPreviewRequest()
+    current_risk, forecast = _preview_inputs(request)
+
+    try:
+        report_summary = build_report_summary(
+            price_area=request.price_area,
+            generated_at_utc=request.generated_at_utc,
+            current_risk=current_risk,
+            forecast=forecast,
+            title=request.title,
+            source_notes=[
+                *PDF_EXPORT_SOURCE_NOTES,
+                *request.source_notes,
+            ],
+        )
+        markdown = render_report_summary_markdown(report_summary)
+        pdf_bytes = render_report_markdown_pdf_bytes(
+            markdown,
+            title=report_summary.get("title"),
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers=dict(PDF_EXPORT_HEADERS),
+    )
 
 
 def _preview_inputs(

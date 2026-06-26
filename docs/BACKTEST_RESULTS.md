@@ -147,6 +147,12 @@ Current read-only foundation:
   preview using deterministic synthetic or caller-provided preview data only.
   It reuses `report-summary-v0` plus Markdown preview output, prepares a
   future PDF export path only, and does not affect backtest scoring.
+- `POST /api/report/pdf/export` exposes a read-only backend in-memory PDF
+  export using deterministic synthetic or caller-provided preview data only.
+  It builds `report-summary-v0`, renders Markdown, returns non-empty
+  `application/pdf` bytes with safety headers, writes no files, accesses no
+  database, calls no live EDS/DMI APIs, uses no ML/LLM behavior, adds no
+  frontend download flow, and does not affect backtest scoring.
 - Frontend Report PDF dry-run preview support displays the existing
   `POST /api/report/pdf/preview` response after a manual button click only.
   The frontend posts JSON body `{}` through `NEXT_PUBLIC_API_BASE_URL`, does
