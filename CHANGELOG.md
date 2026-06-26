@@ -11,6 +11,29 @@
   Energi Data Service or DMI/weather APIs, uses no ML/LLM behavior, adds no
   frontend download flow, writes no audit events, and adds no control,
   dispatch, activation, or operational functionality.
+- Documented observed manual API smoke results for
+  `POST /api/report/pdf/export` in `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke used `Content-Type:
+  application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/pdf/export`. The HTTP response returned
+  status `200`, `content-type=application/pdf`,
+  `content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+  `x-flexsignal-decision-support-only=true`,
+  `x-flexsignal-file-written=false`,
+  `x-flexsignal-database-query-executed=false`,
+  `x-flexsignal-database-write-performed=false`,
+  `x-flexsignal-requires-database-url=false`, `byte_length=9950`, and a body
+  starting with `%PDF`. Safety interpretation: the endpoint generated PDF
+  bytes in memory, wrote no PDF file, returned no file path, executed no
+  database query, performed no database write, required no `DATABASE_URL`,
+  executed no SQL, called no live EDS/DMI API, used no ML/LLM behavior, wrote
+  no audit event, added no frontend download UI, and performed no control,
+  dispatch, or activation behavior. Human review remains required. This
+  documentation-only step added no code, changed no backend or frontend
+  behavior, added no endpoint, accessed no database, ran no SQL, called no
+  live API, and added no scheduler, Azure, auth, audit writes, control,
+  dispatch, activation, or operational functionality.
 - Documented observed manual frontend Report PDF dry-run preview smoke
   results in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
   `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke started
