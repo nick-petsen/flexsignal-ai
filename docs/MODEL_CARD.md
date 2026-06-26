@@ -534,6 +534,16 @@ expose an API, use frontend code, use ML, or use LLMs. It is read-only
 decision support only, requires human review, and must not be used for
 automatic control, dispatch, activation, or autonomous decisions.
 
+`POST /api/report/markdown/preview` exposes the report-summary and Markdown
+renderer path through a backend-only read-only preview API. It uses
+deterministic synthetic or caller-provided preview data only and returns JSON
+with Markdown, `report_summary`, execution flags, and the safety boundary. It
+prepares a future PDF export flow but does not generate PDF output, write
+files, access a database, require `DATABASE_URL`, run SQL, call live Energi
+Data Service or DMI/weather APIs, use ML/LLM behavior, add frontend behavior,
+write audit events, or add control, dispatch, activation, or operational
+functionality.
+
 `render_report_markdown_pdf_bytes(...)` is the manual PDF renderer for
 caller-provided Markdown report content. It returns PDF bytes and does not
 write files, fetch data, access a database, expose an API, use frontend code,

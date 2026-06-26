@@ -93,6 +93,14 @@ Working read-only core:
   yet, write files, access a database, require `DATABASE_URL`, execute SQL,
   call live EDS/DMI APIs, use ML/LLM behavior, write audit events, or add
   control, dispatch, activation, or operational functionality.
+- `POST /api/report/markdown/preview` exposes a read-only Markdown report
+  preview API using deterministic synthetic or caller-provided preview data
+  only. It returns JSON with `markdown_preview_generated=true`, Markdown,
+  `report_summary`, and the same safety boundary flags. It prepares a future
+  PDF export flow but does not generate PDF output, write files, access a
+  database, require `DATABASE_URL`, execute SQL, call live EDS/DMI APIs, use
+  ML/LLM behavior, write audit events, modify frontend behavior, or add
+  control, dispatch, activation, or operational functionality.
 - Observed manual API smoke for `POST /api/report/summary/preview` confirmed
   the endpoint returns valid JSON without `DATABASE_URL`, using deterministic
   synthetic/caller-provided preview data only. The response included

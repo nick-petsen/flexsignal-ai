@@ -91,6 +91,14 @@ Current read-only foundation:
   builder over caller-provided current-risk and forecast-window outputs.
 - `report-summary-v0` Markdown rendering exists as deterministic pure Python
   formatting over caller-provided report dictionaries.
+- `POST /api/report/markdown/preview` exposes a backend-only read-only
+  Markdown preview using deterministic synthetic or caller-provided preview
+  data only. It returns JSON with Markdown and `report_summary`, prepares a
+  future PDF export flow, and does not generate PDF output, write files,
+  access a database, require `DATABASE_URL`, execute SQL, call live EDS/DMI
+  APIs, use ML/LLM behavior, add frontend behavior, or add control, dispatch,
+  activation, or operational functionality. It does not affect backtest
+  scoring.
 - Manual local PDF export v0 exists for synthetic/caller-provided report
   previews through an explicit `--output` path only.
 - `audit-event-v0` exists as a deterministic pure Python in-memory
