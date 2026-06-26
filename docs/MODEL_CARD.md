@@ -165,6 +165,33 @@ executes no SQL, calls no live EDS/DMI API, uses no ML/LLM behavior, and adds
 no automatic control, dispatch, activation, or operational functionality.
 Human review remains required.
 
+Observed manual frontend report summary preview smoke started the backend
+locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+pointing to the backend, and opened the local dashboard in a browser. Report
+summary preview was loaded manually by button click only; no auto-load or
+polling was observed. The Report summary preview card displayed JSON preview
+only and the manual button called `POST /api/report/summary/preview`.
+
+The displayed response included `report_preview_generated=true`,
+`pdf_generated=false`, `file_written=false`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, and `decision_support_only=true`. The
+displayed report content included the report title, `price_area=DK1`,
+`generated_at_utc`, current risk summary, forecast window summary, the
+`0-24h`, `24-48h`, and `48-72h` forecast windows, `key_findings`,
+`recommended_human_actions`, `safety_notes`, `limitations`, `explanation`,
+and `safety_boundary`.
+
+The manual frontend report summary preview smoke does not change
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation logic,
+scoring thresholds, input composition, backtest pairing, predictive
+performance claims, or production forecast validation status. The frontend
+shows JSON preview only. No PDF was generated, no file was written, no
+database query or write was performed by this preview, no SQL was executed
+from the frontend, no live EDS/DMI API was called, no ML/LLM behavior was
+added, and no control, dispatch, or activation behavior occurred. Human
+review remains required.
+
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
 returns parameterized SELECT query plans for DK1/DK2 `spot_prices` and

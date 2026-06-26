@@ -123,6 +123,25 @@ Current read-only foundation:
   `recommended_human_action`, while keeping raw/text forecast details visible
   below the visual. It uses only deterministic synthetic/caller-provided
   preview data and does not affect backtest scoring.
+- Observed manual frontend report summary preview smoke started the backend
+  locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+  pointing to the backend, and opened the local dashboard in a browser.
+  Report summary preview was loaded manually by button click only; no
+  auto-load or polling was observed. The Report summary preview card
+  displayed JSON preview only, and the manual button called
+  `POST /api/report/summary/preview`. The displayed response included
+  `report_preview_generated=true`, `pdf_generated=false`,
+  `file_written=false`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `decision_support_only=true`. The displayed report content included the
+  report title, `price_area=DK1`, `generated_at_utc`, current risk summary,
+  forecast window summary, `0-24h`, `24-48h`, and `48-72h` forecast windows,
+  `key_findings`, `recommended_human_actions`, `safety_notes`,
+  `limitations`, `explanation`, and `safety_boundary`. This smoke does not
+  affect backtest scoring, generate PDF output, write files, perform a
+  database query or write, execute SQL from the frontend, call live EDS/DMI
+  APIs, add ML/LLM behavior, or add control, dispatch, activation, or
+  operational behavior. Human review remains required.
 - The frontend dashboard has a manual energy freshness card that calls
   `GET /api/energy/freshness?price_area=DK1|DK2` through
   `fetchEnergyFreshness()` and the existing `NEXT_PUBLIC_API_BASE_URL`

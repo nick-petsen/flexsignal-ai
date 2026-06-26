@@ -2,6 +2,27 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend Report summary preview smoke results in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
+  the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend, opened the local dashboard in a browser, and loaded Report summary
+  preview by manual button click only. No auto-load or polling was observed.
+  The Report summary preview card displayed JSON preview only, and the manual
+  button called `POST /api/report/summary/preview`. Displayed flags were
+  `report_preview_generated=true`, `pdf_generated=false`,
+  `file_written=false`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `decision_support_only=true`. Displayed content included the report title,
+  `price_area=DK1`, `generated_at_utc`, current risk summary, forecast window
+  summary, `0-24h`, `24-48h`, and `48-72h` forecast windows,
+  `key_findings`, `recommended_human_actions`, `safety_notes`,
+  `limitations`, `explanation`, and `safety_boundary`. This documentation
+  step added no code, changed no frontend or backend behavior, added no API
+  endpoint, did not access a database, executed no SQL, called no live APIs,
+  generated no PDF, wrote no files beyond the requested docs, added no
+  scheduler, Azure, auth, ML/LLM, audit write, control, dispatch, activation,
+  or operational behavior, and preserved required human review.
 - Added frontend Report summary preview support using the existing
   `POST /api/report/summary/preview` backend endpoint. The new API helper
   posts JSON body `{}` through the existing `NEXT_PUBLIC_API_BASE_URL`
