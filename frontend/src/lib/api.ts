@@ -218,6 +218,19 @@ export type ReportSummaryPreviewResponse = {
   safety_boundary: SafetyBoundary;
 };
 
+export type ReportMarkdownPreviewResponse = {
+  markdown_preview_generated: boolean;
+  pdf_generated: boolean;
+  file_written: boolean;
+  database_query_executed: boolean;
+  database_write_performed: boolean;
+  requires_database_url: boolean;
+  decision_support_only: boolean;
+  markdown: string;
+  report_summary: ReportSummary;
+  safety_boundary: SafetyBoundary;
+};
+
 const READ_LIMIT = 5;
 
 export async function fetchSpotPrices(
@@ -337,6 +350,26 @@ export async function fetchReportSummaryPreview(): Promise<ReportSummaryPreviewR
   }
 
   return body as ReportSummaryPreviewResponse;
+}
+
+export async function fetchReportMarkdownPreview(): Promise<ReportMarkdownPreviewResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/report/markdown/preview`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  return body as ReportMarkdownPreviewResponse;
 }
 
 async function fetchEnergyApi<Row>(

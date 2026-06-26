@@ -47,6 +47,25 @@ performed by this preview, no SQL was executed from the frontend, no live
 EDS/DMI API was called, no ML/LLM behavior was added, and no control,
 dispatch, or activation behavior occurred. Human review remains required.
 
+## Frontend Report Markdown Preview
+
+The dashboard includes a Report Markdown preview card for the existing
+`POST /api/report/markdown/preview` endpoint. It appears as Markdown preview
+only after the manual `Load report Markdown preview` button is clicked.
+
+The frontend posts an empty JSON body `{}` through the existing backend API
+base URL helper. It displays `markdown_preview_generated`, `pdf_generated`,
+`file_written`, `database_query_executed`, `database_write_performed`,
+`requires_database_url`, `decision_support_only`, report title, `price_area`,
+`generated_at_utc`, rendered Markdown text, and `safety_boundary`.
+
+Safety interpretation: the card is read-only decision support for human
+review. It does not auto-load, poll, generate PDF output, write files, access
+a database from the frontend, run SQL, call live Energi Data Service or
+DMI/weather APIs, add backend endpoints, change backend behavior, add ML/LLM
+behavior, or write audit events. It prepares a future PDF export UI flow
+without performing PDF generation.
+
 ## Backend Report Markdown Preview API
 
 `POST /api/report/markdown/preview` returns a JSON/Markdown preview for
@@ -61,8 +80,9 @@ Safety interpretation: this backend endpoint is read-only decision support for
 human review. It prepares a future PDF export flow but does not generate PDF
 output, write files, access a database, run SQL, call live Energi Data Service
 or DMI/weather APIs, use ML/LLM behavior, add auth, scheduler/Azure
-infrastructure, audit writes, frontend behavior, control, dispatch,
-activation, or operational functionality.
+infrastructure, audit writes, or operational functionality. The frontend can
+display the returned Markdown preview through a manual button without changing
+backend behavior.
 
 Observed manual backend Markdown preview API smoke:
 
