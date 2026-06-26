@@ -204,6 +204,24 @@ Latest read-only API/UI smoke-test observations:
 
 - DK1 current-risk API returned medium risk with score `35`.
 - DK2 current-risk API returned low risk with score `20`.
+- Manual frontend report summary preview smoke was observed with the backend
+  started locally, the frontend started locally with
+  `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, and the browser opened
+  to the local dashboard. Report summary preview was loaded manually by button
+  click only; no auto-load or polling was observed. The card displayed JSON
+  preview only and called `POST /api/report/summary/preview`, with
+  `report_preview_generated=true`, `pdf_generated=false`,
+  `file_written=false`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `decision_support_only=true`. The displayed summary included report title,
+  `price_area=DK1`, `generated_at_utc`, current risk summary, forecast window
+  summary, `0-24h`, `24-48h`, and `48-72h` forecast windows,
+  `key_findings`, `recommended_human_actions`, `safety_notes`,
+  `limitations`, `explanation`, and `safety_boundary`. This frontend smoke
+  generated no PDF, wrote no file, performed no database query or write,
+  executed no SQL from the frontend, called no live EDS/DMI API, added no
+  ML/LLM behavior, and added no control, dispatch, or activation behavior.
+  Human review remains required.
 - Frontend current-risk card validation covered the new visual
   decision-support risk score. The card still uses only the existing manual
   `Load current risk` response, keeps raw risk details visible, does not
