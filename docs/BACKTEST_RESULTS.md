@@ -164,6 +164,27 @@ Current read-only foundation:
   from the frontend, run SQL, call live EDS/DMI APIs, add auth, add Azure
   infrastructure, add ML/LLM behavior, or add audit writes. It prepares a
   future controlled PDF export flow.
+- Observed manual frontend Report PDF dry-run preview smoke started the
+  backend locally, started the frontend locally with
+  `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, opened the local
+  dashboard in a browser, and loaded the Report PDF dry-run preview manually
+  by button click only. No auto-load or polling was observed. The Report PDF
+  dry-run preview card was displayed, and the manual button called
+  `POST /api/report/pdf/preview`. Displayed flags included
+  `pdf_preview_planned=true`, `pdf_generated=false`, `file_written=false`,
+  `markdown_preview_generated=true`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `decision_support_only=true`. Displayed content included
+  `planned_source=report-summary-v0 + markdown preview`,
+  `planned_output_format=pdf`, `markdown_character_count=3621`, report
+  title, `price_area=DK1`, `generated_at_utc`, `markdown_excerpt`,
+  warnings, and `safety_boundary`. No download button or PDF
+  export/generation button was shown, and no file generation behavior was
+  visible. This smoke does not affect backtest scoring, generate PDF output,
+  write files, make downloads available, perform a database query or write,
+  execute SQL from the frontend, call live EDS/DMI APIs, add ML/LLM behavior,
+  or add control, dispatch, activation, or operational behavior. Human review
+  remains required.
 - Observed manual API smoke for `POST /api/report/pdf/preview` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned

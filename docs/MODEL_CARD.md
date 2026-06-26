@@ -644,6 +644,35 @@ infrastructure, add ML/LLM behavior, or add audit writes. It prepares a
 future controlled PDF export flow while preserving the v0.1 read-only
 decision-support boundary.
 
+Observed manual frontend Report PDF dry-run preview smoke started the backend
+locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+pointing to the backend, and opened the local dashboard in a browser. Report
+PDF dry-run preview was loaded manually by button click only; no auto-load or
+polling was observed. The Report PDF dry-run preview card was displayed, and
+the manual button called `POST /api/report/pdf/preview`.
+
+The displayed response included `pdf_preview_planned=true`,
+`pdf_generated=false`, `file_written=false`,
+`markdown_preview_generated=true`, `database_query_executed=false`,
+`database_write_performed=false`, `requires_database_url=false`, and
+`decision_support_only=true`. The displayed report content included
+`planned_source=report-summary-v0 + markdown preview`,
+`planned_output_format=pdf`, `markdown_character_count=3621`, report title,
+`price_area=DK1`, `generated_at_utc`, `markdown_excerpt`, warnings, and
+`safety_boundary`. No download button or PDF export/generation button was
+shown, and no file generation behavior was visible.
+
+The manual frontend Report PDF dry-run preview smoke does not change
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation logic,
+Markdown rendering logic, PDF rendering logic, scoring thresholds, input
+composition, backtest pairing, predictive-performance claims, or production
+forecast validation status. The frontend shows PDF dry-run preview only. No
+PDF was generated, no file was written, no download was available, no
+database query or write was performed by this preview, no SQL was executed
+from the frontend, no live EDS/DMI API was called, no ML/LLM behavior was
+added, and no control, dispatch, or activation behavior occurred. Human
+review remains required.
+
 Observed manual API smoke for `POST /api/report/pdf/preview` used
 `Content-Type: application/json` and body `{}` against
 `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
