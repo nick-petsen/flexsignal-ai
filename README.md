@@ -123,8 +123,18 @@ Working read-only core:
   only, builds `report-summary-v0`, renders Markdown, returns
   `application/pdf` bytes with safe headers, and returns no file path. It does
   not write files, access a database, require `DATABASE_URL`, run SQL, call
-  live EDS/DMI APIs, use ML/LLM behavior, add frontend download behavior, add
-  audit writes, or add control, dispatch, activation, or operational behavior.
+  live EDS/DMI APIs, use ML/LLM behavior, add audit writes, or add operational
+  asset-command behavior.
+- Frontend dashboard supports manual PDF download through the existing
+  `POST /api/report/pdf/export` backend endpoint. The user-triggered browser
+  download posts JSON body `{}`, expects `application/pdf`, uses backend
+  generated PDF bytes in memory, and shows content type, content disposition,
+  byte length, and safety headers after the manual click. It uses a browser
+  Blob/Object URL and revokes the Object URL after use. No server-side file is
+  written, no database is accessed from the frontend, no live EDS/DMI call is
+  made from the browser, no ML/LLM behavior is added, no audit write occurs,
+  and no automation is added. The report remains read-only decision support
+  with human review required.
 - Observed manual API smoke for `POST /api/report/pdf/preview` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned
@@ -1534,9 +1544,28 @@ attachment; filename="flexsignal-report-preview.pdf"`,
 The in-memory PDF export API does not write files, return or create a file
 path, fetch data, access a database, run SQL, require `DATABASE_URL`, call live
 Energi Data Service, call DMI/weather APIs, use ML, use LLMs, add audit writes,
-add frontend download behavior, or perform automatic control, dispatch,
-activation, or operational functionality. The generated PDF content remains
-read-only decision support for human review only.
+or perform operational asset-command functionality. The generated PDF content
+remains read-only decision support for human review only.
+
+The frontend can manually download this PDF response from the existing
+`POST /api/report/pdf/export` endpoint through `NEXT_PUBLIC_API_BASE_URL`.
+The dashboard card is titled `Report PDF export` and uses a manual
+`Download PDF report` button. It posts JSON body `{}`, expects
+`application/pdf`, creates a browser Blob/Object URL only after the click,
+uses a safe filename from `Content-Disposition` when available, otherwise uses
+`flexsignal-report-preview.pdf`, and revokes the Object URL after use. The
+card displays that PDF download was requested/generated from the backend
+in-memory response, plus `content-type`, `content-disposition`, `byteLength`,
+`x-flexsignal-decision-support-only`, `x-flexsignal-file-written`,
+`x-flexsignal-database-query-executed`,
+`x-flexsignal-database-write-performed`, and
+`x-flexsignal-requires-database-url`.
+
+Frontend PDF export support adds no backend endpoint, no backend behavior
+change, no server-side file writing, no database access from the frontend, no
+live EDS/DMI call from the browser, no ML/LLM behavior, no audit write, and no
+automation. It is manual PDF download only, backed by backend generated PDF
+bytes in memory. Human review remains required.
 
 Observed manual API smoke for `POST /api/report/pdf/export` used
 `Content-Type: application/json` and body `{}` against
@@ -1554,8 +1583,8 @@ Safety interpretation: the endpoint generated PDF bytes in memory. No PDF
 file was written, no file path was returned, no database query was executed,
 no database write was performed, no `DATABASE_URL` was required, no SQL was
 executed, no live EDS/DMI API was called, no ML/LLM behavior was used, no
-audit write occurred, no frontend download UI was added, and no control,
-dispatch, or activation behavior occurred. Human review remains required.
+audit write occurred, and no operational asset-command behavior occurred.
+Human review remains required.
 
 The frontend can manually display this response in a Report PDF dry-run
 preview card by posting `{}` to `POST /api/report/pdf/preview` through

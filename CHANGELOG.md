@@ -2,6 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Added frontend manual PDF download support using the existing
+  `POST /api/report/pdf/export` backend endpoint. The new API helper posts
+  JSON body `{}` through the existing `NEXT_PUBLIC_API_BASE_URL` pattern,
+  expects `application/pdf`, returns the PDF `Blob`, byte length, content
+  type, content disposition, and explicit safety headers, and uses a generic
+  non-200 error path that does not expose backend configuration values. The
+  dashboard now includes a `Report PDF export` card with a manual
+  `Download PDF report` button, loading and error states, browser
+  Blob/Object URL download, safe `Content-Disposition` filename handling with
+  `flexsignal-report-preview.pdf` fallback, and Object URL revocation after
+  use. After manual click, the card displays that the PDF download was
+  requested/generated from backend generated PDF bytes in memory, plus
+  `content-type`, `content-disposition`, `byteLength`,
+  `x-flexsignal-decision-support-only`, `x-flexsignal-file-written`,
+  `x-flexsignal-database-query-executed`,
+  `x-flexsignal-database-write-performed`, and
+  `x-flexsignal-requires-database-url`. This frontend/docs change does not
+  modify backend behavior, add endpoints, write server-side files, access a
+  database from the frontend, run SQL, call live EDS/DMI APIs, add auth,
+  migrations, Azure infrastructure, ML/LLM behavior, audit writes, or
+  automation. It preserves manual read-only decision support with human review
+  required.
 - Added `POST /api/report/pdf/export` as a backend-only read-only PDF export
   endpoint. It uses deterministic synthetic or caller-provided preview data,
   builds `report-summary-v0`, renders Markdown, and returns non-empty

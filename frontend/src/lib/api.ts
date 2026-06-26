@@ -249,6 +249,20 @@ export type ReportPdfPreviewResponse = {
   safety_boundary?: SafetyBoundary;
 };
 
+export type ReportPdfExportResponse = {
+  blob: Blob;
+  byteLength: number;
+  contentType: string;
+  contentDisposition: string | null;
+  safetyHeaders: {
+    "x-flexsignal-decision-support-only": string | null;
+    "x-flexsignal-file-written": string | null;
+    "x-flexsignal-database-query-executed": string | null;
+    "x-flexsignal-database-write-performed": string | null;
+    "x-flexsignal-requires-database-url": string | null;
+  };
+};
+
 const READ_LIMIT = 5;
 
 export async function fetchSpotPrices(
@@ -408,6 +422,59 @@ export async function fetchReportPdfPreview(): Promise<ReportPdfPreviewResponse>
   }
 
   return body as ReportPdfPreviewResponse;
+}
+
+export async function fetchReportPdfExport(): Promise<ReportPdfExportResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/report/pdf/export`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  });
+
+  if (!response.ok) {
+    throw new Error(`PDF export request failed with status ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (!contentType.toLowerCase().includes("application/pdf")) {
+    throw new Error(
+      `Backend returned an unexpected PDF export content type: ${
+        contentType || "missing"
+      }`
+    );
+  }
+
+  const blob = await response.blob();
+
+  return {
+    blob,
+    byteLength: blob.size,
+    contentType,
+    contentDisposition: response.headers.get("content-disposition"),
+    safetyHeaders: {
+      "x-flexsignal-decision-support-only": response.headers.get(
+        "x-flexsignal-decision-support-only"
+      ),
+      "x-flexsignal-file-written": response.headers.get(
+        "x-flexsignal-file-written"
+      ),
+      "x-flexsignal-database-query-executed": response.headers.get(
+        "x-flexsignal-database-query-executed"
+      ),
+      "x-flexsignal-database-write-performed": response.headers.get(
+        "x-flexsignal-database-write-performed"
+      ),
+      "x-flexsignal-requires-database-url": response.headers.get(
+        "x-flexsignal-requires-database-url"
+      )
+    }
+  };
 }
 
 async function fetchEnergyApi<Row>(
