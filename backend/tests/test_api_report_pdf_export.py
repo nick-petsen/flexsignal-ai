@@ -15,11 +15,20 @@ client = TestClient(app)
 
 REPORT_API_PATH = Path("app/api/report.py")
 EXPORT_PATH = "/api/report/pdf/export"
+LOCAL_FRONTEND_ORIGIN = "http://localhost:3000"
 EXPECTED_REPORT_ROUTES = {
     "/api/report/summary/preview",
     "/api/report/markdown/preview",
     "/api/report/pdf/preview",
     EXPORT_PATH,
+}
+EXPECTED_EXPOSED_EXPORT_HEADERS = {
+    "content-disposition",
+    "x-flexsignal-decision-support-only",
+    "x-flexsignal-file-written",
+    "x-flexsignal-database-query-executed",
+    "x-flexsignal-database-write-performed",
+    "x-flexsignal-requires-database-url",
 }
 
 
@@ -42,6 +51,33 @@ def test_export_returns_http_200_pdf_and_required_headers() -> None:
     assert response.headers["x-flexsignal-database-write-performed"] == "false"
     assert response.headers["x-flexsignal-requires-database-url"] == "false"
     assert response.content
+    assert response.content.startswith(b"%PDF")
+
+
+def test_export_cors_exposes_download_and_safety_headers_to_frontend() -> None:
+    response = client.post(
+        EXPORT_PATH,
+        json={},
+        headers={"Origin": LOCAL_FRONTEND_ORIGIN},
+    )
+
+    exposed_headers = {
+        header.strip().lower()
+        for header in response.headers["access-control-expose-headers"].split(",")
+    }
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == LOCAL_FRONTEND_ORIGIN
+    assert EXPECTED_EXPOSED_EXPORT_HEADERS <= exposed_headers
+    assert (
+        response.headers["content-disposition"]
+        == 'attachment; filename="flexsignal-report-preview.pdf"'
+    )
+    assert response.headers["x-flexsignal-decision-support-only"] == "true"
+    assert response.headers["x-flexsignal-file-written"] == "false"
+    assert response.headers["x-flexsignal-database-query-executed"] == "false"
+    assert response.headers["x-flexsignal-database-write-performed"] == "false"
+    assert response.headers["x-flexsignal-requires-database-url"] == "false"
     assert response.content.startswith(b"%PDF")
 
 
