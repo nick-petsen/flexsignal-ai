@@ -633,6 +633,29 @@ run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
 behavior, write audit events, add frontend download behavior, or add
 operational functionality.
 
+Observed manual API smoke for `POST /api/report/pdf/export` used
+`Content-Type: application/json` and body `{}` against
+`http://127.0.0.1:8000/api/report/pdf/export`. The response returned status
+`200`, `content-type=application/pdf`,
+`content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+`x-flexsignal-decision-support-only=true`,
+`x-flexsignal-file-written=false`,
+`x-flexsignal-database-query-executed=false`,
+`x-flexsignal-database-write-performed=false`,
+`x-flexsignal-requires-database-url=false`, `byte_length=9950`, and a body
+starting with `%PDF`.
+
+The manual backend PDF export smoke does not change `rule-engine-v0`,
+`forecast-window-v0`, report-summary generation logic, Markdown rendering
+logic, PDF rendering logic, scoring thresholds, input composition, backtest
+pairing, predictive-performance claims, or production forecast validation
+status. The endpoint generated PDF bytes in memory only. No PDF file was
+written, no file path was returned, no database query or write was performed,
+no `DATABASE_URL` was required, no SQL was executed, no live EDS/DMI API was
+called, no ML/LLM behavior was used, no audit write occurred, no frontend
+download UI was added, and no control, dispatch, or activation behavior
+occurred. Human review remains required.
+
 Frontend Report PDF dry-run preview support now displays the same existing
 `POST /api/report/pdf/preview` response after a manual button click only. The
 frontend posts JSON body `{}` through `NEXT_PUBLIC_API_BASE_URL`, does not

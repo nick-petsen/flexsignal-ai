@@ -1538,6 +1538,25 @@ add frontend download behavior, or perform automatic control, dispatch,
 activation, or operational functionality. The generated PDF content remains
 read-only decision support for human review only.
 
+Observed manual API smoke for `POST /api/report/pdf/export` used
+`Content-Type: application/json` and body `{}` against
+`http://127.0.0.1:8000/api/report/pdf/export`. The HTTP response returned
+status `200`, `content-type=application/pdf`,
+`content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+`x-flexsignal-decision-support-only=true`,
+`x-flexsignal-file-written=false`,
+`x-flexsignal-database-query-executed=false`,
+`x-flexsignal-database-write-performed=false`,
+`x-flexsignal-requires-database-url=false`, `byte_length=9950`, and the
+response body started with `%PDF`.
+
+Safety interpretation: the endpoint generated PDF bytes in memory. No PDF
+file was written, no file path was returned, no database query was executed,
+no database write was performed, no `DATABASE_URL` was required, no SQL was
+executed, no live EDS/DMI API was called, no ML/LLM behavior was used, no
+audit write occurred, no frontend download UI was added, and no control,
+dispatch, or activation behavior occurred. Human review remains required.
+
 The frontend can manually display this response in a Report PDF dry-run
 preview card by posting `{}` to `POST /api/report/pdf/preview` through
 `NEXT_PUBLIC_API_BASE_URL`. The card does not auto-load or poll. It displays

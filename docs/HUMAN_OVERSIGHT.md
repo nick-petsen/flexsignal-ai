@@ -232,6 +232,30 @@ run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
 behavior, add frontend download behavior, add audit writes, or perform
 automatic control, dispatch, activation, or operational functionality.
 
+Observed manual backend PDF in-memory export API smoke:
+
+- Command: `POST http://127.0.0.1:8000/api/report/pdf/export`.
+- Request used `Content-Type: application/json` and body `{}`.
+- HTTP response returned status `200`.
+- `content-type` was `application/pdf`.
+- `content-disposition` was
+  `attachment; filename="flexsignal-report-preview.pdf"`.
+- `x-flexsignal-decision-support-only` was `true`.
+- `x-flexsignal-file-written` was `false`.
+- `x-flexsignal-database-query-executed` was `false`.
+- `x-flexsignal-database-write-performed` was `false`.
+- `x-flexsignal-requires-database-url` was `false`.
+- `byte_length` was `9950`.
+- Response body started with `%PDF`.
+
+Manual smoke safety interpretation: the endpoint generated PDF bytes in
+memory. No PDF file was written, no file path was returned, no database query
+was executed, no database write was performed, no `DATABASE_URL` was required,
+no SQL was executed, no live EDS/DMI API was called, no ML/LLM behavior was
+used, no audit write occurred, no frontend download UI was added, and no
+control, dispatch, or activation behavior occurred. Human review remains
+required.
+
 Observed manual backend PDF dry-run preview API smoke:
 
 - Command: `POST http://127.0.0.1:8000/api/report/pdf/preview`.
