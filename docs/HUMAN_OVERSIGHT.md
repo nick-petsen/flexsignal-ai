@@ -281,6 +281,34 @@ used, and no control, dispatch, or activation occurred. Runtime audit
 persistence remains a later separately reviewed step. Human review remains
 required.
 
+## Backend Manual PDF Export Audit Persistence
+
+`POST /api/audit/pdf-export/persist` persists the reviewed manual PDF export
+request audit event. It creates a `report_pdf_export_requested`
+`audit-event-v0` event with `action=manual_pdf_export`,
+`resource_type=report`, default `price_area=DK1`,
+`resource_id=report-summary-v0-DK1-872ff94f403e4ddd`, decision support only,
+human review required, `pdf_generated_in_memory=true`,
+`server_side_file_written=false`, `database_query_executed=false`, and
+`no_control_dispatch_activation=true`.
+
+The endpoint requires `DATABASE_URL` at request time only. App import and
+route exposure still work without `DATABASE_URL`; a missing value returns a
+safe HTTP 503 response without exposing the raw URL. On success, the endpoint
+writes one row to `audit_events` only through the audit writer/repository
+foundation, uses `ON CONFLICT (event_id) DO NOTHING`, and returns
+`audit_event_created=true`, `audit_event_persisted=true`,
+`database_write_performed=true`, `requires_database_url=true`, `event_id`,
+`event_type`, `table=audit_events`, `conflict_behavior`, and the preserved
+safety boundary.
+
+Safety interpretation: this is audit persistence only. It does not generate a
+PDF, write files, provide a frontend download, access energy data tables,
+read or write `spot_prices`, `power_balance`, forecast, or other energy
+tables, call live EDS/DMI APIs, add a scheduler, add Azure infrastructure,
+add auth, use ML/LLMs, or control, dispatch, or activate anything. Human
+review remains required and the frontend is not wired to this endpoint yet.
+
 Observed manual backend PDF in-memory export API smoke:
 
 - Command: `POST http://127.0.0.1:8000/api/report/pdf/export`.

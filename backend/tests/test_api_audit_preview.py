@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import ast
 import importlib
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -13,7 +11,6 @@ from app.main import app
 
 client = TestClient(app)
 
-AUDIT_API_PATH = Path("app/api/audit.py")
 CONFLICT_BEHAVIOR = "ON CONFLICT (event_id) DO NOTHING"
 SUPPORTED_EVENT_TYPES = (
     "current_risk_viewed",
@@ -241,38 +238,25 @@ def test_endpoint_does_not_require_database_url(monkeypatch: Any) -> None:
     assert response.json()["requires_database_url"] is False
 
 
-def test_no_mutating_database_behavior_is_added() -> None:
-    source = AUDIT_API_PATH.read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    imported_modules = {
-        node.module
-        for node in tree.body
-        if isinstance(node, ast.ImportFrom) and node.module is not None
-    }
-    imported_names = {
-        alias.name
-        for node in tree.body
-        if isinstance(node, (ast.Import, ast.ImportFrom))
-        for alias in node.names
-    }
-    call_names = {
-        node.func.attr
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-    }
+def test_preview_endpoint_does_not_call_persistence_route_helpers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.api import audit
 
-    assert "app.audit." + "writer" not in imported_modules
-    assert "app.db.executor" not in imported_modules
-    assert "app.db.transaction" not in imported_modules
-    assert "app.reporting.pdf" not in imported_modules
-    assert "pathlib" not in imported_modules
-    assert "requests" not in imported_modules
-    assert "httpx" not in imported_modules
-    assert "write_" + "audit_event" not in imported_names
-    assert "execute_" + "audit_event_insert" not in source
-    assert "render_report_markdown_pdf_bytes" not in source
-    assert "open(" not in source
-    assert ".write(" not in source
-    assert "execute" not in call_names
-    assert "connect" not in source
-    assert "exec" + "ute(" not in source
+    def forbidden_connect(_database_url: str) -> object:
+        raise AssertionError("preview must not create a database connection")
+
+    def forbidden_write(_connection: object, _event: object) -> object:
+        raise AssertionError("preview must not write an audit event")
+
+    monkeypatch.setattr(audit, "connect_with_psycopg", forbidden_connect)
+    monkeypatch.setattr(audit, "write_audit_event", forbidden_write)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://localhost/flexsignal_ai")
+
+    response = client.post(
+        "/api/audit/preview",
+        json=_payload("report_pdf_export_requested"),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["audit_event_persisted"] is False

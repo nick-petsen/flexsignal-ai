@@ -184,6 +184,7 @@ def test_route_safety_still_allows_no_put_patch_delete_or_extra_posts() -> None:
         "/api/risk/preview",
         "/api/forecast/preview",
         "/api/audit/preview",
+        "/api/audit/pdf-export/persist",
         "/api/report/summary/preview",
         "/api/report/markdown/preview",
         "/api/report/pdf/preview",
