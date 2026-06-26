@@ -2,6 +2,24 @@
 
 ## v0.1.0 - TODO
 
+- Added a backend-only dry-run audit preview for manual report PDF export
+  requests through the existing `POST /api/audit/preview` endpoint. The new
+  supported event type is `report_pdf_export_requested`; it creates an
+  in-memory `audit-event-v0` style event with `action=manual_pdf_export`,
+  `resource_type=report`,
+  `resource_id=report-summary-v0-DK1-872ff94f403e4ddd` by default,
+  `price_area=DK1` by default, `decision_support_only=true`,
+  `human_review_required=true`, `pdf_generated_in_memory=true`,
+  `server_side_file_written=false`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `no_control_dispatch_activation=true`. The response states
+  `dry_run=true`, `audit_event_created=true`,
+  `audit_event_persisted=false`, `database_write_performed=false`, and
+  `requires_database_url=false`. This does not modify frontend code, persist
+  audit events, generate PDFs, write files, access a database, require
+  `DATABASE_URL`, run SQL, call live EDS/DMI APIs, or add scheduler, Azure,
+  auth, ML/LLM, control, dispatch, activation, or operational behavior. Real
+  audit persistence remains a later reviewed step.
 - Documented observed manual frontend PDF download smoke results after the
   CORS exposed-header fix in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
   `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke started the

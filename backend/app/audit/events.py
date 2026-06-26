@@ -15,6 +15,7 @@ ALLOWED_EVENT_TYPES = frozenset(
         "current_risk_viewed",
         "report_summary_built",
         "report_markdown_rendered",
+        "report_pdf_export_requested",
         "report_pdf_exported",
     }
 )

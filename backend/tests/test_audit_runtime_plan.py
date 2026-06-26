@@ -13,6 +13,7 @@ from app.audit.runtime_plan import (
     build_current_risk_viewed_audit_plan,
     build_forecast_preview_requested_audit_plan,
     build_report_markdown_rendered_audit_plan,
+    build_report_pdf_export_requested_audit_plan,
     build_report_pdf_exported_audit_plan,
     build_report_summary_built_audit_plan,
 )
@@ -52,6 +53,12 @@ PLAN_CASES: tuple[tuple[PlanFactory, str, str, str], ...] = (
         "report_markdown",
     ),
     (
+        build_report_pdf_export_requested_audit_plan,
+        "report_pdf_export_requested",
+        "manual_pdf_export",
+        "report",
+    ),
+    (
         build_report_pdf_exported_audit_plan,
         "report_pdf_exported",
         "preview_report_pdf_export",
@@ -73,6 +80,8 @@ def test_each_runtime_plan_is_dry_run_only(
     plan = factory(price_area="DK1", occurred_at_utc=OCCURRED_AT)
 
     assert plan["dry_run"] is True
+    assert plan["audit_event_created"] is True
+    assert plan["audit_event_persisted"] is False
     assert plan["database_write_performed"] is False
     assert plan["requires_database_url"] is False
     assert plan["event"]
@@ -227,6 +236,34 @@ def test_deterministic_occurred_at_can_be_injected() -> None:
 
     assert first["event"]["occurred_at_utc"] == OCCURRED_AT
     assert first["event_id"] == second["event_id"]
+
+
+def test_report_pdf_export_requested_plan_has_manual_export_flags() -> None:
+    plan = build_report_pdf_export_requested_audit_plan(
+        price_area="DK1",
+        occurred_at_utc=OCCURRED_AT,
+    )
+    event = plan["event"]
+    metadata = event["metadata"]
+
+    assert plan["dry_run"] is True
+    assert plan["audit_event_created"] is True
+    assert plan["audit_event_persisted"] is False
+    assert plan["database_write_performed"] is False
+    assert plan["requires_database_url"] is False
+    assert event["event_type"] == "report_pdf_export_requested"
+    assert event["action"] == "manual_pdf_export"
+    assert event["resource_type"] == "report"
+    assert event["resource_id"] == "report-summary-v0-DK1-872ff94f403e4ddd"
+    assert event["decision_support_only"] is True
+    assert metadata["price_area"] == "DK1"
+    assert metadata["human_review_required"] is True
+    assert metadata["pdf_generated_in_memory"] is True
+    assert metadata["server_side_file_written"] is False
+    assert metadata["database_query_executed"] is False
+    assert metadata["database_write_performed"] is False
+    assert metadata["requires_database_url"] is False
+    assert metadata["no_control_dispatch_activation"] is True
 
 
 def test_runtime_plan_module_does_not_import_fastapi_or_router() -> None:

@@ -20,6 +20,7 @@ SUPPORTED_EVENT_TYPES = (
     "forecast_preview_requested",
     "report_summary_built",
     "report_markdown_rendered",
+    "report_pdf_export_requested",
     "report_pdf_exported",
 )
 BASE_PAYLOAD = {
@@ -53,6 +54,8 @@ def test_each_supported_event_type_returns_dry_run_plan(event_type: str) -> None
     assert response.status_code == 200
     body = response.json()
     assert body["dry_run"] is True
+    assert body["audit_event_created"] is True
+    assert body["audit_event_persisted"] is False
     assert body["database_write_performed"] is False
     assert body["requires_database_url"] is False
     assert body["event"]
@@ -76,6 +79,41 @@ def test_default_actor_fields_are_safe_local_values() -> None:
     event = response.json()["event"]
     assert event["actor_type"] == "local_user"
     assert event["actor_id"] == "unknown-local-user"
+
+
+def test_report_pdf_export_requested_defaults_to_dk1_manual_dry_run_event() -> None:
+    response = client.post(
+        "/api/audit/preview",
+        json={
+            "event_type": "report_pdf_export_requested",
+            "occurred_at_utc": "2026-01-01T12:30:00Z",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    event = body["event"]
+    metadata = event["metadata"]
+    assert body["dry_run"] is True
+    assert body["audit_event_created"] is True
+    assert body["audit_event_persisted"] is False
+    assert body["database_write_performed"] is False
+    assert body["requires_database_url"] is False
+    assert event["event_version"] == "audit-event-v0"
+    assert event["event_type"] == "report_pdf_export_requested"
+    assert event["action"] == "manual_pdf_export"
+    assert event["resource_type"] == "report"
+    assert event["resource_id"] == "report-summary-v0-DK1-872ff94f403e4ddd"
+    assert event["decision_support_only"] is True
+    assert event["safety_boundary"]["human_review_required"] is True
+    assert metadata["price_area"] == "DK1"
+    assert metadata["human_review_required"] is True
+    assert metadata["pdf_generated_in_memory"] is True
+    assert metadata["server_side_file_written"] is False
+    assert metadata["database_query_executed"] is False
+    assert metadata["database_write_performed"] is False
+    assert metadata["requires_database_url"] is False
+    assert metadata["no_control_dispatch_activation"] is True
 
 
 def test_optional_fields_are_used_where_relevant() -> None:
@@ -226,8 +264,15 @@ def test_no_mutating_database_behavior_is_added() -> None:
     assert "app.audit." + "writer" not in imported_modules
     assert "app.db.executor" not in imported_modules
     assert "app.db.transaction" not in imported_modules
+    assert "app.reporting.pdf" not in imported_modules
+    assert "pathlib" not in imported_modules
+    assert "requests" not in imported_modules
+    assert "httpx" not in imported_modules
     assert "write_" + "audit_event" not in imported_names
     assert "execute_" + "audit_event_insert" not in source
+    assert "render_report_markdown_pdf_bytes" not in source
+    assert "open(" not in source
+    assert ".write(" not in source
     assert "execute" not in call_names
     assert "connect" not in source
     assert "exec" + "ute(" not in source

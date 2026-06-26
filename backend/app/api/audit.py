@@ -12,6 +12,7 @@ from app.audit.runtime_plan import (
     build_current_risk_viewed_audit_plan,
     build_forecast_preview_requested_audit_plan,
     build_report_markdown_rendered_audit_plan,
+    build_report_pdf_export_requested_audit_plan,
     build_report_pdf_exported_audit_plan,
     build_report_summary_built_audit_plan,
 )
@@ -29,6 +30,7 @@ PLAN_BUILDERS: dict[str, PlanBuilder] = {
     "forecast_preview_requested": build_forecast_preview_requested_audit_plan,
     "report_summary_built": build_report_summary_built_audit_plan,
     "report_markdown_rendered": build_report_markdown_rendered_audit_plan,
+    "report_pdf_export_requested": build_report_pdf_export_requested_audit_plan,
     "report_pdf_exported": build_report_pdf_exported_audit_plan,
 }
 
@@ -37,7 +39,7 @@ class AuditPreviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     event_type: str = Field(min_length=1)
-    price_area: str = Field(min_length=1)
+    price_area: str = Field(default="DK1", min_length=1)
     actor_type: str | None = Field(default=None, min_length=1)
     actor_id: str | None = Field(default=None, min_length=1)
     request_id: str | None = Field(default=None, min_length=1)
@@ -106,12 +108,18 @@ def _builder_kwargs(
     elif event_type in {
         "report_summary_built",
         "report_markdown_rendered",
+        "report_pdf_export_requested",
         "report_pdf_exported",
     }:
         if payload.report_version is not None:
             kwargs["report_version"] = payload.report_version
         if (
-            event_type in {"report_markdown_rendered", "report_pdf_exported"}
+            event_type
+            in {
+                "report_markdown_rendered",
+                "report_pdf_exported",
+                "report_pdf_export_requested",
+            }
             and payload.output_format is not None
         ):
             kwargs["output_format"] = payload.output_format

@@ -232,6 +232,22 @@ run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
 behavior, add frontend download behavior, add audit writes, or perform
 automatic control, dispatch, activation, or operational functionality.
 
+## Backend Manual PDF Export Audit Preview
+
+`POST /api/audit/preview` supports
+`event_type=report_pdf_export_requested` for previewing the audit event that
+would describe a manual report PDF export user action. The preview creates an
+in-memory `audit-event-v0` style event with `action=manual_pdf_export`,
+`resource_type=report`, default `price_area=DK1`, decision support only, and
+human review required.
+
+The response is dry-run only and states `dry_run=true`,
+`audit_event_created=true`, `audit_event_persisted=false`,
+`database_write_performed=false`, and `requires_database_url=false`. It does
+not persist audit events, generate a PDF, write files, access a database,
+require `DATABASE_URL`, run SQL, call live EDS/DMI APIs, or add control,
+dispatch, or activation. Real audit persistence remains a later reviewed step.
+
 Observed manual backend PDF in-memory export API smoke:
 
 - Command: `POST http://127.0.0.1:8000/api/report/pdf/export`.

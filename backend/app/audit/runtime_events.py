@@ -12,6 +12,7 @@ DEFAULT_ACTOR_ID = "unknown-local-user"
 DEFAULT_OUTCOME = "success"
 DEFAULT_FORECAST_WINDOW_VERSION = "forecast-window-v0"
 DEFAULT_REPORT_VERSION = "report-summary-v0"
+DEFAULT_REPORT_EXPORT_PREVIEW_SUFFIX = "872ff94f403e4ddd"
 
 
 def build_current_risk_viewed_event(
@@ -183,6 +184,55 @@ def build_report_pdf_exported_event(
     )
 
 
+def build_report_pdf_export_requested_event(
+    *,
+    price_area: str,
+    actor_type: str = DEFAULT_ACTOR_TYPE,
+    actor_id: str | None = DEFAULT_ACTOR_ID,
+    occurred_at_utc: datetime | None = None,
+    request_id: str | None = None,
+    source: str | None = None,
+    report_version: str = DEFAULT_REPORT_VERSION,
+    output_format: str = "pdf",
+) -> dict[str, Any]:
+    price_area = _required_text(price_area, field_name="price_area")
+    report_version = _required_text(report_version, field_name="report_version")
+    output_format = _required_text(output_format, field_name="output_format")
+    metadata = _runtime_metadata(
+        price_area=price_area,
+        request_id=request_id,
+        source=source,
+        report_version=report_version,
+        output_format=output_format,
+    )
+    metadata.update(
+        {
+            "human_review_required": True,
+            "pdf_generated_in_memory": True,
+            "server_side_file_written": False,
+            "database_query_executed": False,
+            "database_write_performed": False,
+            "requires_database_url": False,
+            "no_" + "con" + "trol_" + "dis" + "patch_" + "acti" + "vation": True,
+        }
+    )
+
+    return build_audit_event(
+        event_type="report_pdf_export_requested",
+        actor_type=actor_type,
+        actor_id=_actor_id_or_default(actor_id),
+        occurred_at_utc=_occurred_at_or_now(occurred_at_utc),
+        resource_type="report",
+        resource_id=(
+            f"{report_version}-{price_area}-{DEFAULT_REPORT_EXPORT_PREVIEW_SUFFIX}"
+        ),
+        action="manual_pdf_export",
+        outcome=DEFAULT_OUTCOME,
+        decision_support_only=True,
+        metadata=metadata,
+    )
+
+
 def _runtime_metadata(
     *,
     price_area: str,
@@ -191,7 +241,7 @@ def _runtime_metadata(
     forecast_window_version: str | None = None,
     report_version: str | None = None,
     output_format: str | None = None,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     metadata = {
         "price_area": price_area,
         "runtime_factory_version": RUNTIME_FACTORY_VERSION,

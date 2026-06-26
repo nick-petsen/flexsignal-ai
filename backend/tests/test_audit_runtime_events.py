@@ -13,6 +13,7 @@ from app.audit.runtime_events import (
     build_current_risk_viewed_event,
     build_forecast_preview_requested_event,
     build_report_markdown_rendered_event,
+    build_report_pdf_export_requested_event,
     build_report_pdf_exported_event,
     build_report_summary_built_event,
 )
@@ -49,6 +50,12 @@ FACTORY_CASES: tuple[tuple[Factory, str, str, str], ...] = (
         "report_markdown_rendered",
         "render_report_markdown",
         "report_markdown",
+    ),
+    (
+        build_report_pdf_export_requested_event,
+        "report_pdf_export_requested",
+        "manual_pdf_export",
+        "report",
     ),
     (
         build_report_pdf_exported_event,
@@ -159,6 +166,10 @@ def test_report_events_include_report_version_and_output_format_when_relevant() 
         price_area="DK1",
         occurred_at_utc=OCCURRED_AT,
     )
+    pdf_request = build_report_pdf_export_requested_event(
+        price_area="DK1",
+        occurred_at_utc=OCCURRED_AT,
+    )
 
     assert "report-summary-v0" in summary["resource_id"]
     assert summary["metadata"]["report_version"] == "report-summary-v0"
@@ -168,6 +179,17 @@ def test_report_events_include_report_version_and_output_format_when_relevant() 
     assert "report-summary-v0" in pdf["resource_id"]
     assert pdf["metadata"]["report_version"] == "report-summary-v0"
     assert pdf["metadata"]["output_format"] == "pdf"
+    assert pdf_request["resource_type"] == "report"
+    assert pdf_request["resource_id"] == "report-summary-v0-DK1-872ff94f403e4ddd"
+    assert pdf_request["action"] == "manual_pdf_export"
+    assert pdf_request["metadata"]["report_version"] == "report-summary-v0"
+    assert pdf_request["metadata"]["output_format"] == "pdf"
+    assert pdf_request["metadata"]["pdf_generated_in_memory"] is True
+    assert pdf_request["metadata"]["server_side_file_written"] is False
+    assert pdf_request["metadata"]["database_query_executed"] is False
+    assert pdf_request["metadata"]["database_write_performed"] is False
+    assert pdf_request["metadata"]["requires_database_url"] is False
+    assert pdf_request["metadata"]["no_control_dispatch_activation"] is True
 
 
 def test_deterministic_occurred_at_can_be_injected() -> None:
