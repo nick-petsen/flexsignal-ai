@@ -45,6 +45,25 @@ MARKDOWN_PREVIEW_SOURCE_NOTES = [
     "read-only decision support; human review required",
 ]
 
+PDF_PREVIEW_WARNINGS = [
+    "dry-run preview only",
+    "no PDF generated",
+    "no file written",
+    "no database read/write",
+    "no live EDS/DMI calls",
+    "no control, dispatch, or activation",
+]
+
+PDF_PREVIEW_SOURCE_NOTES = [
+    "PDF dry-run preview only",
+    "planned source: report-summary-v0 + markdown preview",
+    "planned output format: pdf",
+    *PDF_PREVIEW_WARNINGS,
+    "read-only decision support; human review required",
+]
+
+MARKDOWN_EXCERPT_CHARACTER_LIMIT = 800
+
 
 class ReportSummaryPreviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -90,6 +109,24 @@ class ReportMarkdownPreviewResponse(BaseModel):
     markdown: str
     report_summary: dict[str, Any]
     safety_boundary: dict[str, bool]
+
+
+class ReportPdfPreviewResponse(BaseModel):
+    pdf_preview_planned: bool
+    pdf_generated: bool
+    file_written: bool
+    markdown_preview_generated: bool
+    database_query_executed: bool
+    database_write_performed: bool
+    requires_database_url: bool
+    decision_support_only: bool
+    planned_source: str
+    planned_output_format: str
+    report_summary: dict[str, Any]
+    markdown_excerpt: str
+    markdown_character_count: int
+    safety_boundary: dict[str, bool]
+    warnings: list[str]
 
 
 @router.post("/summary/preview", response_model=ReportSummaryPreviewResponse)
@@ -167,6 +204,51 @@ def preview_report_markdown(
         "markdown": markdown,
         "report_summary": report_summary,
         "safety_boundary": dict(SAFETY_BOUNDARY),
+    }
+
+
+@router.post("/pdf/preview", response_model=ReportPdfPreviewResponse)
+def preview_report_pdf(
+    payload: ReportSummaryPreviewRequest | None = None,
+) -> dict[str, Any]:
+    request = payload or ReportSummaryPreviewRequest()
+    current_risk, forecast = _preview_inputs(request)
+
+    try:
+        report_summary = build_report_summary(
+            price_area=request.price_area,
+            generated_at_utc=request.generated_at_utc,
+            current_risk=current_risk,
+            forecast=forecast,
+            title=request.title,
+            source_notes=[
+                *PREVIEW_SOURCE_NOTES,
+                *MARKDOWN_PREVIEW_SOURCE_NOTES,
+                *PDF_PREVIEW_SOURCE_NOTES,
+                *request.source_notes,
+            ],
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    markdown = render_report_summary_markdown(report_summary)
+
+    return {
+        "pdf_preview_planned": True,
+        "pdf_generated": False,
+        "file_written": False,
+        "markdown_preview_generated": True,
+        "database_query_executed": False,
+        "database_write_performed": False,
+        "requires_database_url": False,
+        "decision_support_only": True,
+        "planned_source": "report-summary-v0 + markdown preview",
+        "planned_output_format": "pdf",
+        "report_summary": report_summary,
+        "markdown_excerpt": markdown[:MARKDOWN_EXCERPT_CHARACTER_LIMIT],
+        "markdown_character_count": len(markdown),
+        "safety_boundary": dict(SAFETY_BOUNDARY),
+        "warnings": list(PDF_PREVIEW_WARNINGS),
     }
 
 

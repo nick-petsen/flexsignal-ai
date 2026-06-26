@@ -2,6 +2,19 @@
 
 ## v0.1.0 - TODO
 
+- Added `POST /api/report/pdf/preview` as a backend-only read-only PDF
+  dry-run preview API. The endpoint uses deterministic synthetic or
+  caller-provided preview data, reuses the existing `report-summary-v0` plus
+  Markdown preview foundation, and returns structured JSON with
+  `pdf_preview_planned=true`, `pdf_generated=false`, `file_written=false`,
+  `markdown_preview_generated=true`, no database read/write flags,
+  `requires_database_url=false`, `planned_source`, `planned_output_format`,
+  `report_summary`, a Markdown excerpt/count, explicit safety boundary, and
+  warnings. It prepares future PDF export planning only; it does not generate
+  PDF bytes, write files, access a database, require `DATABASE_URL`, run SQL,
+  call live Energi Data Service or DMI/weather APIs, use ML/LLM behavior, add
+  auth, scheduler/Azure infrastructure, audit writes, frontend behavior,
+  control, dispatch, activation, or operational functionality.
 - Documented observed manual frontend Report Markdown preview smoke results
   in `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The smoke started the backend locally, started
