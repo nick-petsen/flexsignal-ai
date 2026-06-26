@@ -2,6 +2,36 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend PDF download smoke results after the
+  CORS exposed-header fix in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
+  `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke started the
+  backend locally, started the frontend locally with
+  `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, opened the local
+  dashboard in a browser, used the Report PDF export card manually, and
+  clicked `Download PDF report`. The browser downloaded
+  `flexsignal-report-preview.pdf`, and the file opened successfully as a PDF.
+  No auto-download or polling was observed. Observed frontend values were
+  `download_filename=flexsignal-report-preview.pdf`,
+  `content-type=application/pdf`,
+  `content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+  `byteLength=9950`, `decision_support_only` header `true`, `file_written`
+  header `false`, `database_query_executed` header `false`,
+  `database_write_performed` header `false`, and `requires_database_url`
+  header `false`. Safety interpretation: the frontend download is manual and
+  user-triggered; backend generated PDF bytes in memory; no server-side file
+  was written; no file path was returned; no database query was executed by
+  the PDF export; no database write was performed; no `DATABASE_URL` was
+  required; no SQL was executed; no live EDS/DMI API was called; no ML/LLM
+  behavior was used; no audit write occurred; no control, dispatch, or
+  activation behavior occurred; and human review remains required. Other
+  DB-backed dashboard cards may show `DATABASE_URL`-related errors when
+  started without `DATABASE_URL`; that is expected for those DB-backed
+  endpoints and is separate from the PDF export smoke result. This
+  documentation-only step added no code, changed no frontend or backend
+  behavior, added no API endpoint, did not access a database, ran no SQL,
+  called no live API, generated no additional PDFs, and added no scheduler,
+  Azure, auth, ML/LLM, audit write, control, dispatch, activation, or
+  operational behavior.
 - Added frontend manual PDF download support using the existing
   `POST /api/report/pdf/export` backend endpoint. The new API helper posts
   JSON body `{}` through the existing `NEXT_PUBLIC_API_BASE_URL` pattern,

@@ -256,6 +256,49 @@ used, no audit write occurred, no frontend download UI was added, and no
 control, dispatch, or activation behavior occurred. Human review remains
 required.
 
+## Frontend Report PDF Manual Download Smoke
+
+The dashboard Report PDF export card uses the existing
+`POST /api/report/pdf/export` endpoint only after the user clicks
+`Download PDF report`. The download is manual and user-triggered.
+
+Observed manual frontend smoke:
+
+- Backend was started locally.
+- Frontend was started locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend.
+- Browser opened the local dashboard.
+- Report PDF export card was used manually.
+- Button clicked: `Download PDF report`.
+- Browser downloaded `flexsignal-report-preview.pdf`.
+- The downloaded file opened successfully as a PDF.
+- No auto-download or polling was observed.
+
+Observed frontend values:
+
+- `download_filename`: `flexsignal-report-preview.pdf`
+- `content-type`: `application/pdf`
+- `content-disposition`:
+  `attachment; filename="flexsignal-report-preview.pdf"`
+- `byteLength`: `9950`
+- `decision_support_only` header: `true`
+- `file_written` header: `false`
+- `database_query_executed` header: `false`
+- `database_write_performed` header: `false`
+- `requires_database_url` header: `false`
+
+Manual smoke safety interpretation: the frontend download is manual and
+user-triggered. The backend generated PDF bytes in memory. No server-side file
+was written, no file path was returned, no database query was executed by the
+PDF export, no database write was performed, no `DATABASE_URL` was required,
+no SQL was executed, no live EDS/DMI API was called, no ML/LLM behavior was
+used, no audit write occurred, and no control, dispatch, or activation
+behavior occurred. Human review remains required.
+
+Other DB-backed dashboard cards may show `DATABASE_URL`-related errors when
+started without `DATABASE_URL`. That is expected for those DB-backed endpoints
+and is separate from the PDF export smoke result.
+
 Observed manual backend PDF dry-run preview API smoke:
 
 - Command: `POST http://127.0.0.1:8000/api/report/pdf/preview`.

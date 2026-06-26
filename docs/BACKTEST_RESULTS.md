@@ -170,6 +170,29 @@ Current read-only foundation:
   used, no audit write occurred, no frontend download UI was added, and no
   control, dispatch, or activation behavior occurred. Human review remains
   required. This smoke does not affect backtest scoring.
+- Observed manual frontend Report PDF export smoke started the backend locally,
+  started the frontend locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend, opened the local dashboard in a browser, used the Report PDF export
+  card manually, and clicked `Download PDF report`. The browser downloaded
+  `flexsignal-report-preview.pdf`, and the file opened successfully as a PDF.
+  No auto-download or polling was observed. Observed frontend values were
+  `download_filename=flexsignal-report-preview.pdf`,
+  `content-type=application/pdf`,
+  `content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+  `byteLength=9950`, `decision_support_only` header `true`, `file_written`
+  header `false`, `database_query_executed` header `false`,
+  `database_write_performed` header `false`, and `requires_database_url`
+  header `false`. Safety interpretation: the frontend download is manual and
+  user-triggered; backend generated PDF bytes in memory; no server-side file
+  was written; no file path was returned; no database query was executed by
+  the PDF export; no database write was performed; no `DATABASE_URL` was
+  required; no SQL was executed; no live EDS/DMI API was called; no ML/LLM
+  behavior was used; no audit write occurred; and no control, dispatch, or
+  activation behavior occurred. Human review remains required. Other
+  DB-backed dashboard cards may show `DATABASE_URL`-related errors when
+  started without `DATABASE_URL`; that is expected for those DB-backed
+  endpoints and is separate from the PDF export smoke result. This smoke does
+  not affect backtest scoring.
 - Frontend Report PDF dry-run preview support displays the existing
   `POST /api/report/pdf/preview` response after a manual button click only.
   The frontend posts JSON body `{}` through `NEXT_PUBLIC_API_BASE_URL`, does
