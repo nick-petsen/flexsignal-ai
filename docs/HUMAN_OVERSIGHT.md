@@ -66,6 +66,32 @@ DMI/weather APIs, add backend endpoints, change backend behavior, add ML/LLM
 behavior, or write audit events. It prepares a future PDF export UI flow
 without performing PDF generation.
 
+Observed manual frontend Report Markdown preview smoke:
+
+- Backend was started locally.
+- Frontend was started locally with `NEXT_PUBLIC_API_BASE_URL` pointing to the
+  backend.
+- Browser opened the local dashboard.
+- Report Markdown preview was loaded manually by button click.
+- No auto-load or polling was observed.
+- The Report Markdown preview card was displayed.
+- The manual button called `POST /api/report/markdown/preview`.
+- The preview displayed `markdown_preview_generated=true`,
+  `pdf_generated=false`, `file_written=false`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, and `decision_support_only=true`.
+- The displayed report content included the report title, `price_area=DK1`,
+  `generated_at_utc`, rendered Markdown text block, and `safety_boundary`.
+- No download button was shown.
+- No PDF export button was shown.
+- No file generation behavior was visible.
+
+Manual smoke safety interpretation: the frontend shows Markdown preview only.
+No PDF was generated, no file was written, no database query or write was
+performed by this preview, no SQL was executed from the frontend, no live
+EDS/DMI API was called, no ML/LLM behavior was added, and no control,
+dispatch, or activation behavior occurred. Human review remains required.
+
 ## Backend Report Markdown Preview API
 
 `POST /api/report/markdown/preview` returns a JSON/Markdown preview for
