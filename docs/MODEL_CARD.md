@@ -229,6 +229,33 @@ behavior, or the read-only decision-support boundary. The frontend does not
 generate PDF output, write files, access a database, run SQL, call live
 EDS/DMI APIs, or use ML/LLM behavior.
 
+Observed manual frontend Report Markdown preview smoke started the backend
+locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+pointing to the backend, and opened the local dashboard in a browser. Report
+Markdown preview was loaded manually by button click only; no auto-load or
+polling was observed. The Report Markdown preview card displayed Markdown
+preview only, and the manual button called
+`POST /api/report/markdown/preview`.
+
+The displayed response included `markdown_preview_generated=true`,
+`pdf_generated=false`, `file_written=false`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, and `decision_support_only=true`. The
+displayed report content included the report title, `price_area=DK1`,
+`generated_at_utc`, rendered Markdown text block, and `safety_boundary`. No
+download button or PDF export button was shown, and no file generation
+behavior was visible.
+
+The manual frontend Report Markdown preview smoke does not change
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation logic,
+Markdown rendering logic, scoring thresholds, input composition, backtest
+pairing, predictive-performance claims, or production forecast validation
+status. The frontend shows Markdown preview only. No PDF was generated, no
+file was written, no database query or write was performed by this preview,
+no SQL was executed from the frontend, no live EDS/DMI API was called, no
+ML/LLM behavior was added, and no control, dispatch, or activation behavior
+occurred. Human review remains required.
+
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
 returns parameterized SELECT query plans for DK1/DK2 `spot_prices` and

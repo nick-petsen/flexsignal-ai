@@ -125,6 +125,24 @@ Current read-only foundation:
   `safety_boundary`. This frontend display path does not change backtest
   scoring, model validation, backend behavior, PDF generation, file writing,
   database access, SQL execution, live EDS/DMI API usage, or ML/LLM behavior.
+- Observed manual frontend Report Markdown preview smoke started the backend
+  locally, started the frontend locally with `NEXT_PUBLIC_API_BASE_URL`
+  pointing to the backend, opened the local dashboard in a browser, and
+  loaded the Report Markdown preview manually by button click only. No
+  auto-load or polling was observed. The Report Markdown preview card was
+  displayed, and the manual button called
+  `POST /api/report/markdown/preview`. Displayed flags included
+  `markdown_preview_generated=true`, `pdf_generated=false`,
+  `file_written=false`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `decision_support_only=true`. Displayed content included the report title,
+  `price_area=DK1`, `generated_at_utc`, rendered Markdown text block, and
+  `safety_boundary`. No download button or PDF export button was shown, and
+  no file generation behavior was visible. This smoke does not affect
+  backtest scoring, generate PDF output, write files, perform a database
+  query or write, execute SQL from the frontend, call live EDS/DMI APIs, add
+  ML/LLM behavior, or add control, dispatch, activation, or operational
+  behavior. Human review remains required.
 - Manual local PDF export v0 exists for synthetic/caller-provided report
   previews through an explicit `--output` path only.
 - `audit-event-v0` exists as a deterministic pure Python in-memory
