@@ -185,6 +185,7 @@ def test_route_safety_still_allows_no_put_patch_delete_or_extra_posts() -> None:
         "/api/forecast/preview",
         "/api/audit/preview",
         "/api/report/summary/preview",
+        "/api/report/markdown/preview",
     }
 
     exposed_mutating_routes = [

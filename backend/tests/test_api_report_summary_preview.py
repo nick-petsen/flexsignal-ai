@@ -175,7 +175,6 @@ def test_report_api_imports_no_file_pdf_db_sql_or_external_api_modules() -> None
         "app.db.transaction",
         "app.integrations",
         "app.integrations.energi_data_service",
-        "app.reporting.markdown",
         "app.reporting.pdf",
         "pathlib",
         "requests",
@@ -188,7 +187,6 @@ def test_report_api_imports_no_file_pdf_db_sql_or_external_api_modules() -> None
         "Path",
         "open",
         "render_report_markdown_pdf_bytes",
-        "render_report_summary_markdown",
     }
 
     assert imported_modules.isdisjoint(forbidden_modules)
@@ -240,7 +238,6 @@ def test_report_api_performs_no_file_pdf_db_sql_external_or_action_calls() -> No
         "open",
         "print",
         "render_report_markdown_pdf_bytes",
-        "render_report_summary_markdown",
     }
     forbidden_sql_operations = {"INSERT", "UPDATE", "DELETE", "UPSERT", "DROP"}
 

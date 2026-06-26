@@ -47,6 +47,23 @@ performed by this preview, no SQL was executed from the frontend, no live
 EDS/DMI API was called, no ML/LLM behavior was added, and no control,
 dispatch, or activation behavior occurred. Human review remains required.
 
+## Backend Report Markdown Preview API
+
+`POST /api/report/markdown/preview` returns a JSON/Markdown preview for
+`report-summary-v0` using deterministic synthetic or caller-provided preview
+data only. The response includes `markdown_preview_generated=true`,
+`pdf_generated=false`, `file_written=false`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, `decision_support_only=true`, Markdown,
+`report_summary`, and the safety boundary.
+
+Safety interpretation: this backend endpoint is read-only decision support for
+human review. It prepares a future PDF export flow but does not generate PDF
+output, write files, access a database, run SQL, call live Energi Data Service
+or DMI/weather APIs, use ML/LLM behavior, add auth, scheduler/Azure
+infrastructure, audit writes, frontend behavior, control, dispatch,
+activation, or operational functionality.
+
 ## Frontend Forecast Window Visual
 
 The Forecast preview card includes a simple visual for the existing

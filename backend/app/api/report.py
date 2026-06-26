@@ -6,6 +6,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.reporting.markdown import render_report_summary_markdown
 from app.reporting.summary import build_report_summary
 
 
@@ -32,6 +33,16 @@ PREVIEW_SOURCE_NOTES = [
     "does not access databases or execute SQL",
     "does not call live Energi Data Service or DMI/weather APIs",
     "does not use ML or LLM behavior",
+]
+
+MARKDOWN_PREVIEW_SOURCE_NOTES = [
+    "JSON/Markdown preview only",
+    "no PDF generated",
+    "no file written",
+    "no database read/write",
+    "no live EDS/DMI calls",
+    "no control, dispatch, or activation",
+    "read-only decision support; human review required",
 ]
 
 
@@ -65,6 +76,19 @@ class ReportSummaryPreviewResponse(BaseModel):
     report_summary: dict[str, Any]
     recommendations: list[str]
     explanation: str
+    safety_boundary: dict[str, bool]
+
+
+class ReportMarkdownPreviewResponse(BaseModel):
+    markdown_preview_generated: bool
+    pdf_generated: bool
+    file_written: bool
+    database_query_executed: bool
+    database_write_performed: bool
+    requires_database_url: bool
+    decision_support_only: bool
+    markdown: str
+    report_summary: dict[str, Any]
     safety_boundary: dict[str, bool]
 
 
@@ -103,6 +127,45 @@ def preview_report_summary(
             "external API, ML, LLM, control, dispatch, or activation behavior "
             "is performed."
         ),
+        "safety_boundary": dict(SAFETY_BOUNDARY),
+    }
+
+
+@router.post("/markdown/preview", response_model=ReportMarkdownPreviewResponse)
+def preview_report_markdown(
+    payload: ReportSummaryPreviewRequest | None = None,
+) -> dict[str, Any]:
+    request = payload or ReportSummaryPreviewRequest()
+    current_risk, forecast = _preview_inputs(request)
+
+    try:
+        report_summary = build_report_summary(
+            price_area=request.price_area,
+            generated_at_utc=request.generated_at_utc,
+            current_risk=current_risk,
+            forecast=forecast,
+            title=request.title,
+            source_notes=[
+                *PREVIEW_SOURCE_NOTES,
+                *MARKDOWN_PREVIEW_SOURCE_NOTES,
+                *request.source_notes,
+            ],
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    markdown = render_report_summary_markdown(report_summary)
+
+    return {
+        "markdown_preview_generated": True,
+        "pdf_generated": False,
+        "file_written": False,
+        "database_query_executed": False,
+        "database_write_performed": False,
+        "requires_database_url": False,
+        "decision_support_only": True,
+        "markdown": markdown,
+        "report_summary": report_summary,
         "safety_boundary": dict(SAFETY_BOUNDARY),
     }
 
