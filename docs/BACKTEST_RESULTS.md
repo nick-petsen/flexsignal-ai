@@ -269,6 +269,14 @@ Current read-only foundation:
   `database_write_performed=false`, and `requires_database_url=false`; it does
   not execute SQL, write audit events, call the audit writer, or wire audit
   persistence into report/PDF/forecast/risk runtime flows.
+- `POST /api/audit/preview` also supports
+  `event_type=report_pdf_export_requested` for the manual report PDF export
+  user action. The response is dry-run only with `audit_event_created=true`,
+  `audit_event_persisted=false`, `database_write_performed=false`, and
+  `requires_database_url=false`. It does not generate PDF bytes, write files,
+  access a database, require `DATABASE_URL`, run SQL, call live EDS/DMI APIs,
+  or persist audit events. Real audit persistence remains deferred to a later
+  reviewed step and this preview does not affect backtest scoring.
 - `POST /api/forecast/preview` exposes that aggregation for caller-provided
   rows only.
 - The frontend dashboard has a manual read-only forecast preview card that

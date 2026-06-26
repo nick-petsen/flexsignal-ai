@@ -290,6 +290,16 @@ Working read-only core:
   `audit-event-v0` dictionaries plus repository INSERT plans without executing
   SQL, opening database connections, reading `DATABASE_URL`, calling the audit
   writer, exposing API routes, or modifying frontend behavior.
+- `POST /api/audit/preview` now supports a manual PDF export request audit
+  preview with `event_type=report_pdf_export_requested`. It creates an
+  in-memory `audit-event-v0` shape for `action=manual_pdf_export` and
+  `resource_type=report`, defaults `price_area` to `DK1`, and returns
+  `dry_run=true`, `audit_event_created=true`,
+  `audit_event_persisted=false`, `database_write_performed=false`, and
+  `requires_database_url=false`. This preview does not persist audit events,
+  generate a PDF, write files, access a database, require `DATABASE_URL`, run
+  SQL, call live EDS/DMI APIs, or add control, dispatch, or activation. Real
+  audit persistence remains a later reviewed step.
 - An EDS data freshness read-model foundation exists in
   `backend/app/db/repositories/energy_freshness.py`, and
   `GET /api/energy/freshness` exposes those DK1/DK2 query plans as a

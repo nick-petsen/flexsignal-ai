@@ -186,6 +186,7 @@ def test_all_allowed_event_types_can_be_built() -> None:
         "current_risk_viewed",
         "report_summary_built",
         "report_markdown_rendered",
+        "report_pdf_export_requested",
         "report_pdf_exported",
     ]:
         event = _event(event_type=event_type)
