@@ -136,6 +136,36 @@ executed, no live EDS/DMI API was called, no ML/LLM behavior was used, and no
 control, dispatch, or activation behavior occurred. Human review remains
 required.
 
+## Frontend Report PDF Dry-Run Preview
+
+The dashboard includes a Report PDF dry-run preview card for the existing
+`POST /api/report/pdf/preview` endpoint. It appears as PDF dry-run preview
+only after a manual button click. The frontend posts JSON body `{}` through
+`NEXT_PUBLIC_API_BASE_URL`.
+
+Required human oversight wording shown in the card:
+
+- PDF dry-run preview only.
+- No PDF generated.
+- No file written.
+- No download available.
+- Read-only decision support.
+- Human review required.
+
+Displayed fields include `pdf_preview_planned`, `pdf_generated`,
+`file_written`, `markdown_preview_generated`, `database_query_executed`,
+`database_write_performed`, `requires_database_url`,
+`decision_support_only`, `planned_source`, `planned_output_format`,
+`markdown_character_count`, optional `markdown_excerpt`, warnings, report
+title, `price_area`, `generated_at_utc`, and `safety_boundary`.
+
+Safety interpretation: the frontend display does not modify backend behavior,
+add endpoints, generate PDF output, add download behavior, write files,
+access a database from the frontend, run SQL, call live EDS/DMI APIs,
+auto-load, poll, add auth, add Azure infrastructure, add ML/LLM, or add audit
+writes. It prepares a future controlled PDF export flow while keeping the
+v0.1 read-only decision-support boundary.
+
 ## Backend Report PDF Dry-Run Preview API
 
 `POST /api/report/pdf/preview` returns a structured JSON dry-run preview for a

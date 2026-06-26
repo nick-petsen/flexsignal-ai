@@ -53,6 +53,21 @@ Working read-only core:
   call live Energi Data Service or DMI/weather APIs, auto-load, poll, add
   endpoints, or change backend behavior. It prepares a future PDF export UI
   flow while preserving read-only decision support and human review.
+- Frontend dashboard can manually load a Report PDF dry-run preview card
+  through `POST /api/report/pdf/preview`. The card displays PDF dry-run
+  preview only after the manual button click, including
+  `pdf_preview_planned`, `pdf_generated`, `file_written`,
+  `markdown_preview_generated`, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`,
+  `decision_support_only`, `planned_source`, `planned_output_format`,
+  `markdown_character_count`, optional `markdown_excerpt`, warnings, report
+  title, `price_area`, `generated_at_utc`, and `safety_boundary`. It shows
+  No PDF generated, No file written, No download available, Read-only
+  decision support, and Human review required. It does not modify backend
+  behavior, add endpoints, generate PDF output, add download behavior, write
+  files, access a database from the frontend, run SQL, call live EDS/DMI
+  APIs, auto-load, poll, add auth, add Azure infrastructure, add ML/LLM, or
+  add audit writes. It prepares a future controlled PDF export flow.
 - Observed manual frontend smoke for the Report Markdown preview started the
   backend locally, started the frontend locally with
   `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, opened the local
@@ -1474,6 +1489,17 @@ not generate PDF bytes, write files, fetch data, access a database, run SQL,
 require `DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs,
 use ML, use LLMs, add audit writes, or perform automatic control, dispatch,
 activation, or operational functionality.
+
+The frontend can manually display this response in a Report PDF dry-run
+preview card by posting `{}` to `POST /api/report/pdf/preview` through
+`NEXT_PUBLIC_API_BASE_URL`. The card does not auto-load or poll. It displays
+the endpoint flags, `planned_source`, `planned_output_format`,
+`markdown_character_count`, optional `markdown_excerpt`, warnings, report
+title, `price_area`, `generated_at_utc`, and `safety_boundary`. The frontend
+does not generate PDFs, add downloads, write files, access a database, run
+SQL, call live EDS/DMI APIs, or change backend behavior. This prepares a
+future controlled PDF export flow while keeping the v0.1 read-only
+decision-support boundary.
 
 Observed manual API smoke for the PDF dry-run preview endpoint:
 

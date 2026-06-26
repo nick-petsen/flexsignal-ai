@@ -147,6 +147,23 @@ Current read-only foundation:
   preview using deterministic synthetic or caller-provided preview data only.
   It reuses `report-summary-v0` plus Markdown preview output, prepares a
   future PDF export path only, and does not affect backtest scoring.
+- Frontend Report PDF dry-run preview support displays the existing
+  `POST /api/report/pdf/preview` response after a manual button click only.
+  The frontend posts JSON body `{}` through `NEXT_PUBLIC_API_BASE_URL`, does
+  not auto-load or poll, and displays PDF dry-run preview only. Displayed
+  fields include `pdf_preview_planned`, `pdf_generated`, `file_written`,
+  `markdown_preview_generated`, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`,
+  `decision_support_only`, `planned_source`, `planned_output_format`,
+  `markdown_character_count`, optional `markdown_excerpt`, warnings, report
+  title, `price_area`, `generated_at_utc`, and `safety_boundary`. The card
+  shows No PDF generated, No file written, No download available, Read-only
+  decision support, and Human review required. This frontend/docs change does
+  not affect backtest scoring, modify backend behavior, add endpoints,
+  generate PDF output, add download behavior, write files, access a database
+  from the frontend, run SQL, call live EDS/DMI APIs, add auth, add Azure
+  infrastructure, add ML/LLM behavior, or add audit writes. It prepares a
+  future controlled PDF export flow.
 - Observed manual API smoke for `POST /api/report/pdf/preview` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/preview`. The HTTP response returned

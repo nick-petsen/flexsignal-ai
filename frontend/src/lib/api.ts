@@ -231,6 +231,24 @@ export type ReportMarkdownPreviewResponse = {
   safety_boundary: SafetyBoundary;
 };
 
+export type ReportPdfPreviewResponse = {
+  pdf_preview_planned: boolean;
+  pdf_generated: boolean;
+  file_written: boolean;
+  markdown_preview_generated: boolean;
+  database_query_executed: boolean;
+  database_write_performed: boolean;
+  requires_database_url: boolean;
+  decision_support_only: boolean;
+  planned_source: string;
+  planned_output_format: string;
+  markdown_character_count: number | null;
+  markdown_excerpt?: string | null;
+  warnings?: string[];
+  report_summary?: ReportSummary;
+  safety_boundary?: SafetyBoundary;
+};
+
 const READ_LIMIT = 5;
 
 export async function fetchSpotPrices(
@@ -370,6 +388,26 @@ export async function fetchReportMarkdownPreview(): Promise<ReportMarkdownPrevie
   }
 
   return body as ReportMarkdownPreviewResponse;
+}
+
+export async function fetchReportPdfPreview(): Promise<ReportPdfPreviewResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/report/pdf/preview`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  return body as ReportPdfPreviewResponse;
 }
 
 async function fetchEnergyApi<Row>(
