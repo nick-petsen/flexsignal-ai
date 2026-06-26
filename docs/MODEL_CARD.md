@@ -608,6 +608,21 @@ Data Service or DMI/weather APIs, use ML/LLM behavior, write audit events, or
 add operational functionality. The frontend can manually display this response
 without changing backend behavior.
 
+`POST /api/report/pdf/preview` exposes a backend-only PDF dry-run preview API.
+It uses deterministic synthetic or caller-provided preview data only, builds
+`report-summary-v0`, renders Markdown preview context, and returns JSON with
+`pdf_preview_planned=true`, `pdf_generated=false`, `file_written=false`,
+`markdown_preview_generated=true`, no database read/write flags,
+`requires_database_url=false`, `planned_source`, `planned_output_format=pdf`,
+`report_summary`, Markdown preview metadata, warnings, and the safety
+boundary. The planned source is `report-summary-v0 + markdown preview`.
+
+The PDF dry-run preview API prepares a future PDF export path only. It does
+not generate PDF bytes, write files, access a database, require
+`DATABASE_URL`, run SQL, call live Energi Data Service or DMI/weather APIs,
+use ML/LLM behavior, write audit events, add auth, scheduler/Azure
+infrastructure, or add operational functionality.
+
 `render_report_markdown_pdf_bytes(...)` is the manual PDF renderer for
 caller-provided Markdown report content. It returns PDF bytes and does not
 write files, fetch data, access a database, expose an API, use frontend code,

@@ -136,6 +136,26 @@ executed, no live EDS/DMI API was called, no ML/LLM behavior was used, and no
 control, dispatch, or activation behavior occurred. Human review remains
 required.
 
+## Backend Report PDF Dry-Run Preview API
+
+`POST /api/report/pdf/preview` returns a structured JSON dry-run preview for a
+future PDF output path. It uses deterministic synthetic or caller-provided
+preview data only, builds `report-summary-v0`, renders Markdown preview
+context, and reports `pdf_preview_planned=true`, `pdf_generated=false`,
+`file_written=false`, `markdown_preview_generated=true`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, `decision_support_only=true`,
+`planned_source=report-summary-v0 + markdown preview`,
+`planned_output_format=pdf`, `report_summary`, Markdown preview metadata,
+warnings, and the safety boundary.
+
+Safety interpretation: this endpoint is read-only decision support for human
+review and prepares future PDF export only. It does not generate PDF bytes,
+write files, access a database, run SQL, call live Energi Data Service or
+DMI/weather APIs, use ML/LLM behavior, add auth, scheduler/Azure
+infrastructure, audit writes, or operational functionality. It must not be
+used for automatic control, dispatch, or activation.
+
 ## Frontend Forecast Window Visual
 
 The Forecast preview card includes a simple visual for the existing

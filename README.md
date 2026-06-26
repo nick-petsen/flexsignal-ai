@@ -72,6 +72,15 @@ Working read-only core:
   was executed from the frontend, no live EDS/DMI API was called, no ML/LLM
   behavior was added, and no control, dispatch, or activation behavior
   occurred. Human review remains required.
+- Backend `POST /api/report/pdf/preview` exists as a PDF dry-run planning API
+  only. It reuses `report-summary-v0` plus Markdown preview output and returns
+  JSON with `pdf_preview_planned=true`, `pdf_generated=false`,
+  `file_written=false`, `markdown_preview_generated=true`, no database
+  read/write flags, `requires_database_url=false`, `planned_source`,
+  `planned_output_format=pdf`, `report_summary`, Markdown preview metadata,
+  safety boundary, and warnings. It does not generate PDF bytes, write files,
+  access a database, run SQL, call live EDS/DMI APIs, use ML/LLM behavior, add
+  audit writes, or add control, dispatch, activation, or operational behavior.
 - The frontend Forecast preview card includes a simple read-only forecast
   window visual. It appears only after the existing manual
   `Load forecast preview` response exists, uses only that deterministic
@@ -1429,6 +1438,24 @@ does not generate PDF files yet, write files, fetch data, access a database,
 run SQL, require `DATABASE_URL`, call live Energi Data Service, call
 DMI/weather APIs, use ML, use LLMs, add audit writes, or perform automatic
 control, dispatch, activation, or operational functionality.
+
+`POST /api/report/pdf/preview` exposes a backend-only PDF dry-run preview API.
+It accepts the same deterministic synthetic defaults or caller-provided
+current-risk and forecast-window dictionaries as the report summary preview,
+builds `report-summary-v0`, renders Markdown for preview context, and returns
+structured JSON with `pdf_preview_planned=true`, `pdf_generated=false`,
+`file_written=false`, `markdown_preview_generated=true`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, `decision_support_only=true`,
+`planned_source=report-summary-v0 + markdown preview`,
+`planned_output_format=pdf`, `report_summary`, a Markdown excerpt/count,
+warnings, and the explicit human-review safety boundary.
+
+The PDF dry-run preview API prepares a future PDF export path only. It does
+not generate PDF bytes, write files, fetch data, access a database, run SQL,
+require `DATABASE_URL`, call live Energi Data Service, call DMI/weather APIs,
+use ML, use LLMs, add audit writes, or perform automatic control, dispatch,
+activation, or operational functionality.
 
 Observed manual API smoke for the report summary preview endpoint:
 
