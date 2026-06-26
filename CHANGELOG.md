@@ -2,6 +2,30 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend Report PDF dry-run preview smoke
+  results in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
+  `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke started
+  the backend locally, started the frontend locally with
+  `NEXT_PUBLIC_API_BASE_URL` pointing to the backend, opened the local
+  dashboard in a browser, and loaded the Report PDF dry-run preview by
+  manual button click only. No auto-load or polling was observed. The Report
+  PDF dry-run preview card was displayed, and the manual button called
+  `POST /api/report/pdf/preview`. Displayed flags were
+  `pdf_preview_planned=true`, `pdf_generated=false`, `file_written=false`,
+  `markdown_preview_generated=true`, `database_query_executed=false`,
+  `database_write_performed=false`, `requires_database_url=false`, and
+  `decision_support_only=true`. Displayed content included
+  `planned_source=report-summary-v0 + markdown preview`,
+  `planned_output_format=pdf`, `markdown_character_count=3621`, report
+  title, `price_area=DK1`, `generated_at_utc`, `markdown_excerpt`,
+  warnings, and `safety_boundary`. No download button or PDF
+  export/generation button was shown, and no file generation behavior was
+  visible. This documentation-only step added no code, changed no frontend or
+  backend behavior, added no API endpoint, did not access a database,
+  executed no SQL, called no live APIs, generated no PDF, wrote no files
+  beyond the requested docs, added no scheduler, Azure, auth, ML/LLM, audit
+  write, control, dispatch, activation, or operational behavior, and
+  preserved required human review.
 - Added frontend Report PDF dry-run preview support using the existing
   `POST /api/report/pdf/preview` backend endpoint. The new API helper posts
   JSON body `{}` through the existing `NEXT_PUBLIC_API_BASE_URL` pattern and
