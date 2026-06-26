@@ -99,6 +99,25 @@ Current read-only foundation:
   APIs, use ML/LLM behavior, add frontend behavior, or add control, dispatch,
   activation, or operational functionality. It does not affect backtest
   scoring.
+- Observed manual API smoke for `POST /api/report/markdown/preview` used
+  `Content-Type: application/json` and body `{}` against
+  `http://127.0.0.1:8000/api/report/markdown/preview`. The HTTP response
+  returned valid JSON with `markdown_preview_generated=true`,
+  non-empty Markdown, `pdf_generated=false`, `file_written=false`,
+  `database_query_executed=false`, `database_write_performed=false`,
+  `requires_database_url=false`, `decision_support_only=true`,
+  `report_summary`, and `safety_boundary`. Observed Markdown content included
+  the report title, report metadata, `price_area=DK1`,
+  `generated_at_utc=2026-01-01T00:00:00Z`, current risk summary, forecast
+  window summary, `0-24h`, `24-48h`, and `48-72h` forecast windows, key
+  findings, recommended human actions, safety notes, limitations, source
+  notes, and read-only / human-review wording. Safety interpretation: the
+  endpoint works without `DATABASE_URL`, uses deterministic
+  synthetic/caller-provided preview data, generated Markdown preview only,
+  generated no PDF, wrote no file, executed no database query, performed no
+  database write, executed no SQL, called no live EDS/DMI API, used no ML/LLM
+  behavior, and performed no control, dispatch, or activation behavior. Human
+  review remains required. This smoke does not affect backtest scoring.
 - Manual local PDF export v0 exists for synthetic/caller-provided report
   previews through an explicit `--output` path only.
 - `audit-event-v0` exists as a deterministic pure Python in-memory

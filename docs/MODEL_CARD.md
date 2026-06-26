@@ -192,6 +192,33 @@ from the frontend, no live EDS/DMI API was called, no ML/LLM behavior was
 added, and no control, dispatch, or activation behavior occurred. Human
 review remains required.
 
+Observed manual API smoke for `POST /api/report/markdown/preview` used
+`Content-Type: application/json` and body `{}` against
+`http://127.0.0.1:8000/api/report/markdown/preview`. The HTTP response
+returned valid JSON with `markdown_preview_generated=true`,
+`pdf_generated=false`, `file_written=false`,
+`database_query_executed=false`, `database_write_performed=false`,
+`requires_database_url=false`, and `decision_support_only=true`. The
+`markdown` value was a non-empty string, and `report_summary` and
+`safety_boundary` were present.
+
+Observed Markdown content included the report title, report metadata,
+`price_area=DK1`, `generated_at_utc=2026-01-01T00:00:00Z`, current risk
+summary, forecast window summary, `0-24h`, `24-48h`, and `48-72h` forecast
+windows, key findings, recommended human actions, safety notes, limitations,
+source notes, and read-only / human-review wording.
+
+The manual backend Markdown preview API smoke does not change
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation logic,
+Markdown rendering logic, scoring thresholds, input composition, backtest
+pairing, predictive-performance claims, or production forecast validation
+status. The endpoint works without `DATABASE_URL` and uses deterministic
+synthetic/caller-provided preview data. Markdown preview was generated, but
+no PDF was generated, no file was written, no database query or write was
+performed, no SQL was executed, no live EDS/DMI API was called, no ML/LLM
+behavior was used, and no control, dispatch, or activation behavior occurred.
+Human review remains required.
+
 `GET /api/energy/freshness?price_area=DK1|DK2` now exposes a read-only preview
 of `eds-data-freshness-read-model-v0` for future freshness indicators. It
 returns parameterized SELECT query plans for DK1/DK2 `spot_prices` and
