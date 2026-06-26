@@ -8,6 +8,7 @@ import {
   fetchEnergyFreshnessRead,
   fetchForecastPreview,
   fetchPowerBalance,
+  fetchReportPdfExport,
   fetchReportMarkdownPreview,
   fetchReportPdfPreview,
   fetchReportSummaryPreview,
@@ -22,6 +23,7 @@ import {
   type PowerBalanceRow,
   type PriceArea,
   type ReportMarkdownPreviewResponse,
+  type ReportPdfExportResponse,
   type ReportPdfPreviewResponse,
   type ReportSummaryPreviewResponse,
   type SafetyBoundary,
@@ -68,6 +70,12 @@ type ReportPdfRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: ReportPdfPreviewResponse }
+  | { status: "error"; message: string };
+
+type ReportPdfExportRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: ReportPdfExportResponse; filename: string }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -986,6 +994,58 @@ function ReportPdfPreviewCard({
   );
 }
 
+function ReportPdfExportCard({
+  state,
+  onDownload
+}: {
+  state: ReportPdfExportRequestState;
+  onDownload: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="report-pdf-export-title">
+      <div className="card__header">
+        <div>
+          <h2 id="report-pdf-export-title">Report PDF export</h2>
+          <p className="card__description">
+            Manual PDF download from backend generated PDF bytes in memory.
+          </p>
+        </div>
+        <span className="status">Read-only</span>
+      </div>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onDownload}
+        disabled={isLoading}
+      >
+        {isLoading ? "Downloading..." : "Download PDF report"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>POST /api/report/pdf/export</code>.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">Requesting manual PDF download...</p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Backend unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <ReportPdfExportResult
+            data={state.data}
+            filename={state.filename}
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function EnergyFreshnessCard({
   state,
   onLoadDryRun,
@@ -1364,6 +1424,81 @@ function ReportPdfPreviewResult({
 
       <WarningList warnings={data.warnings} />
       <SafetyBoundarySummary safetyBoundary={data.safety_boundary} />
+    </div>
+  );
+}
+
+function ReportPdfExportResult({
+  data,
+  filename
+}: {
+  data: ReportPdfExportResponse;
+  filename: string;
+}) {
+  return (
+    <div>
+      <p className="preview-note">
+        PDF download requested/generated from backend in-memory response.
+        Backend generated PDF bytes in memory. No server-side file written.
+        Read-only decision support. Human review required. No database query
+        or write.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>download_filename</dt>
+          <dd>{filename}</dd>
+        </div>
+        <div>
+          <dt>content-type</dt>
+          <dd>{formatValue(data.contentType)}</dd>
+        </div>
+        <div>
+          <dt>content-disposition</dt>
+          <dd>{formatValue(data.contentDisposition)}</dd>
+        </div>
+        <div>
+          <dt>byteLength</dt>
+          <dd>{formatValue(data.byteLength)}</dd>
+        </div>
+        <div>
+          <dt>decision_support_only header</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-decision-support-only"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>file_written header</dt>
+          <dd>
+            {formatValue(data.safetyHeaders["x-flexsignal-file-written"])}
+          </dd>
+        </div>
+        <div>
+          <dt>database_query_executed header</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-database-query-executed"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>database_write_performed header</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-database-write-performed"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>requires_database_url header</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-requires-database-url"]
+            )}
+          </dd>
+        </div>
+      </dl>
     </div>
   );
 }
@@ -1802,6 +1937,72 @@ function parseForecastRiskScore(window: ForecastWindowSummary): number | null {
   );
 }
 
+const REPORT_PDF_FALLBACK_FILENAME = "flexsignal-report-preview.pdf";
+
+function getSafeReportPdfFilename(contentDisposition: string | null): string {
+  const filename = parseContentDispositionFilename(contentDisposition);
+
+  if (!filename) {
+    return REPORT_PDF_FALLBACK_FILENAME;
+  }
+
+  const trimmed = filename.trim();
+  const hasUnsafeCharacter = /[\/\\:\x00-\x1f\x7f]/.test(trimmed);
+  const isPdf = trimmed.toLowerCase().endsWith(".pdf");
+
+  if (
+    trimmed.length === 0 ||
+    trimmed.length > 120 ||
+    hasUnsafeCharacter ||
+    !isPdf
+  ) {
+    return REPORT_PDF_FALLBACK_FILENAME;
+  }
+
+  return trimmed;
+}
+
+function parseContentDispositionFilename(
+  contentDisposition: string | null
+): string | null {
+  if (!contentDisposition) {
+    return null;
+  }
+
+  const filenameStarMatch = contentDisposition.match(
+    /filename\*=UTF-8''([^;]+)/i
+  );
+
+  if (filenameStarMatch?.[1]) {
+    try {
+      return decodeURIComponent(filenameStarMatch[1].trim());
+    } catch {
+      return null;
+    }
+  }
+
+  const filenameMatch = contentDisposition.match(
+    /filename=(?:"([^"]+)"|([^;]+))/i
+  );
+
+  return filenameMatch?.[1] ?? filenameMatch?.[2]?.trim() ?? null;
+}
+
+function downloadReportPdfBlob(blob: Blob, filename: string) {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  try {
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+  } finally {
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  }
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -1840,6 +2041,10 @@ export default function DashboardPage() {
     useState<ReportPdfRequestState>({
       status: "idle"
     });
+  const [reportPdfExportState, setReportPdfExportState] =
+    useState<ReportPdfExportRequestState>({
+      status: "idle"
+    });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
@@ -1851,6 +2056,7 @@ export default function DashboardPage() {
     setReportPreviewState({ status: "idle" });
     setReportMarkdownPreviewState({ status: "idle" });
     setReportPdfPreviewState({ status: "idle" });
+    setReportPdfExportState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -1961,6 +2167,21 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleDownloadReportPdf() {
+    setReportPdfExportState({ status: "loading" });
+    try {
+      const data = await fetchReportPdfExport();
+      const filename = getSafeReportPdfFilename(data.contentDisposition);
+      downloadReportPdfBlob(data.blob, filename);
+      setReportPdfExportState({ status: "success", data, filename });
+    } catch (error) {
+      setReportPdfExportState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
   return (
     <main className="dashboard">
       <div className="dashboard__inner">
@@ -2037,6 +2258,10 @@ export default function DashboardPage() {
           <ReportPdfPreviewCard
             state={reportPdfPreviewState}
             onLoad={handleLoadReportPdfPreview}
+          />
+          <ReportPdfExportCard
+            state={reportPdfExportState}
+            onDownload={handleDownloadReportPdf}
           />
           <EnergyFreshnessCard
             state={freshnessState}
