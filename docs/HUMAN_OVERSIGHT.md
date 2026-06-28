@@ -232,6 +232,33 @@ run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
 behavior, add frontend download behavior, add audit writes, or perform
 automatic control, dispatch, activation, or operational functionality.
 
+## Backend Audited Report PDF In-Memory Export API
+
+`POST /api/report/pdf/export/audited` returns the existing report PDF as an
+`application/pdf` response and persists one audit event in the same request.
+It requires `DATABASE_URL` at request time, while app import and route exposure
+still work without `DATABASE_URL`. Missing configuration returns safe HTTP 503
+without exposing the raw URL.
+
+On success, the endpoint creates a `report_pdf_export_requested`
+`audit-event-v0` event with `action=manual_pdf_export`,
+`resource_type=report`, default `price_area=DK1`,
+`decision_support_only=true`, `human_review_required=true`,
+`pdf_generated_in_memory=true`, `server_side_file_written=false`,
+`database_query_executed=false`, underlying PDF-action
+`database_write_performed=false`, and
+`no_control_dispatch_activation=true`. It writes one row to `audit_events`
+only, then generates PDF bytes in memory and returns the attachment filename
+`flexsignal-report-preview.pdf`.
+
+Safety interpretation: this endpoint writes no server-side files, accesses no
+energy data tables, calls no live EDS/DMI APIs, uses no ML/LLM behavior, adds
+no scheduler, Azure, auth, frontend wiring, control, dispatch, activation, or
+operational functionality. The top-level response may report
+`database_write_performed=true` only because the audit row was persisted to
+`audit_events`; the existing unaudited `POST /api/report/pdf/export` endpoint
+remains available and unchanged with `database_write_performed=false`.
+
 ## Backend Manual PDF Export Audit Preview
 
 `POST /api/audit/preview` supports

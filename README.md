@@ -125,6 +125,18 @@ Working read-only core:
   not write files, access a database, require `DATABASE_URL`, run SQL, call
   live EDS/DMI APIs, use ML/LLM behavior, add audit writes, or add operational
   asset-command behavior.
+- Backend `POST /api/report/pdf/export/audited` exists as a backend-only
+  audited in-memory PDF export API. It requires `DATABASE_URL` at request time
+  and app import still works without it; a missing value returns safe HTTP 503
+  without exposing the raw URL. On success it creates one
+  `report_pdf_export_requested` `audit-event-v0` event, persists one row to
+  `audit_events` only, generates the existing report PDF in memory, and
+  returns `application/pdf` with audit and safety headers. It writes no files,
+  reads no energy data tables, calls no live EDS/DMI APIs, uses no ML/LLM
+  behavior, and performs no control, dispatch, activation, or operational
+  asset-command behavior. The frontend is not wired to this endpoint yet, and
+  the existing unaudited `POST /api/report/pdf/export` remains available and
+  unchanged with `database_write_performed=false`.
 - Backend `POST /api/audit/pdf-export/persist` exists as a backend-only audit
   persistence API for manual PDF export request events. It creates the same
   `audit-event-v0` style `report_pdf_export_requested` event used by the audit

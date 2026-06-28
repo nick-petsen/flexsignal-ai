@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import os
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.audit.runtime_events import DEFAULT_ACTOR_ID
+from app.audit.runtime_events import build_report_pdf_export_requested_event
+from app.audit.writer import write_audit_event
 from app.reporting.markdown import render_report_summary_markdown
 from app.reporting.pdf import render_report_markdown_pdf_bytes
 from app.reporting.summary import build_report_summary
@@ -85,6 +89,22 @@ PDF_EXPORT_HEADERS = {
     "X-FlexSignal-Database-Write-Performed": "false",
     "X-FlexSignal-Requires-Database-Url": "false",
 }
+AUDITED_PDF_EXPORT_HEADERS = {
+    "Content-Disposition": f'attachment; filename="{PDF_EXPORT_FILENAME}"',
+    "X-FlexSignal-Decision-Support-Only": "true",
+    "X-FlexSignal-File-Written": "false",
+    "X-FlexSignal-Pdf-Generated-In-Memory": "true",
+    "X-FlexSignal-Audit-Event-Created": "true",
+    "X-FlexSignal-Audit-Event-Persisted": "true",
+    "X-FlexSignal-Audit-Event-Type": "report_pdf_export_requested",
+    "X-FlexSignal-Audit-Table": "audit_events",
+    "X-FlexSignal-Database-Query-Executed": "false",
+    "X-FlexSignal-Database-Write-Performed": "true",
+    "X-FlexSignal-Database-Write-Scope": "audit_events_only",
+    "X-FlexSignal-Requires-Database-Url": "true",
+    "X-FlexSignal-No-Control-Dispatch-Activation": "true",
+}
+DEFAULT_API_ACTOR_TYPE = "local_user"
 
 
 class ReportSummaryPreviewRequest(BaseModel):
@@ -103,6 +123,26 @@ class ReportSummaryPreviewRequest(BaseModel):
     def generated_at_must_be_timezone_aware(cls, value: datetime) -> datetime:
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("generated_at_utc must be timezone-aware")
+        return value
+
+
+class AuditedReportPdfExportRequest(ReportSummaryPreviewRequest):
+    actor_type: str | None = Field(default=None, min_length=1)
+    actor_id: str | None = Field(default=None, min_length=1)
+    request_id: str | None = Field(default=None, min_length=1)
+    source: str | None = Field(default=None, min_length=1)
+    occurred_at_utc: datetime | None = None
+
+    @field_validator("occurred_at_utc")
+    @classmethod
+    def occurred_at_must_be_timezone_aware(
+        cls,
+        value: datetime | None,
+    ) -> datetime | None:
+        if value is not None and (
+            value.tzinfo is None or value.utcoffset() is None
+        ):
+            raise ValueError("occurred_at_utc must be timezone-aware")
         return value
 
 
@@ -279,25 +319,9 @@ def export_report_pdf(
     payload: ReportSummaryPreviewRequest | None = None,
 ) -> Response:
     request = payload or ReportSummaryPreviewRequest()
-    current_risk, forecast = _preview_inputs(request)
 
     try:
-        report_summary = build_report_summary(
-            price_area=request.price_area,
-            generated_at_utc=request.generated_at_utc,
-            current_risk=current_risk,
-            forecast=forecast,
-            title=request.title,
-            source_notes=[
-                *PDF_EXPORT_SOURCE_NOTES,
-                *request.source_notes,
-            ],
-        )
-        markdown = render_report_summary_markdown(report_summary)
-        pdf_bytes = render_report_markdown_pdf_bytes(
-            markdown,
-            title=report_summary.get("title"),
-        )
+        pdf_bytes = _render_report_pdf_bytes(request)
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -305,6 +329,107 @@ def export_report_pdf(
         content=pdf_bytes,
         media_type="application/pdf",
         headers=dict(PDF_EXPORT_HEADERS),
+    )
+
+
+@router.post("/pdf/export/audited")
+def export_report_pdf_audited(
+    payload: AuditedReportPdfExportRequest | None = None,
+) -> Response:
+    request = payload or AuditedReportPdfExportRequest()
+
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "warning": (
+                    "DATABASE_URL is required at request time; no audit event "
+                    "database write or PDF export was attempted."
+                ),
+                "audit_event_created": False,
+                "audit_event_persisted": False,
+                "pdf_generated_in_memory": False,
+                "server_side_file_written": False,
+                "database_query_executed": False,
+                "database_write_performed": False,
+                "requires_database_url": True,
+                "table": "audit_events",
+            },
+        )
+
+    try:
+        event = build_report_pdf_export_requested_event(
+            price_area=request.price_area,
+            actor_type=request.actor_type or DEFAULT_API_ACTOR_TYPE,
+            actor_id=request.actor_id or DEFAULT_ACTOR_ID,
+            occurred_at_utc=request.occurred_at_utc,
+            request_id=request.request_id,
+            source=request.source,
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    connection = None
+    try:
+        connection = connect_with_psycopg(database_url)
+        write_result = write_audit_event(connection, event)
+        pdf_bytes = _render_report_pdf_bytes(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:  # pragma: no cover - real DB failures are env-specific
+        raise HTTPException(
+            status_code=503,
+            detail="Audited PDF export failed",
+        ) from exc
+    finally:
+        if connection is not None:
+            close = getattr(connection, "close", None)
+            if callable(close):
+                close()
+
+    headers = {
+        **AUDITED_PDF_EXPORT_HEADERS,
+        "X-FlexSignal-Audit-Event-Id": event["event_id"],
+        "X-FlexSignal-Audit-Table": write_result["table"],
+    }
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers=headers,
+    )
+
+
+def connect_with_psycopg(database_url: str) -> Any:
+    try:
+        psycopg_module = __import__("psycopg")
+    except ImportError as exc:  # pragma: no cover - depends on deployment env
+        raise RuntimeError("Database driver is not installed") from exc
+
+    psycopg_connect = getattr(psycopg_module, "connect")
+    return psycopg_connect(database_url, autocommit=True)
+
+
+def _render_report_pdf_bytes(request: ReportSummaryPreviewRequest) -> bytes:
+    current_risk, forecast = _preview_inputs(request)
+
+    report_summary = build_report_summary(
+        price_area=request.price_area,
+        generated_at_utc=request.generated_at_utc,
+        current_risk=current_risk,
+        forecast=forecast,
+        title=request.title,
+        source_notes=[
+            *PDF_EXPORT_SOURCE_NOTES,
+            *request.source_notes,
+        ],
+    )
+    markdown = render_report_summary_markdown(report_summary)
+    return render_report_markdown_pdf_bytes(
+        markdown,
+        title=report_summary.get("title"),
     )
 
 

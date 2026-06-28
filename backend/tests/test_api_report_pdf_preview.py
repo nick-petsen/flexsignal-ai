@@ -182,6 +182,7 @@ def test_no_mutating_http_methods_beyond_allowed_preview_post_patterns() -> None
         "/api/report/markdown/preview",
         PREVIEW_PATH,
         "/api/report/pdf/export",
+        "/api/report/pdf/export/audited",
     } <= route_paths
     assert not any(
         getattr(route, "methods", set()) & {"PUT", "PATCH", "DELETE"}
@@ -224,7 +225,7 @@ def test_report_api_imports_no_file_pdf_db_sql_or_external_api_modules() -> None
 
     assert imported_modules.isdisjoint(forbidden_modules)
     assert imported_names.isdisjoint(forbidden_names)
-    assert "DATABASE_URL" not in source
+    assert "DATABASE_URL" in source
 
 
 def test_report_api_performs_no_file_pdf_db_sql_external_or_action_calls() -> None:

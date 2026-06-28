@@ -170,6 +170,7 @@ def test_app_exposes_no_mutating_write_methods() -> None:
         "/api/report/markdown/preview",
         "/api/report/pdf/preview",
         "/api/report/pdf/export",
+        "/api/report/pdf/export/audited",
     }
 
     exposed_mutating_routes = [

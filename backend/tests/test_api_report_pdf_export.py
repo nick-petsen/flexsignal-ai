@@ -15,20 +15,30 @@ client = TestClient(app)
 
 REPORT_API_PATH = Path("app/api/report.py")
 EXPORT_PATH = "/api/report/pdf/export"
+AUDITED_EXPORT_PATH = "/api/report/pdf/export/audited"
 LOCAL_FRONTEND_ORIGIN = "http://localhost:3000"
 EXPECTED_REPORT_ROUTES = {
     "/api/report/summary/preview",
     "/api/report/markdown/preview",
     "/api/report/pdf/preview",
     EXPORT_PATH,
+    AUDITED_EXPORT_PATH,
 }
 EXPECTED_EXPOSED_EXPORT_HEADERS = {
     "content-disposition",
     "x-flexsignal-decision-support-only",
     "x-flexsignal-file-written",
+    "x-flexsignal-pdf-generated-in-memory",
+    "x-flexsignal-audit-event-created",
+    "x-flexsignal-audit-event-persisted",
+    "x-flexsignal-audit-event-type",
+    "x-flexsignal-audit-event-id",
+    "x-flexsignal-audit-table",
     "x-flexsignal-database-query-executed",
     "x-flexsignal-database-write-performed",
+    "x-flexsignal-database-write-scope",
     "x-flexsignal-requires-database-url",
+    "x-flexsignal-no-control-dispatch-activation",
 }
 
 
@@ -155,7 +165,7 @@ def test_no_mutating_http_methods_beyond_allowed_preview_and_export_posts() -> N
     )
 
 
-def test_report_api_imports_no_file_db_sql_or_external_api_modules() -> None:
+def test_report_api_imports_no_file_sql_or_external_api_modules() -> None:
     source = REPORT_API_PATH.read_text(encoding="utf-8")
     tree = ast.parse(source)
     imported_modules = {
@@ -190,7 +200,7 @@ def test_report_api_imports_no_file_db_sql_or_external_api_modules() -> None:
 
     assert imported_modules.isdisjoint(forbidden_modules)
     assert imported_names.isdisjoint(forbidden_names)
-    assert "DATABASE_URL" not in source
+    assert "DATABASE_URL" in source
 
 
 def test_report_api_performs_no_file_db_sql_external_or_action_route_calls() -> None:
