@@ -2,6 +2,41 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual frontend UI smoke results for the `Audit PDF
+  export persistence` card in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
+  `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke opened
+  `http://127.0.0.1:3000`, used the dashboard card manually, and clicked
+  `Persist audit event`. The UI displayed `audit_event_created=true`,
+  `audit_event_persisted=true`, `database_query_executed=false`,
+  `database_write_performed=true`, `requires_database_url=true`,
+  `event_id=audit_evt_06e3fef85a37a66f24b6a4fb`,
+  `event_type=report_pdf_export_requested`, `table=audit_events`,
+  `conflict_behavior=ON CONFLICT (event_id) DO NOTHING`,
+  `event.action=manual_pdf_export`, `event.resource_type=report`, and
+  `event.resource_id=report-summary-v0-DK1-872ff94f403e4ddd`. Warnings stated
+  that one `audit-event-v0` row was persisted to `audit_events` only, no PDF
+  was generated, no file was written, and no energy data tables were read or
+  written. The observed latest database row for
+  `select event_id, event_type, action, resource_type, occurred_at_utc from
+  audit_events order by occurred_at_utc desc limit 5;` matched the UI
+  `event_id`, with `event_type=report_pdf_export_requested`,
+  `action=manual_pdf_export`, `resource_type=report`, and
+  `occurred_at_utc=2026-06-28 23:24:30.534349+02`. Safety interpretation:
+  the frontend can manually trigger an `audit_events`-only DB write through
+  the backend, validating the local frontend-to-backend-to-PostgreSQL audit
+  persistence path. The action remains manual and isolated, is not
+  automatically wired to PDF download yet, generated no PDF, wrote no file,
+  read or wrote no energy data tables, called no live EDS/DMI APIs, used no
+  ML/LLM behavior, and performed no control, dispatch, activation, or
+  operational energy-system integration. Human review remains required. A
+  temporary attempt to expose the local dev UI over LAN allowed page loading,
+  but API actions were not validated over LAN; LAN sharing is out of MVP
+  scope until CORS, origin, and auth strategy are handled separately. The
+  verified smoke path is local `127.0.0.1`. This documentation-only step
+  added no code, changed no frontend or backend behavior, added no endpoint,
+  did not access a database, ran no SQL, called no live API, generated no
+  PDF, wrote no generated files, and added no auth, Azure, ML/LLM, control,
+  dispatch, activation, or operational functionality.
 - Added a frontend-only manual `Audit PDF export persistence` smoke card for
   `POST /api/audit/pdf-export/persist`. The new API helper uses
   `NEXT_PUBLIC_API_BASE_URL`, posts JSON body `{"price_area":"DK1"}`, parses

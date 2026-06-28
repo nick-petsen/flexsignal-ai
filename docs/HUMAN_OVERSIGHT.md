@@ -344,6 +344,59 @@ infrastructure; does not call live EDS/DMI APIs; does not add ML/LLM
 behavior; and does not add control, dispatch, activation, or operational
 functionality.
 
+Observed manual frontend Audit PDF export persistence smoke:
+
+- Frontend opened `http://127.0.0.1:3000`.
+- Dashboard card used: `Audit PDF export persistence`.
+- Button clicked: `Persist audit event`.
+- UI response displayed `audit_event_created=true`,
+  `audit_event_persisted=true`, `database_query_executed=false`,
+  `database_write_performed=true`, and `requires_database_url=true`.
+- UI response displayed
+  `event_id=audit_evt_06e3fef85a37a66f24b6a4fb`.
+- UI response displayed `event_type=report_pdf_export_requested`.
+- UI response displayed `table=audit_events`.
+- UI response displayed
+  `conflict_behavior=ON CONFLICT (event_id) DO NOTHING`.
+- UI response displayed `event.action=manual_pdf_export`,
+  `event.resource_type=report`, and
+  `event.resource_id=report-summary-v0-DK1-872ff94f403e4ddd`.
+- Warnings stated that one `audit-event-v0` row was persisted to
+  `audit_events` only, no PDF was generated, no file was written, and no
+  energy data tables were read or written.
+
+Observed database confirmation queried:
+
+```sql
+select event_id, event_type, action, resource_type, occurred_at_utc
+from audit_events
+order by occurred_at_utc desc
+limit 5;
+```
+
+Observed latest row:
+
+- `event_id`: `audit_evt_06e3fef85a37a66f24b6a4fb`
+- `event_type`: `report_pdf_export_requested`
+- `action`: `manual_pdf_export`
+- `resource_type`: `report`
+- `occurred_at_utc`: `2026-06-28 23:24:30.534349+02`
+
+Manual frontend smoke safety interpretation: the frontend can manually
+trigger an `audit_events`-only database write through the backend. The
+`event_id` shown in the UI matched the latest persisted database row,
+validating the local frontend-to-backend-to-PostgreSQL audit persistence
+path. The action remains manual and isolated, is not automatically wired to
+PDF download yet, generated no PDF, wrote no file, read or wrote no energy
+data tables, called no live EDS/DMI APIs, used no ML/LLM behavior, and
+performed no control, dispatch, activation, or operational energy-system
+integration. Human review remains required.
+
+LAN note: a temporary attempt to expose the local dev UI over LAN allowed page
+loading, but API actions were not validated over LAN. LAN sharing is out of
+MVP scope until CORS, origin, and auth strategy are handled separately. The
+verified smoke path is local `127.0.0.1`.
+
 Observed manual backend PDF export audit persistence smoke:
 
 - Command:
