@@ -2,6 +2,44 @@
 
 ## v0.1.0 - TODO
 
+- Documented observed manual backend smoke results for audited PDF export in
+  `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
+  `docs/BACKTEST_RESULTS.md`. The smoke used
+  `POST http://127.0.0.1:8000/api/report/pdf/export/audited` with body
+  `{"price_area":"DK1"}` and observed `HTTP/1.1 200 OK`,
+  `content-type=application/pdf`,
+  `content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+  `content-length=9950`, PDF document version 1.3 with 3 pages,
+  `byte_length=9950`, and `starts_with_pdf=True`. Observed safety/audit
+  headers included decision support only, no file written, PDF generated in
+  memory, audit event created and persisted,
+  `x-flexsignal-audit-event-type=report_pdf_export_requested`,
+  `x-flexsignal-audit-table=audit_events`,
+  `x-flexsignal-database-query-executed=false`,
+  `x-flexsignal-database-write-performed=true`,
+  `x-flexsignal-database-write-scope=audit_events_only`,
+  `x-flexsignal-requires-database-url=true`,
+  `x-flexsignal-no-control-dispatch-activation=true`, and
+  `x-flexsignal-audit-event-id=audit_evt_5867f1fed9b9783d11deedda`. The
+  observed database confirmation row for that event id was
+  `event_type=report_pdf_export_requested`, `action=manual_pdf_export`,
+  `resource_type=report`, and
+  `occurred_at_utc=2026-06-29 00:08:43.304665+02`. Safety interpretation:
+  backend PDF generation and audit persistence were validated in the same
+  request; the PDF was generated in memory only; no server-side file was
+  written; exactly one audit event was persisted to `audit_events`;
+  `database_write_performed=true` refers only to the `audit_events` write;
+  database write scope was `audit_events_only`; no energy data tables were
+  read or written; no live EDS/DMI APIs were called; no ML/LLM behavior was
+  used; no control, dispatch, activation, or operational energy-system
+  integration occurred; human review remains required. The frontend is not
+  wired to the audited PDF endpoint yet, and the existing unaudited PDF export
+  remains available separately. This documentation-only step added no code,
+  changed no backend or frontend behavior, added no endpoint, did not run SQL
+  in this workspace, did not access a database in this workspace, called no
+  live APIs, generated no PDF in this workspace, wrote no generated files, and
+  added no auth, Azure, ML/LLM, control, dispatch, activation, or operational
+  functionality.
 - Added backend-only audited report PDF export at
   `POST /api/report/pdf/export/audited`. The endpoint requires `DATABASE_URL`
   at request time while preserving app import without it, returns safe HTTP

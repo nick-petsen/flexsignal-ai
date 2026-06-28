@@ -166,6 +166,41 @@ Current read-only foundation:
   perform control, dispatch, activation, or operational functionality. The
   top-level database write flag is true only for the audit row; the existing
   unaudited PDF export remains available and unchanged with no database write.
+- Observed manual backend smoke for
+  `POST /api/report/pdf/export/audited` used
+  `Content-Type: application/json` and body `{"price_area":"DK1"}` against
+  `http://127.0.0.1:8000/api/report/pdf/export/audited`. The HTTP/PDF
+  response returned `HTTP/1.1 200 OK`, `content-type=application/pdf`,
+  `content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+  `content-length=9950`, PDF document version 1.3 with 3 pages,
+  `byte_length=9950`, and `starts_with_pdf=True`. Observed headers included
+  `x-flexsignal-decision-support-only=true`,
+  `x-flexsignal-file-written=false`,
+  `x-flexsignal-pdf-generated-in-memory=true`,
+  `x-flexsignal-audit-event-created=true`,
+  `x-flexsignal-audit-event-persisted=true`,
+  `x-flexsignal-audit-event-type=report_pdf_export_requested`,
+  `x-flexsignal-audit-table=audit_events`,
+  `x-flexsignal-database-query-executed=false`,
+  `x-flexsignal-database-write-performed=true`,
+  `x-flexsignal-database-write-scope=audit_events_only`,
+  `x-flexsignal-requires-database-url=true`,
+  `x-flexsignal-no-control-dispatch-activation=true`, and
+  `x-flexsignal-audit-event-id=audit_evt_5867f1fed9b9783d11deedda`.
+  Database confirmation queried that event id in `audit_events` and returned
+  `event_type=report_pdf_export_requested`, `action=manual_pdf_export`,
+  `resource_type=report`, and
+  `occurred_at_utc=2026-06-29 00:08:43.304665+02`. Safety interpretation:
+  this validates backend PDF generation and audit persistence in the same
+  request and does not affect backtest scoring. The PDF was generated in
+  memory only, no server-side file was written, exactly one audit event was
+  persisted to `audit_events`, `database_write_performed=true` refers only to
+  the audit write, and database write scope was `audit_events_only`. No energy
+  data tables were read or written, no live EDS/DMI APIs were called, no
+  ML/LLM behavior was used, and no control, dispatch, activation, or
+  operational energy-system integration occurred. Human review remains
+  required. The frontend is not wired to the audited PDF endpoint yet, and the
+  existing unaudited PDF export remains available separately.
 - Observed manual API smoke for `POST /api/report/pdf/export` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/export`. The HTTP response returned
