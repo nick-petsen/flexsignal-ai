@@ -313,11 +313,25 @@ Current read-only foundation:
   `database_write_performed=true`, `requires_database_url=true`,
   `table=audit_events`, and the preserved safety boundary on successful
   mocked/synthetic persistence. It does not generate PDF output, write files,
-  wire frontend behavior, read or write `spot_prices`, `power_balance`,
-  forecast, or other energy data tables, call live EDS/DMI APIs, add
-  scheduler/Azure/auth behavior, use ML/LLMs, or add control, dispatch,
-  activation, or operational functionality. It does not affect backtest
-  scoring.
+  read or write `spot_prices`, `power_balance`, forecast, or other energy
+  data tables, call live EDS/DMI APIs, add scheduler/Azure/auth behavior, use
+  ML/LLMs, or add control, dispatch, activation, or operational
+  functionality. It does not affect backtest scoring.
+- Frontend manual audit persistence smoke support displays the existing
+  `POST /api/audit/pdf-export/persist` response after a manual button click
+  only. The frontend posts JSON body `{"price_area":"DK1"}` through
+  `NEXT_PUBLIC_API_BASE_URL`, requires backend `DATABASE_URL` at request
+  time for success, and shows safe visible error text if it is missing. It
+  displays `audit_event_created`, `audit_event_persisted`,
+  `database_query_executed`, `database_write_performed`,
+  `requires_database_url`, `event_id`, `event_type`, `table`,
+  `conflict_behavior`, `event.action`, `event.resource_type`,
+  `event.resource_id`, and warnings. This is manual audit logging only,
+  writes only to `audit_events`, is not automatically wired to PDF download
+  yet, does not generate PDF output, does not write files, does not read or
+  write energy data tables, does not call live EDS/DMI APIs, does not add
+  ML/LLM behavior, and does not control, dispatch, or activate anything. It
+  does not affect backtest scoring.
 - Observed manual local API smoke for
   `POST /api/audit/pdf-export/persist` used
   `Content-Type: application/json` and body `{"price_area":"DK1"}` against
@@ -348,9 +362,10 @@ Current read-only foundation:
   no PDF, wrote no file, read or wrote no energy data tables, called no live
   EDS/DMI APIs, used no ML/LLM behavior, and performed no control, dispatch,
   activation, or operational energy-system integration. Human review remains
-  required, frontend persistence wiring is still absent, and this smoke does
-  not affect backtest scoring. Top-level `database_write_performed=true`
-  describes the audit persistence operation; event metadata
+  required, frontend automatic PDF-download audit persistence wiring is still
+  absent, and this smoke does not affect backtest scoring. Top-level
+  `database_write_performed=true` describes the audit persistence operation;
+  event metadata
   `database_write_performed=false` describes the underlying PDF export
   action, which did not itself perform a database write. Local smoke note:
   Alembic with SQLAlchemy/psycopg3 may require a `postgresql+psycopg://` URL

@@ -497,6 +497,19 @@ tr:last-child td {
   line-height: 1.45;
 }
 
+.safety-copy {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 12px 12px 12px 28px;
+  border: 1px solid #e4c36d;
+  border-radius: 8px;
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
 .forecast-windows {
   display: grid;
   gap: 12px;

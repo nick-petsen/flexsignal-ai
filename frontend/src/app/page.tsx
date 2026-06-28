@@ -13,6 +13,8 @@ import {
   fetchReportPdfPreview,
   fetchReportSummaryPreview,
   fetchSpotPrices,
+  persistAuditPdfExportEvent,
+  type AuditPdfExportPersistResponse,
   type CurrentRiskResponse,
   type EnergyApiResponse,
   type EnergyFreshnessQueryPlan,
@@ -76,6 +78,12 @@ type ReportPdfExportRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: ReportPdfExportResponse; filename: string }
+  | { status: "error"; message: string };
+
+type AuditPdfExportPersistRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: AuditPdfExportPersistResponse }
   | { status: "error"; message: string };
 
 type Column<Row> = {
@@ -1046,6 +1054,69 @@ function ReportPdfExportCard({
   );
 }
 
+function AuditPdfExportPersistCard({
+  state,
+  onPersist
+}: {
+  state: AuditPdfExportPersistRequestState;
+  onPersist: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="audit-pdf-export-persist-title">
+      <div className="card__header">
+        <div>
+          <h2 id="audit-pdf-export-persist-title">
+            Audit PDF export persistence
+          </h2>
+          <p className="card__description">
+            Manual audit logging only for a DK1 PDF export request event.
+          </p>
+        </div>
+        <span className="status status--warning">Audit DB write</span>
+      </div>
+      <ul className="safety-copy">
+        <li>Audit DB write only.</li>
+        <li>Writes only to audit_events.</li>
+        <li>Does not generate PDF.</li>
+        <li>Does not write files.</li>
+        <li>Does not read/write energy data tables.</li>
+        <li>Does not call live EDS/DMI APIs.</li>
+        <li>Does not control, dispatch, or activate anything.</li>
+        <li>Human review remains required.</li>
+      </ul>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onPersist}
+        disabled={isLoading}
+      >
+        {isLoading ? "Persisting..." : "Persist audit event"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>POST /api/audit/pdf-export/persist</code> with{" "}
+            <code>{"{\"price_area\":\"DK1\"}"}</code>. This is not wired to
+            PDF download.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">Persisting one manual audit event...</p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Audit persistence unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <AuditPdfExportPersistResult data={state.data} />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function EnergyFreshnessCard({
   state,
   onLoadDryRun,
@@ -1499,6 +1570,74 @@ function ReportPdfExportResult({
           </dd>
         </div>
       </dl>
+    </div>
+  );
+}
+
+function AuditPdfExportPersistResult({
+  data
+}: {
+  data: AuditPdfExportPersistResponse;
+}) {
+  return (
+    <div>
+      <p className="preview-note">
+        Manual audit DB write only. Persisted response is limited to
+        audit_events. This does not generate a PDF, write files, read/write
+        energy data tables, call live EDS/DMI APIs, or control, dispatch, or
+        activate anything. Human review remains required.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>audit_event_created</dt>
+          <dd>{formatValue(data.audit_event_created)}</dd>
+        </div>
+        <div>
+          <dt>audit_event_persisted</dt>
+          <dd>{formatValue(data.audit_event_persisted)}</dd>
+        </div>
+        <div>
+          <dt>database_query_executed</dt>
+          <dd>{formatValue(data.database_query_executed)}</dd>
+        </div>
+        <div>
+          <dt>database_write_performed</dt>
+          <dd>{formatValue(data.database_write_performed)}</dd>
+        </div>
+        <div>
+          <dt>requires_database_url</dt>
+          <dd>{formatValue(data.requires_database_url)}</dd>
+        </div>
+        <div>
+          <dt>event_id</dt>
+          <dd>{formatValue(data.event_id)}</dd>
+        </div>
+        <div>
+          <dt>event_type</dt>
+          <dd>{formatValue(data.event_type)}</dd>
+        </div>
+        <div>
+          <dt>table</dt>
+          <dd>{formatValue(data.table)}</dd>
+        </div>
+        <div>
+          <dt>conflict_behavior</dt>
+          <dd>{formatValue(data.conflict_behavior)}</dd>
+        </div>
+        <div>
+          <dt>event.action</dt>
+          <dd>{formatValue(data.event.action)}</dd>
+        </div>
+        <div>
+          <dt>event.resource_type</dt>
+          <dd>{formatValue(data.event.resource_type)}</dd>
+        </div>
+        <div>
+          <dt>event.resource_id</dt>
+          <dd>{formatValue(data.event.resource_id)}</dd>
+        </div>
+      </dl>
+      <WarningList warnings={data.warnings} />
     </div>
   );
 }
@@ -2045,6 +2184,10 @@ export default function DashboardPage() {
     useState<ReportPdfExportRequestState>({
       status: "idle"
     });
+  const [auditPdfExportPersistState, setAuditPdfExportPersistState] =
+    useState<AuditPdfExportPersistRequestState>({
+      status: "idle"
+    });
 
   function handleAreaChange(nextArea: PriceArea) {
     setSelectedArea(nextArea);
@@ -2057,6 +2200,7 @@ export default function DashboardPage() {
     setReportMarkdownPreviewState({ status: "idle" });
     setReportPdfPreviewState({ status: "idle" });
     setReportPdfExportState({ status: "idle" });
+    setAuditPdfExportPersistState({ status: "idle" });
   }
 
   async function handleLoadSpotPrices() {
@@ -2182,6 +2326,19 @@ export default function DashboardPage() {
     }
   }
 
+  async function handlePersistAuditPdfExportEvent() {
+    setAuditPdfExportPersistState({ status: "loading" });
+    try {
+      const data = await persistAuditPdfExportEvent();
+      setAuditPdfExportPersistState({ status: "success", data });
+    } catch (error) {
+      setAuditPdfExportPersistState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
   return (
     <main className="dashboard">
       <div className="dashboard__inner">
@@ -2262,6 +2419,10 @@ export default function DashboardPage() {
           <ReportPdfExportCard
             state={reportPdfExportState}
             onDownload={handleDownloadReportPdf}
+          />
+          <AuditPdfExportPersistCard
+            state={auditPdfExportPersistState}
+            onPersist={handlePersistAuditPdfExportEvent}
           />
           <EnergyFreshnessCard
             state={freshnessState}

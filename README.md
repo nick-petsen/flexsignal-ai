@@ -132,10 +132,27 @@ Working read-only core:
   `audit_events` only with `ON CONFLICT (event_id) DO NOTHING`. It requires
   `DATABASE_URL` at request time and app import still works without it; a
   missing `DATABASE_URL` returns a safe HTTP 503 without exposing the raw URL.
-  It does not generate a PDF, write files, wire frontend behavior, access
-  energy data tables, call live EDS/DMI APIs, add auth, add Azure
-  infrastructure, use ML/LLMs, or control, dispatch, or activate anything.
-  Human review remains required.
+  It does not generate a PDF, write files, automatically wire PDF-download
+  audit persistence, access energy data tables, call live EDS/DMI APIs, add
+  auth, add Azure infrastructure, use ML/LLMs, or control, dispatch, or
+  activate anything. Human review remains required.
+- Frontend dashboard includes a manual `Audit PDF export persistence` smoke
+  card for `POST /api/audit/pdf-export/persist`. The frontend helper uses
+  the existing `NEXT_PUBLIC_API_BASE_URL` pattern, posts JSON body
+  `{"price_area":"DK1"}`, parses JSON responses safely, and shows visible
+  non-2xx errors, including missing backend `DATABASE_URL` HTTP 503
+  responses. The card is explicit that this is manual audit logging only:
+  audit DB write only, writes only to `audit_events`, does not generate a
+  PDF, does not write files, does not read/write energy data tables, does not
+  call live EDS/DMI APIs, does not control, dispatch, or activate anything,
+  and human review remains required. It displays
+  `audit_event_created`, `audit_event_persisted`,
+  `database_query_executed`, `database_write_performed`,
+  `requires_database_url`, `event_id`, `event_type`, `table`,
+  `conflict_behavior`, `event.action`, `event.resource_type`,
+  `event.resource_id`, and warnings after the manual button click. It is not
+  automatically wired to PDF download yet and exposes no secrets such as
+  `DATABASE_URL` to the browser.
 - Observed manual local API smoke for
   `POST /api/audit/pdf-export/persist` used
   `Content-Type: application/json` and body `{"price_area":"DK1"}` against
@@ -167,8 +184,8 @@ Working read-only core:
   generated no PDF, wrote no file, read or wrote no energy data tables, called
   no live EDS/DMI APIs, used no ML/LLM behavior, and performed no control,
   dispatch, activation, or operational energy-system integration. Human
-  review remains required, and the frontend is still not wired to this
-  persistence endpoint. Clarification: top-level
+  review remains required, and frontend automatic PDF-download audit
+  persistence wiring is still absent. Clarification: top-level
   `database_write_performed=true` describes the `audit_events` persistence
   operation; `event.metadata.database_write_performed=false` describes the
   underlying PDF export action, which did not itself perform a database write.

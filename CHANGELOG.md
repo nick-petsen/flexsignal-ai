@@ -2,6 +2,26 @@
 
 ## v0.1.0 - TODO
 
+- Added a frontend-only manual `Audit PDF export persistence` smoke card for
+  `POST /api/audit/pdf-export/persist`. The new API helper uses
+  `NEXT_PUBLIC_API_BASE_URL`, posts JSON body `{"price_area":"DK1"}`, parses
+  JSON safely, validates the expected response shape, and surfaces non-2xx
+  backend errors visibly, including safe missing-`DATABASE_URL` HTTP 503
+  responses. The card has a manual `Persist audit event` button, loading and
+  error states, and displays `audit_event_created`,
+  `audit_event_persisted`, `database_query_executed`,
+  `database_write_performed`, `requires_database_url`, `event_id`,
+  `event_type`, `table`, `conflict_behavior`, `event.action`,
+  `event.resource_type`, `event.resource_id`, and warnings. The UI states
+  that this is audit DB write only, writes only to `audit_events`, does not
+  generate PDF output, does not write files, does not read/write energy data
+  tables, does not call live EDS/DMI APIs, does not control, dispatch, or
+  activate anything, and human review remains required. This change does not
+  modify backend, database, migration, or PDF export endpoint code; does not
+  automatically call audit persistence from PDF download yet; does not add
+  auth, Azure infrastructure, live API calls, ML/LLM behavior, control,
+  dispatch, activation, or operational functionality; and does not expose
+  `DATABASE_URL` or secrets in the frontend.
 - Documented observed manual local smoke results for backend audit
   persistence of manual PDF export events in `README.md`,
   `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
@@ -36,11 +56,12 @@
   were read or written, no live EDS/DMI APIs were called, no ML/LLM behavior
   was used, and no control, dispatch, activation, or operational
   energy-system integration occurred. Human review remains required, and the
-  frontend is still not wired to this persistence endpoint. Clarified that
-  top-level `database_write_performed=true` describes the `audit_events`
-  persistence operation, while `event.metadata.database_write_performed=false`
-  describes the underlying PDF export action, which did not itself perform a
-  database write. Also documented local smoke notes: Alembic with
+  frontend automatic PDF-download audit persistence wiring is still absent.
+  Clarified that top-level `database_write_performed=true` describes the
+  `audit_events` persistence operation, while
+  `event.metadata.database_write_performed=false` describes the underlying
+  PDF export action, which did not itself perform a database write. Also
+  documented local smoke notes: Alembic with
   SQLAlchemy/psycopg3 may require a `postgresql+psycopg://` URL for migration
   commands; runtime smoke used
   `postgresql://$(whoami)@localhost:5432/flexsignal_ai`; and the

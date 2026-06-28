@@ -327,10 +327,25 @@ and writes one row to `audit_events` only, with
 time only; app import still works without it, and missing configuration
 returns a safe HTTP 503 without exposing the raw URL. This endpoint does not
 generate a PDF, write files, access energy data tables, call live EDS/DMI
-APIs, add frontend wiring, add auth or Azure infrastructure, use ML/LLMs, or
-control, dispatch, or activate anything. It does not change `rule-engine-v0`,
-forecasting, scoring thresholds, input composition, backtest interpretation,
-or predictive-performance claims. Human review remains required.
+APIs, add auth or Azure infrastructure, use ML/LLMs, or control, dispatch,
+or activate anything. It does not change `rule-engine-v0`, forecasting,
+scoring thresholds, input composition, backtest interpretation, or
+predictive-performance claims. Human review remains required.
+
+The frontend now includes a manual `Audit PDF export persistence` smoke card
+for `POST /api/audit/pdf-export/persist`. It posts
+`{"price_area":"DK1"}` through `NEXT_PUBLIC_API_BASE_URL`, displays
+`audit_event_created`, `audit_event_persisted`,
+`database_query_executed`, `database_write_performed`,
+`requires_database_url`, `event_id`, `event_type`, `table`,
+`conflict_behavior`, `event.action`, `event.resource_type`,
+`event.resource_id`, and warnings, and shows safe error text if backend
+`DATABASE_URL` is missing at request time. This card is manual audit logging
+only, writes only to `audit_events`, is not automatically wired to PDF
+download yet, does not generate a PDF, does not write files, does not
+read/write energy data tables, does not call live EDS/DMI APIs, does not add
+ML/LLM behavior, and does not control, dispatch, or activate anything. It
+does not change `rule-engine-v0` or any model validation claims.
 
 Observed manual local API smoke for
 `POST /api/audit/pdf-export/persist` used
@@ -362,8 +377,9 @@ runtime audit DB write, limited to `audit_events` only. The endpoint required
 generated no PDF, wrote no file, read or wrote no energy data tables, called
 no live EDS/DMI APIs, used no ML/LLM behavior, and performed no control,
 dispatch, activation, or operational energy-system integration. Human review
-remains required, and frontend persistence wiring is still absent. Top-level
-`database_write_performed=true` describes the audit persistence operation;
+remains required, and frontend automatic PDF-download audit persistence
+wiring is still absent. Top-level `database_write_performed=true` describes
+the audit persistence operation;
 `event.metadata.database_write_performed=false` describes the underlying PDF
 export action, which did not itself perform a database write. Local smoke
 note: Alembic with SQLAlchemy/psycopg3 may require a `postgresql+psycopg://`
