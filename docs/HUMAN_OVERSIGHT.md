@@ -259,6 +259,46 @@ operational functionality. The top-level response may report
 `audit_events`; the existing unaudited `POST /api/report/pdf/export` endpoint
 remains available and unchanged with `database_write_performed=false`.
 
+Observed manual backend audited PDF export smoke:
+
+- Endpoint: `POST http://127.0.0.1:8000/api/report/pdf/export/audited`.
+- Body: `{"price_area":"DK1"}`.
+- HTTP/PDF response: `HTTP/1.1 200 OK`, `content-type=application/pdf`,
+  `content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+  `content-length=9950`, PDF document version 1.3 with 3 pages,
+  `byte_length=9950`, and `starts_with_pdf=True`.
+- Safety/audit headers:
+  `x-flexsignal-decision-support-only=true`,
+  `x-flexsignal-file-written=false`,
+  `x-flexsignal-pdf-generated-in-memory=true`,
+  `x-flexsignal-audit-event-created=true`,
+  `x-flexsignal-audit-event-persisted=true`,
+  `x-flexsignal-audit-event-type=report_pdf_export_requested`,
+  `x-flexsignal-audit-table=audit_events`,
+  `x-flexsignal-database-query-executed=false`,
+  `x-flexsignal-database-write-performed=true`,
+  `x-flexsignal-database-write-scope=audit_events_only`,
+  `x-flexsignal-requires-database-url=true`,
+  `x-flexsignal-no-control-dispatch-activation=true`, and
+  `x-flexsignal-audit-event-id=audit_evt_5867f1fed9b9783d11deedda`.
+- Database confirmation queried `audit_events` for
+  `audit_evt_5867f1fed9b9783d11deedda` and returned
+  `event_type=report_pdf_export_requested`, `action=manual_pdf_export`,
+  `resource_type=report`, and
+  `occurred_at_utc=2026-06-29 00:08:43.304665+02`.
+
+Manual smoke safety interpretation: backend PDF generation and audit
+persistence were validated in the same request. The PDF was generated in
+memory only, no server-side file was written, and exactly one audit event was
+persisted to `audit_events`. `database_write_performed=true` refers only to
+the `audit_events` write, and the database write scope was
+`audit_events_only`. No energy data tables were read or written, no live
+EDS/DMI APIs were called, no ML/LLM behavior was used, and no control,
+dispatch, activation, or operational energy-system integration occurred.
+Human review remains required. The frontend is not wired to the audited PDF
+endpoint yet, and the existing unaudited PDF export remains available
+separately.
+
 ## Backend Manual PDF Export Audit Preview
 
 `POST /api/audit/preview` supports

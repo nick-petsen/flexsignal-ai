@@ -752,6 +752,37 @@ ML/LLM behavior, add frontend wiring, or add operational functionality. The
 existing unaudited `POST /api/report/pdf/export` endpoint remains available
 and unchanged.
 
+Observed manual backend smoke for `POST /api/report/pdf/export/audited` used
+body `{"price_area":"DK1"}` against
+`http://127.0.0.1:8000/api/report/pdf/export/audited`. The response returned
+`HTTP/1.1 200 OK`, `content-type=application/pdf`,
+`content-disposition=attachment; filename="flexsignal-report-preview.pdf"`,
+`content-length=9950`, PDF document version 1.3 with 3 pages,
+`byte_length=9950`, and `starts_with_pdf=True`. Safety/audit headers confirmed
+decision support only, no file written, PDF generated in memory, audit event
+created and persisted, `audit_events` as the audit table,
+`database_query_executed=false`, `database_write_performed=true`,
+`database_write_scope=audit_events_only`, `requires_database_url=true`, no
+control/dispatch/activation, and
+`audit_event_id=audit_evt_5867f1fed9b9783d11deedda`.
+
+The observed database confirmation row for
+`audit_evt_5867f1fed9b9783d11deedda` was
+`event_type=report_pdf_export_requested`, `action=manual_pdf_export`,
+`resource_type=report`, and
+`occurred_at_utc=2026-06-29 00:08:43.304665+02`. This validates backend PDF
+generation and audit persistence in the same request only. It does not change
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation logic,
+scoring thresholds, input composition, backtest pairing,
+predictive-performance claims, or production forecast validation status. The
+PDF was generated in memory only; no server-side file was written; exactly one
+audit event was persisted to `audit_events`; no energy data tables were read
+or written; no live EDS/DMI APIs were called; no ML/LLM behavior was used; and
+no control, dispatch, activation, or operational energy-system integration
+occurred. Human review remains required. The frontend is not wired to the
+audited PDF endpoint yet, and the existing unaudited PDF export remains
+available separately.
+
 `POST /api/audit/preview` supports a backend-only manual PDF export audit
 preview with `event_type=report_pdf_export_requested`. It creates an
 in-memory `audit-event-v0` style event for `action=manual_pdf_export`,
