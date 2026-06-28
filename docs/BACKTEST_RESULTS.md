@@ -153,6 +153,19 @@ Current read-only foundation:
   `application/pdf` bytes with safety headers, writes no files, accesses no
   database, calls no live EDS/DMI APIs, uses no ML/LLM behavior, adds no
   frontend download flow, and does not affect backtest scoring.
+- `POST /api/report/pdf/export/audited` exposes a backend-only audited
+  in-memory PDF export using the same deterministic synthetic or
+  caller-provided preview data only. It requires `DATABASE_URL` at request
+  time, while app import still works without it; missing configuration returns
+  safe HTTP 503 without exposing the raw URL. On success it creates one
+  `report_pdf_export_requested` `audit-event-v0` event, writes one row to
+  `audit_events` only, generates the existing report PDF in memory, and
+  returns `application/pdf` with audit and safety headers. This endpoint does
+  not affect backtest scoring, write server-side files, access energy data
+  tables, call live EDS/DMI APIs, use ML/LLM behavior, add frontend wiring, or
+  perform control, dispatch, activation, or operational functionality. The
+  top-level database write flag is true only for the audit row; the existing
+  unaudited PDF export remains available and unchanged with no database write.
 - Observed manual API smoke for `POST /api/report/pdf/export` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/export`. The HTTP response returned

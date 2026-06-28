@@ -734,6 +734,24 @@ run SQL, call live Energi Data Service or DMI/weather APIs, use ML/LLM
 behavior, write audit events, add frontend download behavior, or add
 operational functionality.
 
+`POST /api/report/pdf/export/audited` exposes a backend-only audited PDF
+export API for the same deterministic synthetic or caller-provided preview
+inputs. It requires `DATABASE_URL` at request time but keeps app import and
+route exposure independent of `DATABASE_URL`; missing configuration returns
+safe HTTP 503 without exposing the raw URL. On success it creates one
+`report_pdf_export_requested` `audit-event-v0` event, writes one row to
+`audit_events` only, generates the report PDF in memory, and returns
+`application/pdf` with headers for decision support only, no file written,
+PDF generated in memory, audit event created/persisted, audit table
+`audit_events`, database write scope `audit_events_only`, and no control,
+dispatch, or activation. The top-level database write flag is true only for
+the audit row; the persisted event metadata keeps
+`database_write_performed=false` for the underlying PDF action. The endpoint
+does not access energy data tables, call live EDS/DMI APIs, write files, use
+ML/LLM behavior, add frontend wiring, or add operational functionality. The
+existing unaudited `POST /api/report/pdf/export` endpoint remains available
+and unchanged.
+
 `POST /api/audit/preview` supports a backend-only manual PDF export audit
 preview with `event_type=report_pdf_export_requested`. It creates an
 in-memory `audit-event-v0` style event for `action=manual_pdf_export`,

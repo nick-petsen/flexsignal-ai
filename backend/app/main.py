@@ -19,9 +19,17 @@ EXPOSED_PDF_EXPORT_HEADERS = (
     "Content-Disposition",
     "X-FlexSignal-Decision-Support-Only",
     "X-FlexSignal-File-Written",
+    "X-FlexSignal-Pdf-Generated-In-Memory",
+    "X-FlexSignal-Audit-Event-Created",
+    "X-FlexSignal-Audit-Event-Persisted",
+    "X-FlexSignal-Audit-Event-Type",
+    "X-FlexSignal-Audit-Event-Id",
+    "X-FlexSignal-Audit-Table",
     "X-FlexSignal-Database-Query-Executed",
     "X-FlexSignal-Database-Write-Performed",
+    "X-FlexSignal-Database-Write-Scope",
     "X-FlexSignal-Requires-Database-Url",
+    "X-FlexSignal-No-Control-Dispatch-Activation",
 )
 
 

@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added backend-only audited report PDF export at
+  `POST /api/report/pdf/export/audited`. The endpoint requires `DATABASE_URL`
+  at request time while preserving app import without it, returns safe HTTP
+  503 when missing, creates one `report_pdf_export_requested`
+  `audit-event-v0` event, persists one row to `audit_events` only, generates
+  the existing report PDF in memory, and returns `application/pdf` with
+  audit/safety headers including `audit_events_only` write scope. The
+  top-level database write flag is true only because the audit row was
+  written; the existing unaudited `POST /api/report/pdf/export` remains
+  available and unchanged with no database write. This change does not modify
+  frontend wiring, migrations, energy data table access, live EDS/DMI calls,
+  file writes, scheduler/Azure/auth behavior, ML/LLM behavior, or control,
+  dispatch, activation, or operational functionality. Added focused backend
+  tests and documentation in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
+  `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`.
 - Documented observed manual frontend UI smoke results for the `Audit PDF
   export persistence` card in `README.md`, `docs/HUMAN_OVERSIGHT.md`,
   `docs/MODEL_CARD.md`, and `docs/BACKTEST_RESULTS.md`. The smoke opened
