@@ -263,6 +263,27 @@ export type ReportPdfExportResponse = {
   };
 };
 
+export type AuditPdfExportPersistEvent = {
+  action?: string;
+  resource_type?: string;
+  resource_id?: string;
+  [key: string]: unknown;
+};
+
+export type AuditPdfExportPersistResponse = {
+  audit_event_created: boolean;
+  audit_event_persisted: boolean;
+  database_query_executed: boolean;
+  database_write_performed: boolean;
+  requires_database_url: boolean;
+  event_id: string;
+  event_type: string;
+  table: string;
+  conflict_behavior: string;
+  event: AuditPdfExportPersistEvent;
+  warnings?: string[];
+};
+
 const READ_LIMIT = 5;
 
 export async function fetchSpotPrices(
@@ -477,6 +498,32 @@ export async function fetchReportPdfExport(): Promise<ReportPdfExportResponse> {
   };
 }
 
+export async function persistAuditPdfExportEvent(): Promise<AuditPdfExportPersistResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/audit/pdf-export/persist`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ price_area: "DK1" })
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  if (!isAuditPdfExportPersistResponse(body)) {
+    throw new Error(
+      "Backend returned an unexpected audit persistence response shape"
+    );
+  }
+
+  return body;
+}
+
 async function fetchEnergyApi<Row>(
   path: string,
   priceArea: PriceArea
@@ -570,6 +617,30 @@ function isEnergyFreshnessResponse(
   );
 }
 
+function isAuditPdfExportPersistResponse(
+  value: unknown
+): value is AuditPdfExportPersistResponse {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const candidate = value as Partial<AuditPdfExportPersistResponse>;
+
+  return (
+    typeof candidate.audit_event_created === "boolean" &&
+    typeof candidate.audit_event_persisted === "boolean" &&
+    typeof candidate.database_query_executed === "boolean" &&
+    typeof candidate.database_write_performed === "boolean" &&
+    typeof candidate.requires_database_url === "boolean" &&
+    typeof candidate.event_id === "string" &&
+    typeof candidate.event_type === "string" &&
+    typeof candidate.table === "string" &&
+    typeof candidate.conflict_behavior === "string" &&
+    isRecord(candidate.event) &&
+    isOptionalStringArray(candidate.warnings)
+  );
+}
+
 function isPriceArea(value: unknown): value is PriceArea {
   return value === "DK1" || value === "DK2";
 }
@@ -597,6 +668,22 @@ function getApiErrorMessage(body: unknown, status: number): string {
   ) {
     if (typeof body.detail === "string") {
       return body.detail;
+    }
+
+    if (
+      status === 503 &&
+      isRecord(body.detail) &&
+      body.detail.requires_database_url === true &&
+      body.detail.table === "audit_events"
+    ) {
+      if (
+        "warning" in body.detail &&
+        typeof body.detail.warning === "string"
+      ) {
+        return body.detail.warning;
+      }
+
+      return "Audit PDF export persistence requires backend DATABASE_URL.";
     }
 
     if (
