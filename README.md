@@ -125,7 +125,7 @@ Working read-only core:
   not write files, access a database, require `DATABASE_URL`, run SQL, call
   live EDS/DMI APIs, use ML/LLM behavior, add audit writes, or add operational
   asset-command behavior.
-- Backend `POST /api/report/pdf/export/audited` exists as a backend-only
+- Backend `POST /api/report/pdf/export/audited` exists as an
   audited in-memory PDF export API. It requires `DATABASE_URL` at request time
   and app import still works without it; a missing value returns safe HTTP 503
   without exposing the raw URL. On success it creates one
@@ -134,9 +134,29 @@ Working read-only core:
   returns `application/pdf` with audit and safety headers. It writes no files,
   reads no energy data tables, calls no live EDS/DMI APIs, uses no ML/LLM
   behavior, and performs no control, dispatch, activation, or operational
-  asset-command behavior. The frontend is not wired to this endpoint yet, and
-  the existing unaudited `POST /api/report/pdf/export` remains available and
-  unchanged with `database_write_performed=false`.
+  asset-command behavior. The existing unaudited
+  `POST /api/report/pdf/export` remains available and unchanged with
+  `database_write_performed=false`.
+- Frontend dashboard includes a separate manual `Audited PDF export` card
+  for `POST /api/report/pdf/export/audited`. The frontend helper uses
+  `NEXT_PUBLIC_API_BASE_URL`, posts JSON body `{"price_area":"DK1"}`, treats
+  successful responses as PDF Blob data, downloads using the
+  `Content-Disposition` filename when available with
+  `flexsignal-report-preview.pdf` as fallback, revokes the object URL, and
+  displays visible response metadata and audit/safety headers including
+  `content-type`, `content-disposition`, `byteLength`, `starts_with_pdf`,
+  audit event created/persisted/type/id/table, PDF generated in memory,
+  database write scope, `requires_database_url`, and no
+  control/dispatch/activation. It shows clear visible errors for non-2xx
+  responses, including missing backend `DATABASE_URL` HTTP 503 responses.
+  The card states that it generates PDF in memory, persists one audit event
+  to `audit_events`, writes no server-side PDF file, limits database write
+  scope to `audit_events` only, does not read/write energy data tables, does
+  not call live EDS/DMI APIs, does not control, dispatch, or activate
+  anything, and still requires human review. This frontend-only flow does not
+  modify backend, database code, migrations, auth, Azure infrastructure,
+  live API calls, ML/LLM behavior, or operational functionality, and it does
+  not replace the existing unaudited PDF export card.
 - Observed manual backend smoke for
   `POST /api/report/pdf/export/audited` used JSON body
   `{"price_area":"DK1"}` against
@@ -173,9 +193,9 @@ Working read-only core:
   database write scope was `audit_events_only`; no energy data tables were
   read or written; no live EDS/DMI APIs were called; no ML/LLM behavior was
   used; no control, dispatch, activation, or operational energy-system
-  integration occurred; human review remains required. The frontend is not
-  wired to this audited endpoint yet, and the existing unaudited PDF export
-  remains available separately.
+  integration occurred; human review remains required. The frontend now has
+  a separate manual audited PDF download card for this endpoint, and the
+  existing unaudited PDF export remains available separately.
 - Backend `POST /api/audit/pdf-export/persist` exists as a backend-only audit
   persistence API for manual PDF export request events. It creates the same
   `audit-event-v0` style `report_pdf_export_requested` event used by the audit

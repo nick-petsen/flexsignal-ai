@@ -2,6 +2,27 @@
 
 ## v0.1.0 - TODO
 
+- Added a frontend-only manual `Audited PDF export` dashboard card and API
+  helper for `POST /api/report/pdf/export/audited`. The helper uses
+  `NEXT_PUBLIC_API_BASE_URL`, posts `{"price_area":"DK1"}`, treats successful
+  responses as PDF Blob data, downloads using the `Content-Disposition`
+  filename when available with `flexsignal-report-preview.pdf` as fallback,
+  revokes the object URL after download, infers `starts_with_pdf` from the
+  Blob prefix, and surfaces non-2xx errors visibly, including missing backend
+  `DATABASE_URL` HTTP 503 responses. The card displays `content-type`,
+  `content-disposition`, `byteLength`, `starts_with_pdf`, and the exposed
+  audit/safety headers for decision support only, no file written, PDF
+  generated in memory, audit event created/persisted/type/id/table, database
+  query/write flags, database write scope, `requires_database_url`, and no
+  control/dispatch/activation. The UI states that the flow generates PDF in
+  memory, persists one audit event to `audit_events`, writes no server-side
+  PDF file, limits database write scope to `audit_events` only, does not
+  read/write energy data tables, does not call live EDS/DMI APIs, does not
+  control, dispatch, or activate anything, and requires human review. This
+  change is frontend plus docs only: it does not modify backend, database
+  code, migrations, auth, Azure infrastructure, live API calls, ML/LLM
+  behavior, control, dispatch, activation, or operational functionality, and
+  it leaves the existing unaudited PDF export card available separately.
 - Documented observed manual backend smoke results for audited PDF export in
   `README.md`, `docs/HUMAN_OVERSIGHT.md`, `docs/MODEL_CARD.md`, and
   `docs/BACKTEST_RESULTS.md`. The smoke used
@@ -32,9 +53,9 @@
   database write scope was `audit_events_only`; no energy data tables were
   read or written; no live EDS/DMI APIs were called; no ML/LLM behavior was
   used; no control, dispatch, activation, or operational energy-system
-  integration occurred; human review remains required. The frontend is not
-  wired to the audited PDF endpoint yet, and the existing unaudited PDF export
-  remains available separately. This documentation-only step added no code,
+  integration occurred; human review remains required. The existing unaudited
+  PDF export remains available separately. This documentation-only step added
+  no code,
   changed no backend or frontend behavior, added no endpoint, did not run SQL
   in this workspace, did not access a database in this workspace, called no
   live APIs, generated no PDF in this workspace, wrote no generated files, and

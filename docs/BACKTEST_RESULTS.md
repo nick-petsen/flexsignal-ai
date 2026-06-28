@@ -162,10 +162,20 @@ Current read-only foundation:
   `audit_events` only, generates the existing report PDF in memory, and
   returns `application/pdf` with audit and safety headers. This endpoint does
   not affect backtest scoring, write server-side files, access energy data
-  tables, call live EDS/DMI APIs, use ML/LLM behavior, add frontend wiring, or
+  tables, call live EDS/DMI APIs, use ML/LLM behavior, or
   perform control, dispatch, activation, or operational functionality. The
   top-level database write flag is true only for the audit row; the existing
   unaudited PDF export remains available and unchanged with no database write.
+- The frontend dashboard includes a separate manual `Audited PDF export` card
+  for `POST /api/report/pdf/export/audited`. It posts
+  `{"price_area":"DK1"}`, downloads the PDF returned by the backend, displays
+  `content-type`, `content-disposition`, `byteLength`, `starts_with_pdf`, and
+  exposed audit/safety headers, and shows visible non-2xx errors such as
+  missing backend `DATABASE_URL`. This frontend path does not affect backtest
+  scoring, model validation, backend behavior, database schema, migrations,
+  energy data table access, live EDS/DMI API usage, ML/LLM behavior, control,
+  dispatch, activation, or operational functionality. The existing unaudited
+  PDF export remains available separately.
 - Observed manual backend smoke for
   `POST /api/report/pdf/export/audited` used
   `Content-Type: application/json` and body `{"price_area":"DK1"}` against
@@ -199,8 +209,9 @@ Current read-only foundation:
   data tables were read or written, no live EDS/DMI APIs were called, no
   ML/LLM behavior was used, and no control, dispatch, activation, or
   operational energy-system integration occurred. Human review remains
-  required. The frontend is not wired to the audited PDF endpoint yet, and the
-  existing unaudited PDF export remains available separately.
+  required. The frontend now has a separate manual audited PDF download card
+  for this endpoint, and the existing unaudited PDF export remains available
+  separately.
 - Observed manual API smoke for `POST /api/report/pdf/export` used
   `Content-Type: application/json` and body `{}` against
   `http://127.0.0.1:8000/api/report/pdf/export`. The HTTP response returned
