@@ -253,11 +253,46 @@ only, then generates PDF bytes in memory and returns the attachment filename
 
 Safety interpretation: this endpoint writes no server-side files, accesses no
 energy data tables, calls no live EDS/DMI APIs, uses no ML/LLM behavior, adds
-no scheduler, Azure, auth, frontend wiring, control, dispatch, activation, or
-operational functionality. The top-level response may report
+no scheduler, Azure, auth, control, dispatch, activation, or operational
+functionality. The top-level response may report
 `database_write_performed=true` only because the audit row was persisted to
 `audit_events`; the existing unaudited `POST /api/report/pdf/export` endpoint
 remains available and unchanged with `database_write_performed=false`.
+
+## Frontend Audited Report PDF Manual Download
+
+The dashboard includes a separate `Audited PDF export` card for manually
+calling `POST /api/report/pdf/export/audited`. It posts JSON body
+`{"price_area":"DK1"}` through `NEXT_PUBLIC_API_BASE_URL`, downloads the PDF
+returned by the backend, uses the `Content-Disposition` filename when safely
+available, falls back to `flexsignal-report-preview.pdf`, and revokes the
+object URL after the browser download is triggered.
+
+The card displays `content-type`, `content-disposition`, `byteLength`,
+`starts_with_pdf`, `x-flexsignal-decision-support-only`,
+`x-flexsignal-file-written`, `x-flexsignal-pdf-generated-in-memory`,
+`x-flexsignal-audit-event-created`,
+`x-flexsignal-audit-event-persisted`,
+`x-flexsignal-audit-event-type`, `x-flexsignal-audit-event-id`,
+`x-flexsignal-audit-table`,
+`x-flexsignal-database-query-executed`,
+`x-flexsignal-database-write-performed`,
+`x-flexsignal-database-write-scope`,
+`x-flexsignal-requires-database-url`, and
+`x-flexsignal-no-control-dispatch-activation` when those headers are exposed
+to the browser.
+
+Safety interpretation: this is a manual audited download path only. It
+generates PDF in memory, persists one audit event to `audit_events`, writes no
+server-side PDF file, limits database write scope to `audit_events` only, does
+not read/write energy data tables, does not call live EDS/DMI APIs, does not
+control, dispatch, or activate anything, and human review remains required.
+It requires backend `DATABASE_URL` at request time and shows a clear visible
+error if the backend returns HTTP 503 because `DATABASE_URL` is missing. The
+existing unaudited PDF export remains available separately. This frontend
+flow does not add auth, Azure infrastructure, backend code, database code,
+migrations, live API calls, ML/LLM behavior, automatic control, dispatch, or
+activation.
 
 Observed manual backend audited PDF export smoke:
 
@@ -295,9 +330,9 @@ the `audit_events` write, and the database write scope was
 `audit_events_only`. No energy data tables were read or written, no live
 EDS/DMI APIs were called, no ML/LLM behavior was used, and no control,
 dispatch, activation, or operational energy-system integration occurred.
-Human review remains required. The frontend is not wired to the audited PDF
-endpoint yet, and the existing unaudited PDF export remains available
-separately.
+Human review remains required. The frontend now has a separate manual audited
+PDF download card for this endpoint, and the existing unaudited PDF export
+remains available separately.
 
 ## Backend Manual PDF Export Audit Preview
 

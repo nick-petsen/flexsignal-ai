@@ -263,6 +263,29 @@ export type ReportPdfExportResponse = {
   };
 };
 
+export type AuditedReportPdfExportResponse = {
+  blob: Blob;
+  byteLength: number;
+  contentType: string;
+  contentDisposition: string | null;
+  startsWithPdf: boolean;
+  safetyHeaders: {
+    "x-flexsignal-decision-support-only": string | null;
+    "x-flexsignal-file-written": string | null;
+    "x-flexsignal-pdf-generated-in-memory": string | null;
+    "x-flexsignal-audit-event-created": string | null;
+    "x-flexsignal-audit-event-persisted": string | null;
+    "x-flexsignal-audit-event-type": string | null;
+    "x-flexsignal-audit-event-id": string | null;
+    "x-flexsignal-audit-table": string | null;
+    "x-flexsignal-database-query-executed": string | null;
+    "x-flexsignal-database-write-performed": string | null;
+    "x-flexsignal-database-write-scope": string | null;
+    "x-flexsignal-requires-database-url": string | null;
+    "x-flexsignal-no-control-dispatch-activation": string | null;
+  };
+};
+
 export type AuditPdfExportPersistEvent = {
   action?: string;
   resource_type?: string;
@@ -498,6 +521,85 @@ export async function fetchReportPdfExport(): Promise<ReportPdfExportResponse> {
   };
 }
 
+export async function fetchAuditedReportPdfExport(): Promise<AuditedReportPdfExportResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/report/pdf/export/audited`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ price_area: "DK1" })
+  });
+
+  if (!response.ok) {
+    throw new Error(await getPdfExportErrorMessage(response));
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (!contentType.toLowerCase().includes("application/pdf")) {
+    throw new Error(
+      `Backend returned an unexpected audited PDF export content type: ${
+        contentType || "missing"
+      }`
+    );
+  }
+
+  const blob = await response.blob();
+  const startsWithPdf = await blobStartsWithPdf(blob);
+
+  return {
+    blob,
+    byteLength: blob.size,
+    contentType,
+    contentDisposition: response.headers.get("content-disposition"),
+    startsWithPdf,
+    safetyHeaders: {
+      "x-flexsignal-decision-support-only": response.headers.get(
+        "x-flexsignal-decision-support-only"
+      ),
+      "x-flexsignal-file-written": response.headers.get(
+        "x-flexsignal-file-written"
+      ),
+      "x-flexsignal-pdf-generated-in-memory": response.headers.get(
+        "x-flexsignal-pdf-generated-in-memory"
+      ),
+      "x-flexsignal-audit-event-created": response.headers.get(
+        "x-flexsignal-audit-event-created"
+      ),
+      "x-flexsignal-audit-event-persisted": response.headers.get(
+        "x-flexsignal-audit-event-persisted"
+      ),
+      "x-flexsignal-audit-event-type": response.headers.get(
+        "x-flexsignal-audit-event-type"
+      ),
+      "x-flexsignal-audit-event-id": response.headers.get(
+        "x-flexsignal-audit-event-id"
+      ),
+      "x-flexsignal-audit-table": response.headers.get(
+        "x-flexsignal-audit-table"
+      ),
+      "x-flexsignal-database-query-executed": response.headers.get(
+        "x-flexsignal-database-query-executed"
+      ),
+      "x-flexsignal-database-write-performed": response.headers.get(
+        "x-flexsignal-database-write-performed"
+      ),
+      "x-flexsignal-database-write-scope": response.headers.get(
+        "x-flexsignal-database-write-scope"
+      ),
+      "x-flexsignal-requires-database-url": response.headers.get(
+        "x-flexsignal-requires-database-url"
+      ),
+      "x-flexsignal-no-control-dispatch-activation": response.headers.get(
+        "x-flexsignal-no-control-dispatch-activation"
+      )
+    }
+  };
+}
+
 export async function persistAuditPdfExportEvent(): Promise<AuditPdfExportPersistResponse> {
   const url = new URL(
     `${backendApiBaseUrl.replace(/\/+$/, "")}/api/audit/pdf-export/persist`
@@ -658,6 +760,39 @@ function isOptionalStringArray(value: unknown): value is string[] {
     value === undefined ||
     (Array.isArray(value) && value.every((item) => typeof item === "string"))
   );
+}
+
+async function blobStartsWithPdf(blob: Blob): Promise<boolean> {
+  try {
+    return (await blob.slice(0, 5).text()).startsWith("%PDF-");
+  } catch {
+    return false;
+  }
+}
+
+async function getPdfExportErrorMessage(response: Response): Promise<string> {
+  const rawText = await response.text().catch(() => "");
+  let body: unknown = null;
+
+  if (rawText.trim()) {
+    try {
+      body = JSON.parse(rawText);
+    } catch {
+      body = rawText;
+    }
+  }
+
+  const message = getApiErrorMessage(body, response.status);
+
+  if (response.status === 503 && message.includes("DATABASE_URL")) {
+    return "Audited PDF export requires backend DATABASE_URL to persist the audit event.";
+  }
+
+  if (typeof body === "string" && body.trim()) {
+    return body.trim();
+  }
+
+  return message;
 }
 
 function getApiErrorMessage(body: unknown, status: number): string {

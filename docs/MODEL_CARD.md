@@ -748,9 +748,23 @@ dispatch, or activation. The top-level database write flag is true only for
 the audit row; the persisted event metadata keeps
 `database_write_performed=false` for the underlying PDF action. The endpoint
 does not access energy data tables, call live EDS/DMI APIs, write files, use
-ML/LLM behavior, add frontend wiring, or add operational functionality. The
+ML/LLM behavior, or add operational functionality. The
 existing unaudited `POST /api/report/pdf/export` endpoint remains available
 and unchanged.
+
+The frontend dashboard now includes a separate manual `Audited PDF export`
+card for `POST /api/report/pdf/export/audited`. This UI path posts
+`{"price_area":"DK1"}`, downloads the PDF returned by the backend, displays
+`content-type`, `content-disposition`, `byteLength`, `starts_with_pdf`, and
+the exposed audit/safety headers, and shows clear errors for non-2xx
+responses such as missing backend `DATABASE_URL`. It is not part of
+`rule-engine-v0`, `forecast-window-v0`, report-summary generation,
+forecasting, or model scoring. It does not change thresholds, input
+composition, backtest pairing, predictive-performance claims, or production
+forecast validation status. It adds no backend code, database code,
+migration, auth, Azure infrastructure, live EDS/DMI call, ML/LLM behavior,
+automatic control, dispatch, activation, or operational functionality. The
+existing unaudited PDF export remains available separately.
 
 Observed manual backend smoke for `POST /api/report/pdf/export/audited` used
 body `{"price_area":"DK1"}` against
@@ -779,9 +793,9 @@ PDF was generated in memory only; no server-side file was written; exactly one
 audit event was persisted to `audit_events`; no energy data tables were read
 or written; no live EDS/DMI APIs were called; no ML/LLM behavior was used; and
 no control, dispatch, activation, or operational energy-system integration
-occurred. Human review remains required. The frontend is not wired to the
-audited PDF endpoint yet, and the existing unaudited PDF export remains
-available separately.
+occurred. Human review remains required. The frontend now has a separate
+manual audited PDF download card for this endpoint, and the existing
+unaudited PDF export remains available separately.
 
 `POST /api/audit/preview` supports a backend-only manual PDF export audit
 preview with `event_type=report_pdf_export_requested`. It creates an

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import {
   backendApiBaseUrl,
+  fetchAuditedReportPdfExport,
   fetchCurrentRisk,
   fetchEnergyFreshness,
   fetchEnergyFreshnessRead,
@@ -15,6 +16,7 @@ import {
   fetchSpotPrices,
   persistAuditPdfExportEvent,
   type AuditPdfExportPersistResponse,
+  type AuditedReportPdfExportResponse,
   type CurrentRiskResponse,
   type EnergyApiResponse,
   type EnergyFreshnessQueryPlan,
@@ -78,6 +80,12 @@ type ReportPdfExportRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: ReportPdfExportResponse; filename: string }
+  | { status: "error"; message: string };
+
+type AuditedReportPdfExportRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: AuditedReportPdfExportResponse; filename: string }
   | { status: "error"; message: string };
 
 type AuditPdfExportPersistRequestState =
@@ -1054,6 +1062,72 @@ function ReportPdfExportCard({
   );
 }
 
+function AuditedReportPdfExportCard({
+  state,
+  onDownload
+}: {
+  state: AuditedReportPdfExportRequestState;
+  onDownload: () => void;
+}) {
+  const isLoading = state.status === "loading";
+
+  return (
+    <section className="card" aria-labelledby="audited-report-pdf-export-title">
+      <div className="card__header">
+        <div>
+          <h2 id="audited-report-pdf-export-title">Audited PDF export</h2>
+          <p className="card__description">
+            Manual DK1 audited PDF download from backend generated PDF bytes.
+          </p>
+        </div>
+        <span className="status status--warning">Audit DB write</span>
+      </div>
+      <ul className="safety-copy">
+        <li>Generates PDF in memory.</li>
+        <li>Persists one audit event to audit_events.</li>
+        <li>Writes no server-side PDF file.</li>
+        <li>Database write scope is audit_events only.</li>
+        <li>Does not read/write energy data tables.</li>
+        <li>Does not call live EDS/DMI APIs.</li>
+        <li>Does not control, dispatch, or activate anything.</li>
+        <li>Human review remains required.</li>
+      </ul>
+      <button
+        className="load-button"
+        type="button"
+        onClick={onDownload}
+        disabled={isLoading}
+      >
+        {isLoading ? "Downloading..." : "Download audited PDF"}
+      </button>
+      <div className="result" aria-live="polite">
+        {state.status === "idle" && (
+          <p className="muted">
+            No request has been made. Use the manual button to call{" "}
+            <code>POST /api/report/pdf/export/audited</code> with{" "}
+            <code>{"{\"price_area\":\"DK1\"}"}</code>. The unaudited PDF
+            export remains available separately.
+          </p>
+        )}
+        {state.status === "loading" && (
+          <p className="muted">
+            Requesting audited PDF download and audit event persistence...
+          </p>
+        )}
+        {state.status === "error" && (
+          <p className="error">Audited PDF export unavailable: {state.message}</p>
+        )}
+        {state.status === "success" && (
+          <AuditedReportPdfExportResult
+            data={state.data}
+            filename={state.filename}
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
 function AuditPdfExportPersistCard({
   state,
   onPersist
@@ -1566,6 +1640,143 @@ function ReportPdfExportResult({
           <dd>
             {formatValue(
               data.safetyHeaders["x-flexsignal-requires-database-url"]
+            )}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+function AuditedReportPdfExportResult({
+  data,
+  filename
+}: {
+  data: AuditedReportPdfExportResponse;
+  filename: string;
+}) {
+  return (
+    <div>
+      <p className="preview-note">
+        Audited PDF download requested manually. PDF bytes were generated in
+        memory, one audit event was persisted to audit_events, no server-side
+        PDF file was written, no energy data tables were read or written, and
+        human review remains required.
+      </p>
+      <dl className="risk-list">
+        <div>
+          <dt>download_filename</dt>
+          <dd>{filename}</dd>
+        </div>
+        <div>
+          <dt>content-type</dt>
+          <dd>{formatValue(data.contentType)}</dd>
+        </div>
+        <div>
+          <dt>content-disposition</dt>
+          <dd>{formatValue(data.contentDisposition)}</dd>
+        </div>
+        <div>
+          <dt>byteLength</dt>
+          <dd>{formatValue(data.byteLength)}</dd>
+        </div>
+        <div>
+          <dt>starts_with_pdf</dt>
+          <dd>{formatValue(data.startsWithPdf)}</dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-decision-support-only</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-decision-support-only"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-file-written</dt>
+          <dd>
+            {formatValue(data.safetyHeaders["x-flexsignal-file-written"])}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-pdf-generated-in-memory</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-pdf-generated-in-memory"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-audit-event-created</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-audit-event-created"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-audit-event-persisted</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-audit-event-persisted"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-audit-event-type</dt>
+          <dd>
+            {formatValue(data.safetyHeaders["x-flexsignal-audit-event-type"])}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-audit-event-id</dt>
+          <dd>
+            {formatValue(data.safetyHeaders["x-flexsignal-audit-event-id"])}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-audit-table</dt>
+          <dd>{formatValue(data.safetyHeaders["x-flexsignal-audit-table"])}</dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-database-query-executed</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-database-query-executed"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-database-write-performed</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-database-write-performed"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-database-write-scope</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-database-write-scope"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-requires-database-url</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders["x-flexsignal-requires-database-url"]
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>x-flexsignal-no-control-dispatch-activation</dt>
+          <dd>
+            {formatValue(
+              data.safetyHeaders[
+                "x-flexsignal-no-control-dispatch-activation"
+              ]
             )}
           </dd>
         </div>
@@ -2184,6 +2395,10 @@ export default function DashboardPage() {
     useState<ReportPdfExportRequestState>({
       status: "idle"
     });
+  const [auditedReportPdfExportState, setAuditedReportPdfExportState] =
+    useState<AuditedReportPdfExportRequestState>({
+      status: "idle"
+    });
   const [auditPdfExportPersistState, setAuditPdfExportPersistState] =
     useState<AuditPdfExportPersistRequestState>({
       status: "idle"
@@ -2200,6 +2415,7 @@ export default function DashboardPage() {
     setReportMarkdownPreviewState({ status: "idle" });
     setReportPdfPreviewState({ status: "idle" });
     setReportPdfExportState({ status: "idle" });
+    setAuditedReportPdfExportState({ status: "idle" });
     setAuditPdfExportPersistState({ status: "idle" });
   }
 
@@ -2326,6 +2542,21 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleDownloadAuditedReportPdf() {
+    setAuditedReportPdfExportState({ status: "loading" });
+    try {
+      const data = await fetchAuditedReportPdfExport();
+      const filename = getSafeReportPdfFilename(data.contentDisposition);
+      downloadReportPdfBlob(data.blob, filename);
+      setAuditedReportPdfExportState({ status: "success", data, filename });
+    } catch (error) {
+      setAuditedReportPdfExportState({
+        status: "error",
+        message: errorMessage(error)
+      });
+    }
+  }
+
   async function handlePersistAuditPdfExportEvent() {
     setAuditPdfExportPersistState({ status: "loading" });
     try {
@@ -2419,6 +2650,10 @@ export default function DashboardPage() {
           <ReportPdfExportCard
             state={reportPdfExportState}
             onDownload={handleDownloadReportPdf}
+          />
+          <AuditedReportPdfExportCard
+            state={auditedReportPdfExportState}
+            onDownload={handleDownloadAuditedReportPdf}
           />
           <AuditPdfExportPersistCard
             state={auditPdfExportPersistState}
