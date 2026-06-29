@@ -32,6 +32,17 @@ Working read-only core:
   surplus risk, a forecast-window preview, an energy freshness dry-run
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
+- Frontend now includes a frontend-only navigation shell with a dark green
+  N&O Predict / FlexSignal AI theme, left sidebar sections for Dashboard,
+  Reports, Audit, Forecast, Data, and Meteo / Weather, plus a topbar showing
+  product name and `System Status: LIVE`. Section switching uses local
+  frontend state only and keeps existing manual dashboard cards accessible.
+  The Meteo / Weather section is a placeholder only for a future DMI/weather
+  forecast module; it does not show fake live weather data, fake maps, or AI
+  congestion claims. No backend, database, migration, API endpoint, data,
+  model, auth, Azure, live API, ML/LLM, control, dispatch, activation, or
+  operational behavior changed, and the v0.1 read-only decision-support
+  boundary remains unchanged.
 - Frontend dashboard can manually load a Report summary preview card through
   `POST /api/report/summary/preview`. The card displays JSON preview only
   after the manual button click, including preview execution flags, report

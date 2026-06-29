@@ -2,6 +2,17 @@
 
 ## v0.1.0 - TODO
 
+- Added a frontend-only navigation shell and dark green N&O Predict /
+  FlexSignal AI theme. The UI now has local-state section switching for
+  Dashboard, Reports, Audit, Forecast, Data, and Meteo / Weather; a left
+  sidebar; a topbar with product name and `System Status: LIVE`; visible
+  read-only decision-support safety copy; and a Meteo / Weather placeholder
+  that states weather integration is not implemented yet. Existing manual
+  frontend cards remain accessible in their relevant sections. This changed
+  frontend UI and documentation only: no backend files, database code,
+  migrations, API endpoints, API behavior, live APIs, auth, Azure
+  infrastructure, ML/LLM behavior, control, dispatch, activation, or
+  operational functionality changed.
 - Added a frontend-only manual `Audited PDF export` dashboard card and API
   helper for `POST /api/report/pdf/export/audited`. The helper uses
   `NEXT_PUBLIC_API_BASE_URL`, posts `{"price_area":"DK1"}`, treats successful
