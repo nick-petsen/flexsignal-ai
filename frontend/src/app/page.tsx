@@ -99,6 +99,14 @@ type Column<Row> = {
   label: string;
 };
 
+type DashboardSection =
+  | "dashboard"
+  | "reports"
+  | "audit"
+  | "forecast"
+  | "data"
+  | "weather";
+
 type EnergyCardProps<Row> = {
   title: string;
   description: string;
@@ -111,6 +119,43 @@ type EnergyCardProps<Row> = {
 };
 
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
+
+const navigationItems: {
+  id: DashboardSection;
+  label: string;
+  description: string;
+}[] = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    description: "Overview"
+  },
+  {
+    id: "reports",
+    label: "Reports",
+    description: "Preview and export"
+  },
+  {
+    id: "audit",
+    label: "Audit",
+    description: "Manual evidence"
+  },
+  {
+    id: "forecast",
+    label: "Forecast",
+    description: "Risk windows"
+  },
+  {
+    id: "data",
+    label: "Data",
+    description: "Stored energy data"
+  },
+  {
+    id: "weather",
+    label: "Meteo / Weather",
+    description: "Future module"
+  }
+];
 
 const spotPriceColumns: Column<SpotPriceRow>[] = [
   { key: "timestamp_utc", label: "Timestamp UTC" },
@@ -2361,7 +2406,47 @@ function errorMessage(error: unknown): string {
   return "Request failed";
 }
 
+function SectionIntro({
+  eyebrow,
+  title,
+  description
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="section-intro">
+      <p className="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p className="lead">{description}</p>
+    </div>
+  );
+}
+
+function WeatherPlaceholder() {
+  return (
+    <section className="placeholder-panel" aria-labelledby="weather-title">
+      <span className="status">Placeholder</span>
+      <h2 id="weather-title">Weather integration not implemented yet</h2>
+      <p>
+        Future DMI/weather forecast module. This screen does not show fake live
+        weather data, fake Denmark maps, or AI congestion claims.
+      </p>
+      <ul className="safety-copy safety-copy--compact">
+        <li>Read-only decision support.</li>
+        <li>No automatic control.</li>
+        <li>No dispatch.</li>
+        <li>No activation.</li>
+        <li>Human review required.</li>
+      </ul>
+    </section>
+  );
+}
+
 export default function DashboardPage() {
+  const [activeSection, setActiveSection] =
+    useState<DashboardSection>("dashboard");
   const [selectedArea, setSelectedArea] = useState<PriceArea>("DK1");
   const [spotPricesState, setSpotPricesState] = useState<
     EnergyRequestState<SpotPriceRow>
@@ -2570,108 +2655,258 @@ export default function DashboardPage() {
     }
   }
 
-  return (
-    <main className="dashboard">
-      <div className="dashboard__inner">
-        <header className="dashboard__header">
-          <div>
-            <p className="eyebrow">FlexSignal AI</p>
-            <h1>FlexSignal AI</h1>
-            <div className="scope-badge">
-              Read-only decision support — no automatic control
+  const activeNavigationItem =
+    navigationItems.find((item) => item.id === activeSection) ??
+    navigationItems[0];
+
+  const spotPriceCard = (
+    <EnergyCard
+      title="Spot prices"
+      description="Manual read-only spot price rows from the backend request."
+      endpointName="spot-prices"
+      buttonLabel="Load spot prices"
+      state={spotPricesState}
+      columns={spotPriceColumns}
+      onLoad={handleLoadSpotPrices}
+      renderAfterTable={(data) => <SpotPriceTrendChart data={data} />}
+    />
+  );
+  const powerBalanceCard = (
+    <EnergyCard
+      title="Power balance"
+      description="Manual read-only power balance rows from the backend request."
+      endpointName="power-balance"
+      buttonLabel="Load power balance"
+      state={powerBalanceState}
+      columns={powerBalanceColumns}
+      onLoad={handleLoadPowerBalance}
+      renderAfterTable={(data) => <PowerBalanceTrendChart data={data} />}
+    />
+  );
+  const currentRiskCard = (
+    <CurrentRiskCard
+      state={currentRiskState}
+      onLoad={handleLoadCurrentRisk}
+    />
+  );
+  const forecastPreviewCard = (
+    <ForecastPreviewCard
+      state={forecastPreviewState}
+      onLoad={handleLoadForecastPreview}
+    />
+  );
+  const freshnessCard = (
+    <EnergyFreshnessCard
+      state={freshnessState}
+      onLoadDryRun={handleLoadFreshnessDryRun}
+      onLoadRead={handleLoadFreshnessRead}
+    />
+  );
+  const reportCards = (
+    <>
+      <ReportSummaryPreviewCard
+        state={reportPreviewState}
+        onLoad={handleLoadReportSummaryPreview}
+      />
+      <ReportMarkdownPreviewCard
+        state={reportMarkdownPreviewState}
+        onLoad={handleLoadReportMarkdownPreview}
+      />
+      <ReportPdfPreviewCard
+        state={reportPdfPreviewState}
+        onLoad={handleLoadReportPdfPreview}
+      />
+      <ReportPdfExportCard
+        state={reportPdfExportState}
+        onDownload={handleDownloadReportPdf}
+      />
+    </>
+  );
+  const auditCards = (
+    <>
+      <AuditedReportPdfExportCard
+        state={auditedReportPdfExportState}
+        onDownload={handleDownloadAuditedReportPdf}
+      />
+      <AuditPdfExportPersistCard
+        state={auditPdfExportPersistState}
+        onPersist={handlePersistAuditPdfExportEvent}
+      />
+    </>
+  );
+
+  function renderSectionContent() {
+    switch (activeSection) {
+      case "reports":
+        return (
+          <>
+            <SectionIntro
+              eyebrow="Reports"
+              title="Report previews and PDF export"
+              description="Manual report summary, Markdown, PDF dry-run, and unaudited PDF download flows. No files are written by the frontend and no live external data APIs are called."
+            />
+            <div className="summary summary--two">{reportCards}</div>
+          </>
+        );
+      case "audit":
+        return (
+          <>
+            <SectionIntro
+              eyebrow="Audit"
+              title="Audit evidence"
+              description="Manual audit-focused flows for PDF export evidence. Audit writes remain explicit, scoped, and visible to the reviewer."
+            />
+            <div className="summary summary--two">{auditCards}</div>
+          </>
+        );
+      case "forecast":
+        return (
+          <>
+            <SectionIntro
+              eyebrow="Forecast"
+              title="Surplus risk forecast"
+              description="Read-only current risk and deterministic forecast-window preview for human review. Forecasting remains explainable and manual."
+            />
+            <div className="summary summary--two">
+              {currentRiskCard}
+              {forecastPreviewCard}
             </div>
-            <p className="lead">
-              Minimal dashboard for Danish electricity decision support. Data
-              loads only when requested from the backend API helper, and the
-              frontend does not dispatch, activate, poll, control energy
-              assets, run forecasting logic, or call Energi Data Service
-              directly.
-            </p>
+          </>
+        );
+      case "data":
+        return (
+          <>
+            <SectionIntro
+              eyebrow="Data"
+              title="Stored energy data"
+              description="Manual spot price, power balance, and freshness reads. The browser does not call Energi Data Service, DMI, or weather APIs directly."
+            />
+            <div className="summary">
+              {spotPriceCard}
+              {powerBalanceCard}
+              {freshnessCard}
+            </div>
+          </>
+        );
+      case "weather":
+        return (
+          <>
+            <SectionIntro
+              eyebrow="Meteo / Weather"
+              title="Weather module placeholder"
+              description="A reserved frontend section for future weather forecast work. No weather integration is implemented in v0.1."
+            />
+            <WeatherPlaceholder />
+          </>
+        );
+      case "dashboard":
+      default:
+        return (
+          <>
+            <SectionIntro
+              eyebrow="Dashboard"
+              title="FlexSignal AI overview"
+              description="Minimal dashboard for Danish electricity decision support. Data loads only when requested from the backend API helper, and the frontend does not dispatch, activate, poll, control energy assets, run forecasting logic, or call external data APIs directly."
+            />
+            <div className="summary">
+              {spotPriceCard}
+              {powerBalanceCard}
+              {currentRiskCard}
+              {forecastPreviewCard}
+            </div>
+          </>
+        );
+    }
+  }
+
+  return (
+    <main className="app-shell">
+      <aside className="sidebar" aria-label="Primary navigation">
+        <div className="sidebar__brand">
+          <span className="sidebar__mark">FS</span>
+          <div>
+            <strong>N&amp;O Predict</strong>
+            <span>FlexSignal AI</span>
           </div>
-          <div className="selector">
-            <label htmlFor="price-area">Price area</label>
-            <select
-              id="price-area"
-              value={selectedArea}
-              onChange={(event) =>
-                handleAreaChange(event.target.value as PriceArea)
+        </div>
+        <nav className="sidebar__nav">
+          {navigationItems.map((item) => (
+            <button
+              key={item.id}
+              className={
+                item.id === activeSection
+                  ? "nav-item nav-item--active"
+                  : "nav-item"
               }
+              type="button"
+              onClick={() => setActiveSection(item.id)}
+              aria-current={item.id === activeSection ? "page" : undefined}
             >
-              {priceAreas.map((area) => (
-                <option key={area} value={area}>
-                  {area}
-                </option>
-              ))}
-            </select>
+              <span>{item.label}</span>
+              <small>{item.description}</small>
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar__safety">
+          <span>v0.1 boundary</span>
+          <strong>Read-only decision support</strong>
+          <p>No automatic control, dispatch, or activation.</p>
+        </div>
+      </aside>
+
+      <div className="dashboard">
+        <header className="topbar">
+          <div>
+            <p className="topbar__label">Current section</p>
+            <h2>{activeNavigationItem.label}</h2>
+          </div>
+          <div className="topbar__meta">
+            <div className="topbar__product">
+              N&amp;O Predict / FlexSignal AI
+            </div>
+            <div className="system-status" aria-label="System Status: LIVE">
+              <span className="system-status__dot" aria-hidden="true" />
+              <span>System Status: LIVE</span>
+            </div>
           </div>
         </header>
 
-        <div className="summary">
-          <EnergyCard
-            title="Spot prices"
-            description="Manual read-only spot price rows from the backend request."
-            endpointName="spot-prices"
-            buttonLabel="Load spot prices"
-            state={spotPricesState}
-            columns={spotPriceColumns}
-            onLoad={handleLoadSpotPrices}
-            renderAfterTable={(data) => <SpotPriceTrendChart data={data} />}
-          />
-          <EnergyCard
-            title="Power balance"
-            description="Manual read-only power balance rows from the backend request."
-            endpointName="power-balance"
-            buttonLabel="Load power balance"
-            state={powerBalanceState}
-            columns={powerBalanceColumns}
-            onLoad={handleLoadPowerBalance}
-            renderAfterTable={(data) => <PowerBalanceTrendChart data={data} />}
-          />
-          <CurrentRiskCard
-            state={currentRiskState}
-            onLoad={handleLoadCurrentRisk}
-          />
-          <ForecastPreviewCard
-            state={forecastPreviewState}
-            onLoad={handleLoadForecastPreview}
-          />
-          <ReportSummaryPreviewCard
-            state={reportPreviewState}
-            onLoad={handleLoadReportSummaryPreview}
-          />
-          <ReportMarkdownPreviewCard
-            state={reportMarkdownPreviewState}
-            onLoad={handleLoadReportMarkdownPreview}
-          />
-          <ReportPdfPreviewCard
-            state={reportPdfPreviewState}
-            onLoad={handleLoadReportPdfPreview}
-          />
-          <ReportPdfExportCard
-            state={reportPdfExportState}
-            onDownload={handleDownloadReportPdf}
-          />
-          <AuditedReportPdfExportCard
-            state={auditedReportPdfExportState}
-            onDownload={handleDownloadAuditedReportPdf}
-          />
-          <AuditPdfExportPersistCard
-            state={auditPdfExportPersistState}
-            onPersist={handlePersistAuditPdfExportEvent}
-          />
-          <EnergyFreshnessCard
-            state={freshnessState}
-            onLoadDryRun={handleLoadFreshnessDryRun}
-            onLoadRead={handleLoadFreshnessRead}
-          />
-        </div>
+        <div className="dashboard__inner">
+          <header className="dashboard__controls">
+            <div className="safety-strip" aria-label="Safety boundary">
+              <span>Read-only decision support</span>
+              <span>No automatic control</span>
+              <span>No dispatch</span>
+              <span>No activation</span>
+              <span>Human review required</span>
+            </div>
+            <div className="selector">
+              <label htmlFor="price-area">Price area</label>
+              <select
+                id="price-area"
+                value={selectedArea}
+                onChange={(event) =>
+                  handleAreaChange(event.target.value as PriceArea)
+                }
+              >
+                {priceAreas.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </header>
 
-        <p className="api-note">
-          Frontend requests use only the backend API base URL helper:{" "}
-          <code>{backendApiBaseUrl}</code>. The browser does not call Energi
-          Data Service or external data APIs directly, and nothing auto-loads
-          or polls.
-        </p>
+          {renderSectionContent()}
+
+          <p className="api-note">
+            Frontend requests use only the backend API base URL helper:{" "}
+            <code>{backendApiBaseUrl}</code>. The browser does not call Energi
+            Data Service, DMI, weather, or external data APIs directly, and
+            nothing auto-loads or polls.
+          </p>
+        </div>
       </div>
     </main>
   );
