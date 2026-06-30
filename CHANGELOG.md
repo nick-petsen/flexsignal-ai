@@ -2,6 +2,22 @@
 
 ## v0.1.0 - TODO
 
+- Polished the existing frontend-only navigation shell into a cleaner
+  operations-grade energy intelligence UI. The visible frontend product
+  branding now uses N&O Predict in the sidebar, topbar, dashboard title, and
+  page metadata; technical repo, API, package, endpoint, and generated PDF
+  filename names are not renamed in this step. The update keeps the deep green
+  app background, sidebar sections, `System Status: LIVE`, existing cards, and
+  all existing manual frontend flows while using cleaner neutral surfaces,
+  logo-inspired green as the primary accent, refined sidebar/topbar states, a
+  manual-state Decision overview cockpit, more whitespace, restrained button
+  states, and a calmer `Decision support mode` safety presentation with the
+  remaining safety constraints still visible. Meteo / Weather remains a
+  placeholder only with no weather integration, fake maps, fake wind data, or
+  fake AI congestion claims. This changed frontend UI and documentation only:
+  no backend files, database code, migrations, API endpoints, API behavior,
+  model behavior, live data, ML/LLM, auth, Azure infrastructure, control,
+  dispatch, activation, or operational functionality changed.
 - Added a frontend-only navigation shell and dark green N&O Predict /
   FlexSignal AI theme. The UI now has local-state section switching for
   Dashboard, Reports, Audit, Forecast, Data, and Meteo / Weather; a left
