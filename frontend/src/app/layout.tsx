@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FlexSignal AI",
-  description: "Read-only decision support dashboard shell for FlexSignal AI."
+  title: "N&O Predict",
+  description: "Read-only decision support dashboard shell for N&O Predict."
 };
 
 export default function RootLayout({

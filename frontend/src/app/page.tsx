@@ -2444,6 +2444,60 @@ function WeatherPlaceholder() {
   );
 }
 
+function DecisionOverview({ selectedArea }: { selectedArea: PriceArea }) {
+  const overviewItems = [
+    {
+      label: "Current surplus risk",
+      value: "Awaiting manual load",
+      detail: "Use the current risk card below."
+    },
+    {
+      label: "Next risk window",
+      value: "Not calculated",
+      detail: "Forecast preview has not been loaded."
+    },
+    {
+      label: "Price area",
+      value: selectedArea,
+      detail: "Manual selection"
+    },
+    {
+      label: "Data freshness",
+      value: "Manual check required",
+      detail: "Use the freshness card in Data."
+    },
+    {
+      label: "Recommended action",
+      value: "Human review required",
+      detail: "No automatic action is available."
+    }
+  ];
+
+  return (
+    <section className="decision-overview" aria-labelledby="decision-overview-title">
+      <div className="decision-overview__header">
+        <div>
+          <p className="eyebrow">Decision overview</p>
+          <h2 id="decision-overview-title">Operations cockpit</h2>
+        </div>
+        <div className="mode-indicator">
+          <span>Decision support mode</span>
+          <strong>Read-only · Human review required</strong>
+        </div>
+      </div>
+      <div className="decision-overview__grid">
+        {overviewItems.map((item) => (
+          <article className="decision-overview__item" key={item.label}>
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+            <p>{item.detail}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardPage() {
   const [activeSection, setActiveSection] =
     useState<DashboardSection>("dashboard");
@@ -2805,9 +2859,10 @@ export default function DashboardPage() {
           <>
             <SectionIntro
               eyebrow="Dashboard"
-              title="FlexSignal AI overview"
+              title="N&O Predict overview"
               description="Minimal dashboard for Danish electricity decision support. Data loads only when requested from the backend API helper, and the frontend does not dispatch, activate, poll, control energy assets, run forecasting logic, or call external data APIs directly."
             />
+            <DecisionOverview selectedArea={selectedArea} />
             <div className="summary">
               {spotPriceCard}
               {powerBalanceCard}
@@ -2823,11 +2878,12 @@ export default function DashboardPage() {
     <main className="app-shell">
       <aside className="sidebar" aria-label="Primary navigation">
         <div className="sidebar__brand">
-          <span className="sidebar__mark">FS</span>
-          <div>
-            <strong>N&amp;O Predict</strong>
-            <span>FlexSignal AI</span>
-          </div>
+          <img
+            className="sidebar__logo"
+            src="/branding/no-predict-logo.png"
+            alt=""
+            aria-hidden="true"
+          />
         </div>
         <nav className="sidebar__nav">
           {navigationItems.map((item) => (
@@ -2847,23 +2903,24 @@ export default function DashboardPage() {
             </button>
           ))}
         </nav>
-        <div className="sidebar__safety">
+        <div className="sidebar__safety" aria-label="v0.1 safety boundary">
           <span>v0.1 boundary</span>
           <strong>Read-only decision support</strong>
-          <p>No automatic control, dispatch, or activation.</p>
+          <p>
+            No automatic control, dispatch, or activation. Human review
+            required.
+          </p>
         </div>
       </aside>
 
       <div className="dashboard">
         <header className="topbar">
-          <div>
+          <div className="topbar__section">
             <p className="topbar__label">Current section</p>
             <h2>{activeNavigationItem.label}</h2>
           </div>
           <div className="topbar__meta">
-            <div className="topbar__product">
-              N&amp;O Predict / FlexSignal AI
-            </div>
+            <div className="topbar__product">N&amp;O Predict</div>
             <div className="system-status" aria-label="System Status: LIVE">
               <span className="system-status__dot" aria-hidden="true" />
               <span>System Status: LIVE</span>
@@ -2873,12 +2930,20 @@ export default function DashboardPage() {
 
         <div className="dashboard__inner">
           <header className="dashboard__controls">
-            <div className="safety-strip" aria-label="Safety boundary">
-              <span>Read-only decision support</span>
-              <span>No automatic control</span>
-              <span>No dispatch</span>
-              <span>No activation</span>
-              <span>Human review required</span>
+            <div className="safety-boundary" aria-label="Safety boundary">
+              <div className="mode-indicator">
+                <span>Decision support mode</span>
+                <strong>Read-only · Human review required</strong>
+              </div>
+              <div className="safety-boundary__details">
+                <span>Safety constraints:</span>
+                <ul>
+                  <li>No automatic control</li>
+                  <li>No dispatch</li>
+                  <li>No activation</li>
+                  <li>Human review required</li>
+                </ul>
+              </div>
             </div>
             <div className="selector">
               <label htmlFor="price-area">Price area</label>
