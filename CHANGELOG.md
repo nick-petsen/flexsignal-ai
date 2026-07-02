@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Added backend-only `POST /api/dashboard/decision-summary/preview` for the
+  N&O Predict Dashboard cockpit decision summary. The endpoint accepts DK1/DK2
+  `price_area`, returns read-only decision-support and human-review flags,
+  explicitly states no automatic control, no dispatch, and no activation,
+  reuses existing current-risk and freshness read paths only when available,
+  and returns calm `not_available` / `not_calculated` fields otherwise.
+  Expected impact and economic potential remain `not_calculated` because no
+  existing real backend source provides them. This changed backend tests/docs
+  only besides the new backend router registration: no frontend files,
+  migrations, database schema, database writes, live EDS/DMI/weather or
+  external API calls, ML/LLM decision engine, auth, Azure, control, dispatch,
+  activation, or operational asset integration were added.
 - Documented the merged Dashboard cockpit state wiring. Cockpit KPI tiles now
   update only after manual user clicks: `Load latest risk view` updates
   Current risk and Recommended action from the existing current risk flow when
