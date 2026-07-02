@@ -28,6 +28,64 @@ export type CurrentRiskResponse = {
   };
 };
 
+export type DashboardDecisionSummaryStatus =
+  | "available"
+  | "limited"
+  | "not_available"
+  | "not_calculated"
+  | string;
+
+export type DashboardDecisionSummaryCurrentRisk = {
+  status?: DashboardDecisionSummaryStatus;
+  reason?: string;
+  risk_level?: string;
+  risk_score?: number | string | null;
+  confidence_score?: number | string | null;
+  explanation?: string;
+  recommended_human_action?: string;
+  source?: string;
+};
+
+export type DashboardDecisionSummaryValue = {
+  status?: DashboardDecisionSummaryStatus;
+  reason?: string;
+  value?: string | number | null;
+  source?: string;
+  label?: string;
+  summary?: string;
+};
+
+export type DashboardDecisionSummaryWindow = DashboardDecisionSummaryValue & {
+  window_label?: string;
+};
+
+export type DashboardDecisionSummaryFreshness = {
+  status?: DashboardDecisionSummaryStatus;
+  reason?: string;
+  source?: string;
+  spot_price_row_count?: number;
+  power_balance_row_count?: number;
+  warnings?: string[];
+};
+
+export type DashboardDecisionSummaryPreviewResponse = {
+  price_area: PriceArea;
+  decision_support_only: boolean;
+  human_review_required: boolean;
+  no_automatic_control: boolean;
+  no_dispatch: boolean;
+  no_activation: boolean;
+  current_risk: DashboardDecisionSummaryCurrentRisk;
+  next_surplus_window: DashboardDecisionSummaryWindow;
+  confidence: DashboardDecisionSummaryValue;
+  expected_impact: DashboardDecisionSummaryValue;
+  economic_potential: DashboardDecisionSummaryValue;
+  recommended_human_action: string;
+  data_freshness: DashboardDecisionSummaryFreshness;
+  warnings?: string[];
+  source_notes?: Record<string, string>;
+};
+
 export type ForecastRiskLevel = "low" | "medium" | "high" | "unknown";
 
 export type ForecastPreviewRow = {
@@ -362,6 +420,34 @@ export async function fetchForecastPreview(
   }
 
   return body as ForecastPreviewResponse;
+}
+
+export async function fetchDashboardDecisionSummaryPreview(
+  priceArea: PriceArea
+): Promise<DashboardDecisionSummaryPreviewResponse> {
+  const url = new URL(
+    `${backendApiBaseUrl.replace(/\/+$/, "")}/api/dashboard/decision-summary/preview`
+  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ price_area: priceArea })
+  });
+  const body: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(body, response.status));
+  }
+
+  if (!isDashboardDecisionSummaryPreviewResponse(body)) {
+    throw new Error(
+      "Backend returned an unexpected decision summary preview shape"
+    );
+  }
+
+  return body;
 }
 
 export async function fetchEnergyFreshness(
@@ -716,6 +802,35 @@ function isEnergyFreshnessResponse(
     (isRecord(candidate.freshness_plans) ||
       isRecord(candidate.spot_price_freshness) ||
       isRecord(candidate.power_balance_freshness))
+  );
+}
+
+function isDashboardDecisionSummaryPreviewResponse(
+  value: unknown
+): value is DashboardDecisionSummaryPreviewResponse {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const candidate =
+    value as Partial<DashboardDecisionSummaryPreviewResponse>;
+
+  return (
+    isPriceArea(candidate.price_area) &&
+    typeof candidate.decision_support_only === "boolean" &&
+    typeof candidate.human_review_required === "boolean" &&
+    typeof candidate.no_automatic_control === "boolean" &&
+    typeof candidate.no_dispatch === "boolean" &&
+    typeof candidate.no_activation === "boolean" &&
+    isRecord(candidate.current_risk) &&
+    isRecord(candidate.next_surplus_window) &&
+    isRecord(candidate.confidence) &&
+    isRecord(candidate.expected_impact) &&
+    isRecord(candidate.economic_potential) &&
+    typeof candidate.recommended_human_action === "string" &&
+    isRecord(candidate.data_freshness) &&
+    isOptionalStringArray(candidate.warnings) &&
+    isOptionalRecord(candidate.source_notes)
   );
 }
 
