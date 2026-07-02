@@ -588,6 +588,32 @@ h1 {
   line-height: 1.45;
 }
 
+.decision-overview__notes {
+  display: grid;
+  gap: 8px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.decision-overview__notes span {
+  color: var(--steel);
+  font-size: 0.75rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.decision-overview__notes ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 17px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .decision-overview__boundary {
   display: flex;
   gap: 12px;

@@ -5,6 +5,7 @@ import {
   backendApiBaseUrl,
   fetchAuditedReportPdfExport,
   fetchCurrentRisk,
+  fetchDashboardDecisionSummaryPreview,
   fetchEnergyFreshness,
   fetchEnergyFreshnessRead,
   fetchForecastPreview,
@@ -18,6 +19,9 @@ import {
   type AuditPdfExportPersistResponse,
   type AuditedReportPdfExportResponse,
   type CurrentRiskResponse,
+  type DashboardDecisionSummaryPreviewResponse,
+  type DashboardDecisionSummaryStatus,
+  type DashboardDecisionSummaryValue,
   type EnergyApiResponse,
   type EnergyFreshnessQueryPlan,
   type EnergyFreshnessReadResult,
@@ -50,6 +54,12 @@ type ForecastRequestState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: ForecastPreviewResponse }
+  | { status: "error"; message: string };
+
+type DecisionSummaryRequestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: DashboardDecisionSummaryPreviewResponse }
   | { status: "error"; message: string };
 
 type FreshnessRequestState =
@@ -875,9 +885,328 @@ function formatConfidence(value: unknown): string {
     return "Not available";
   }
 
-  return parsed > 0 && parsed <= 1
+  return parsed >= 0 && parsed <= 1
     ? `${formatNumber(parsed * 100)}%`
     : formatNumber(parsed);
+}
+
+function formatSummaryStatus(
+  status: DashboardDecisionSummaryStatus | undefined,
+  availableLabel = "Available"
+): string {
+  switch (status) {
+    case "available":
+      return availableLabel;
+    case "limited":
+      return "Limited";
+    case "not_available":
+      return "Not available";
+    case "not_calculated":
+      return "Not calculated yet";
+    case undefined:
+    case "":
+      return "Not available";
+    default:
+      return status
+        .split("_")
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+  }
+}
+
+function getDecisionSummaryIdleKpis(): CockpitKpi[] {
+  return [
+    {
+      label: "Current risk",
+      value: "Awaiting manual refresh",
+      detail: "Use Load decision summary to refresh this view."
+    },
+    {
+      label: "Next surplus window",
+      value: "Not calculated yet",
+      detail: "Awaiting manual refresh."
+    },
+    {
+      label: "Confidence",
+      value: "Not available",
+      detail: "Awaiting manual refresh."
+    },
+    {
+      label: "Expected impact",
+      value: "Not calculated yet",
+      detail: "Awaiting manual refresh."
+    },
+    {
+      label: "Economic potential",
+      value: "Not calculated yet",
+      detail: "Awaiting manual refresh."
+    },
+    {
+      label: "Data freshness",
+      value: "Not available",
+      detail: "Awaiting manual refresh."
+    },
+    {
+      label: "Recommended action",
+      value: "Human review required",
+      detail: "Decision support only."
+    }
+  ];
+}
+
+function getDecisionSummaryLoadingKpis(): CockpitKpi[] {
+  return getDecisionSummaryIdleKpis().map((item) => ({
+    ...item,
+    value: "Loading...",
+    detail: "Decision summary is being loaded."
+  }));
+}
+
+function getDecisionSummaryErrorKpis(message: string): CockpitKpi[] {
+  return getDecisionSummaryIdleKpis().map((item) => ({
+    ...item,
+    detail:
+      item.label === "Current risk"
+        ? `Decision summary unavailable: ${message}`
+        : "Awaiting manual refresh."
+  }));
+}
+
+function getDecisionSummaryKpis(
+  state: DecisionSummaryRequestState
+): CockpitKpi[] {
+  if (state.status === "loading") {
+    return getDecisionSummaryLoadingKpis();
+  }
+
+  if (state.status === "error") {
+    return getDecisionSummaryErrorKpis(state.message);
+  }
+
+  if (state.status !== "success") {
+    return getDecisionSummaryIdleKpis();
+  }
+
+  return [
+    getDecisionSummaryCurrentRiskKpi(state.data),
+    getDecisionSummaryWindowKpi(state.data),
+    getDecisionSummaryConfidenceKpi(state.data),
+    getDecisionSummaryExpectedImpactKpi(state.data.expected_impact),
+    getDecisionSummaryEconomicPotentialKpi(state.data.economic_potential),
+    getDecisionSummaryFreshnessKpi(state.data),
+    getDecisionSummaryRecommendedActionKpi(state.data)
+  ];
+}
+
+function getDecisionSummaryCurrentRiskKpi(
+  data: DashboardDecisionSummaryPreviewResponse
+): CockpitKpi {
+  const currentRisk = data.current_risk;
+
+  if (currentRisk.status === "not_available") {
+    return {
+      label: "Current risk",
+      value: "Not available",
+      detail: currentRisk.reason || "No current risk value was returned."
+    };
+  }
+
+  const riskLevel = currentRisk.risk_level;
+  const riskScore = parseRiskScore(currentRisk.risk_score);
+  const detail =
+    riskScore === null
+      ? currentRisk.explanation || "Risk score not available. Human review required."
+      : `Risk score ${formatNumber(riskScore)}. Human review required.`;
+
+  return {
+    label: "Current risk",
+    value: formatRiskLabel(riskLevel),
+    detail,
+    tone:
+      riskLevel === "high"
+        ? "danger"
+        : riskLevel === "medium"
+          ? "warning"
+          : riskLevel === "low"
+            ? "good"
+            : undefined
+  };
+}
+
+function getDecisionSummaryWindowKpi(
+  data: DashboardDecisionSummaryPreviewResponse
+): CockpitKpi {
+  const window = data.next_surplus_window;
+
+  if (window.status === "not_calculated") {
+    return {
+      label: "Next surplus window",
+      value: "Not calculated yet",
+      detail: window.reason || "No surplus window was calculated."
+    };
+  }
+
+  if (window.status === "not_available") {
+    return {
+      label: "Next surplus window",
+      value: "Not available",
+      detail: window.reason || "No surplus window was returned."
+    };
+  }
+
+  return {
+    label: "Next surplus window",
+    value:
+      getSummaryValue(window) ??
+      formatSummaryStatus(window.status, "Data available"),
+    detail: window.reason || "Human review required."
+  };
+}
+
+function getDecisionSummaryConfidenceKpi(
+  data: DashboardDecisionSummaryPreviewResponse
+): CockpitKpi {
+  const confidenceValue =
+    data.confidence.value ?? data.current_risk.confidence_score;
+
+  if (confidenceValue !== undefined && confidenceValue !== null) {
+    return {
+      label: "Confidence",
+      value: formatConfidence(confidenceValue),
+      detail: "Human review required."
+    };
+  }
+
+  return {
+    label: "Confidence",
+    value: formatSummaryStatus(data.confidence.status),
+    detail: data.confidence.reason || "No confidence value was returned."
+  };
+}
+
+function getDecisionSummaryExpectedImpactKpi(
+  expectedImpact: DashboardDecisionSummaryValue
+): CockpitKpi {
+  return getDecisionSummaryMetricKpi(
+    "Expected impact",
+    expectedImpact,
+    "No impact estimate was returned."
+  );
+}
+
+function getDecisionSummaryEconomicPotentialKpi(
+  economicPotential: DashboardDecisionSummaryValue
+): CockpitKpi {
+  return getDecisionSummaryMetricKpi(
+    "Economic potential",
+    economicPotential,
+    "No economic potential was returned."
+  );
+}
+
+function getDecisionSummaryMetricKpi(
+  label: string,
+  metric: DashboardDecisionSummaryValue,
+  fallbackDetail: string
+): CockpitKpi {
+  if (metric.status === "not_calculated") {
+    return {
+      label,
+      value: "Not calculated yet",
+      detail: metric.reason || fallbackDetail
+    };
+  }
+
+  if (metric.status === "not_available") {
+    return {
+      label,
+      value: "Not available",
+      detail: metric.reason || fallbackDetail
+    };
+  }
+
+  return {
+    label,
+    value:
+      getSummaryValue(metric) ??
+      formatSummaryStatus(metric.status, "Data available"),
+    detail: metric.reason || "Human review required."
+  };
+}
+
+function getDecisionSummaryFreshnessKpi(
+  data: DashboardDecisionSummaryPreviewResponse
+): CockpitKpi {
+  const freshness = data.data_freshness;
+  const rowCounts =
+    typeof freshness.spot_price_row_count === "number" &&
+    typeof freshness.power_balance_row_count === "number"
+      ? `Rows available: spot prices ${freshness.spot_price_row_count}, power balance ${freshness.power_balance_row_count}.`
+      : null;
+
+  return {
+    label: "Data freshness",
+    value: formatSummaryStatus(freshness.status, "Data available"),
+    detail: freshness.reason || rowCounts || "Human review required.",
+    tone:
+      freshness.status === "available"
+        ? "good"
+        : freshness.status === "limited" || freshness.status === "not_available"
+          ? "warning"
+          : undefined
+  };
+}
+
+function getDecisionSummaryRecommendedActionKpi(
+  data: DashboardDecisionSummaryPreviewResponse
+): CockpitKpi {
+  const action = data.recommended_human_action.trim();
+
+  return {
+    label: "Recommended action",
+    value: action || "Human review required",
+    detail: "Decision support only. Human review required."
+  };
+}
+
+function getSummaryValue(
+  metric: DashboardDecisionSummaryValue & { window_label?: string }
+): string | null {
+  if (typeof metric.window_label === "string" && metric.window_label.trim()) {
+    return metric.window_label.trim();
+  }
+
+  if (typeof metric.value === "string" && metric.value.trim()) {
+    return metric.value.trim();
+  }
+
+  if (typeof metric.value === "number" && Number.isFinite(metric.value)) {
+    return formatNumber(metric.value);
+  }
+
+  if (typeof metric.label === "string" && metric.label.trim()) {
+    return metric.label.trim();
+  }
+
+  if (typeof metric.summary === "string" && metric.summary.trim()) {
+    return metric.summary.trim();
+  }
+
+  return null;
+}
+
+function getDecisionSummarySourceNotes(
+  data: DashboardDecisionSummaryPreviewResponse
+): string[] {
+  const notes = Object.values(data.source_notes ?? {}).filter(
+    (note): note is string => typeof note === "string" && note.trim().length > 0
+  );
+  const warnings = (data.warnings ?? [])
+    .filter((warning) => warning.trim().length > 0)
+    .map((warning) => `Backend note: ${warning.replaceAll("_", " ")}.`);
+
+  return [...notes, ...warnings].slice(0, 8);
 }
 
 function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
@@ -1258,8 +1587,28 @@ function getFreshnessActionStatus(state: FreshnessRequestState): string {
   }
 }
 
+function getDecisionSummaryActionStatus(
+  state: DecisionSummaryRequestState
+): string {
+  switch (state.status) {
+    case "loading":
+      return "Loading decision summary...";
+    case "success":
+      return "Decision summary loaded.";
+    case "error":
+      return `Decision summary unavailable: ${state.message}`;
+    case "idle":
+    default:
+      return "Awaiting manual refresh.";
+  }
+}
+
 function getActionStatusClass(
-  state: RiskRequestState | ForecastRequestState | FreshnessRequestState
+  state:
+    | RiskRequestState
+    | ForecastRequestState
+    | FreshnessRequestState
+    | DecisionSummaryRequestState
 ): string {
   const baseClass = "decision-overview__action-status-item";
 
@@ -2867,37 +3216,19 @@ function WeatherPlaceholder() {
 
 function DecisionOverview({
   selectedArea,
-  currentRiskState,
-  forecastPreviewState,
-  freshnessState,
-  onLoadRisk,
-  onLoadForecast,
-  onCheckFreshness
+  decisionSummaryState,
+  onLoadDecisionSummary
 }: {
   selectedArea: PriceArea;
-  currentRiskState: RiskRequestState;
-  forecastPreviewState: ForecastRequestState;
-  freshnessState: FreshnessRequestState;
-  onLoadRisk: () => void;
-  onLoadForecast: () => void;
-  onCheckFreshness: () => void;
+  decisionSummaryState: DecisionSummaryRequestState;
+  onLoadDecisionSummary: () => void;
 }) {
-  const isRiskLoading = currentRiskState.status === "loading";
-  const isForecastLoading = forecastPreviewState.status === "loading";
-  const isFreshnessLoading = freshnessState.status === "loading";
-  const overviewItems: CockpitKpi[] = [
-    getCurrentRiskKpi(currentRiskState),
-    getForecastWindowKpi(forecastPreviewState),
-    getRecommendedActionKpi(currentRiskState),
-    getConfidenceKpi(currentRiskState, forecastPreviewState),
-    getExpectedImpactKpi(forecastPreviewState),
-    {
-      label: "Economic potential",
-      value: "Not calculated yet",
-      detail: "No economic model is loaded in v0.1."
-    },
-    getFreshnessKpi(freshnessState)
-  ];
+  const isLoading = decisionSummaryState.status === "loading";
+  const overviewItems = getDecisionSummaryKpis(decisionSummaryState);
+  const sourceNotes =
+    decisionSummaryState.status === "success"
+      ? getDecisionSummarySourceNotes(decisionSummaryState.data)
+      : [];
 
   return (
     <section className="decision-overview" aria-labelledby="decision-overview-title">
@@ -2915,37 +3246,15 @@ function DecisionOverview({
         <button
           className="load-button load-button--cockpit"
           type="button"
-          onClick={onLoadRisk}
-          disabled={isRiskLoading}
+          onClick={onLoadDecisionSummary}
+          disabled={isLoading}
         >
-          {isRiskLoading ? "Loading..." : "Load latest risk view"}
-        </button>
-        <button
-          className="load-button load-button--secondary load-button--cockpit"
-          type="button"
-          onClick={onLoadForecast}
-          disabled={isForecastLoading}
-        >
-          {isForecastLoading ? "Reviewing..." : "Review forecast window"}
-        </button>
-        <button
-          className="load-button load-button--secondary load-button--cockpit"
-          type="button"
-          onClick={onCheckFreshness}
-          disabled={isFreshnessLoading}
-        >
-          {isFreshnessLoading ? "Checking..." : "Check data freshness"}
+          {isLoading ? "Loading..." : "Load decision summary"}
         </button>
       </div>
       <div className="decision-overview__action-status" aria-live="polite">
-        <span className={getActionStatusClass(currentRiskState)}>
-          {getRiskActionStatus(currentRiskState)}
-        </span>
-        <span className={getActionStatusClass(forecastPreviewState)}>
-          {getForecastActionStatus(forecastPreviewState)}
-        </span>
-        <span className={getActionStatusClass(freshnessState)}>
-          {getFreshnessActionStatus(freshnessState)}
+        <span className={getActionStatusClass(decisionSummaryState)}>
+          {getDecisionSummaryActionStatus(decisionSummaryState)}
         </span>
       </div>
       <div className="decision-overview__grid">
@@ -2964,6 +3273,16 @@ function DecisionOverview({
           </article>
         ))}
       </div>
+      {sourceNotes.length > 0 && (
+        <div className="decision-overview__notes" aria-label="Data notes">
+          <span>Data notes</span>
+          <ul>
+            {sourceNotes.map((note, index) => (
+              <li key={`${index}-${note}`}>{note}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="decision-overview__boundary" aria-label="Cockpit safety boundary">
         <span>Safety boundary</span>
         <p>
@@ -2988,6 +3307,10 @@ export default function DashboardPage() {
   const [currentRiskState, setCurrentRiskState] = useState<RiskRequestState>({
     status: "idle"
   });
+  const [decisionSummaryState, setDecisionSummaryState] =
+    useState<DecisionSummaryRequestState>({
+      status: "idle"
+    });
   const [forecastPreviewState, setForecastPreviewState] =
     useState<ForecastRequestState>({
       status: "idle"
@@ -3025,6 +3348,7 @@ export default function DashboardPage() {
     setSpotPricesState({ status: "idle" });
     setPowerBalanceState({ status: "idle" });
     setCurrentRiskState({ status: "idle" });
+    setDecisionSummaryState({ status: "idle" });
     setForecastPreviewState({ status: "idle" });
     setFreshnessState({ status: "idle" });
     setReportPreviewState({ status: "idle" });
@@ -3062,6 +3386,19 @@ export default function DashboardPage() {
       setCurrentRiskState({ status: "success", data });
     } catch (error) {
       setCurrentRiskState({ status: "error", message: errorMessage(error) });
+    }
+  }
+
+  async function handleLoadDecisionSummary() {
+    setDecisionSummaryState({ status: "loading" });
+    try {
+      const data = await fetchDashboardDecisionSummaryPreview(selectedArea);
+      setDecisionSummaryState({ status: "success", data });
+    } catch (error) {
+      setDecisionSummaryState({
+        status: "error",
+        message: errorMessage(error)
+      });
     }
   }
 
@@ -3341,12 +3678,8 @@ export default function DashboardPage() {
             />
             <DecisionOverview
               selectedArea={selectedArea}
-              currentRiskState={currentRiskState}
-              forecastPreviewState={forecastPreviewState}
-              freshnessState={freshnessState}
-              onLoadRisk={handleLoadCurrentRisk}
-              onLoadForecast={handleLoadForecastPreview}
-              onCheckFreshness={handleLoadFreshnessRead}
+              decisionSummaryState={decisionSummaryState}
+              onLoadDecisionSummary={handleLoadDecisionSummary}
             />
             <div className="summary">
               {spotPriceCard}
