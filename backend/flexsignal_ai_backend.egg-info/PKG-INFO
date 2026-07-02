@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: flexsignal-ai-backend
+Version: 0.1.0
+Summary: Minimal FastAPI backend for FlexSignal AI read-only decision support.
+Requires-Python: >=3.11
+Requires-Dist: alembic
+Requires-Dist: fastapi
+Requires-Dist: reportlab
+Requires-Dist: uvicorn
+Provides-Extra: dev
+Requires-Dist: httpx; extra == "dev"
+Requires-Dist: psycopg[binary]; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
