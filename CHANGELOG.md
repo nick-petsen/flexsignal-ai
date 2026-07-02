@@ -2,12 +2,31 @@
 
 ## v0.1.0 - TODO
 
+- Documented the merged Dashboard cockpit state wiring. Cockpit KPI tiles now
+  update only after manual user clicks: `Load latest risk view` updates
+  Current risk and Recommended action from the existing current risk flow when
+  available, `Review forecast window` updates Next surplus window and
+  Confidence from the existing forecast preview flow when available, and
+  `Check data freshness` updates Data freshness from the existing freshness
+  flow when available. Economic potential remains `Not calculated yet` unless
+  real backend data exists. The topbar uses Manual refresh mode, not
+  `System Status: LIVE`; Meteo / Weather remains placeholder-only. Observed
+  manual smoke confirmed the cockpit buttons were clickable and KPI tiles
+  updated after manual clicks. Example observed values may include Current
+  risk `Medium`, Risk score `35/100`, Next surplus window `0-24h`,
+  Confidence `100%`, Data freshness `OK`, and Economic potential
+  `Not calculated yet`; these values come from existing backend/manual flows
+  when available and are not fake frontend values. This documentation-only
+  update changed no frontend code, backend code, database code, migrations,
+  API endpoints, model logic, live weather behavior, control, dispatch,
+  activation, auto-load, or polling behavior, and preserves read-only
+  decision support with human review required.
 - Polished the existing frontend-only navigation shell into a cleaner
   operations-grade energy intelligence UI. The visible frontend product
   branding now uses N&O Predict in the sidebar, topbar, dashboard title, and
   page metadata; technical repo, API, package, endpoint, and generated PDF
   filename names are not renamed in this step. The update keeps the deep green
-  app background, sidebar sections, `System Status: LIVE`, existing cards, and
+  app background, sidebar sections, Manual refresh mode, existing cards, and
   all existing manual frontend flows while using cleaner neutral surfaces,
   logo-inspired green as the primary accent, refined sidebar/topbar states, a
   manual-state Decision overview cockpit, more whitespace, restrained button
@@ -21,7 +40,7 @@
 - Added a frontend-only navigation shell and dark green N&O Predict /
   FlexSignal AI theme. The UI now has local-state section switching for
   Dashboard, Reports, Audit, Forecast, Data, and Meteo / Weather; a left
-  sidebar; a topbar with product name and `System Status: LIVE`; visible
+  sidebar; a topbar with product name and Manual refresh mode; visible
   read-only decision-support safety copy; and a Meteo / Weather placeholder
   that states weather integration is not implemented yet. Existing manual
   frontend cards remain accessible in their relevant sections. This changed

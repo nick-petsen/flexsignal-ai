@@ -1,5 +1,30 @@
 # Human Oversight
 
+## Dashboard Cockpit State Wiring
+
+The Dashboard cockpit KPI tiles update only after manual user clicks. `Load
+latest risk view` updates Current risk and Recommended action from the
+existing current risk flow when available. `Review forecast window` updates
+Next surplus window and Confidence from the existing forecast preview flow
+when available. `Check data freshness` updates Data freshness from the
+existing freshness flow when available.
+
+Economic potential remains `Not calculated yet` unless real backend data
+exists. The cockpit has no auto-load, polling, live control, dispatch, or
+activation behavior. It remains read-only decision support and requires human
+review before any real-world action. Meteo / Weather remains placeholder-only,
+and the topbar uses Manual refresh mode, not `System Status: LIVE`.
+
+Observed manual cockpit smoke:
+
+- Cockpit buttons were clickable.
+- KPI tiles updated after manual clicks.
+- Example observed values may include Current risk `Medium`, Risk score
+  `35/100`, Next surplus window `0-24h`, Confidence `100%`, Data freshness
+  `OK`, and Economic potential `Not calculated yet`.
+- These values came from existing backend/manual flows when available and are
+  not fake frontend values.
+
 ## Frontend Report Summary Preview
 
 The dashboard includes a Report summary preview card for the existing
