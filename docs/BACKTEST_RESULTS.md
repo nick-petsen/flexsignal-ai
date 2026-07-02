@@ -30,6 +30,26 @@ historical batch write:
 
 Current read-only foundation:
 
+- Dashboard cockpit state wiring is a read-only display surface over existing
+  manual flows and does not affect backtest scoring. KPI tiles update only
+  after manual user clicks. `Load latest risk view` updates Current risk and
+  Recommended action from the existing current risk flow when available.
+  `Review forecast window` updates Next surplus window and Confidence from
+  the existing forecast preview flow when available. `Check data freshness`
+  updates Data freshness from the existing freshness flow when available.
+  Economic potential remains `Not calculated yet` unless real backend data
+  exists. The topbar uses Manual refresh mode, not `System Status: LIVE`;
+  Meteo / Weather remains placeholder-only.
+- Observed manual cockpit smoke confirmed the cockpit buttons were clickable
+  and KPI tiles updated after manual clicks. Example observed values may
+  include Current risk `Medium`, Risk score `35/100`, Next surplus window
+  `0-24h`, Confidence `100%`, Data freshness `OK`, and Economic potential
+  `Not calculated yet`. These values came from existing backend/manual flows
+  when available and are not fake frontend values. This smoke does not affect
+  backtest scoring, model validation status, predictive-performance claims,
+  backend behavior, database schema, migrations, API endpoints, model logic,
+  live weather behavior, auto-load, polling, control, dispatch, activation, or
+  operational functionality. Human review remains required.
 - `GET /api/energy/freshness?price_area=DK1|DK2` exposes a read-only dry-run
   preview of `eds-data-freshness-read-model-v0` for DK1/DK2 `spot_prices` and
   `power_balance` freshness summaries. It also includes a combined energy

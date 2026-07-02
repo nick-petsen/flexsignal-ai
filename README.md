@@ -32,10 +32,27 @@ Working read-only core:
   surplus risk, a forecast-window preview, an energy freshness dry-run
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
+- Dashboard cockpit KPI tiles update only after manual user clicks. `Load
+  latest risk view` updates Current risk and Recommended action from the
+  existing current risk flow when available. `Review forecast window` updates
+  Next surplus window and Confidence from the existing forecast preview flow
+  when available. `Check data freshness` updates Data freshness from the
+  existing freshness flow when available. Economic potential remains `Not
+  calculated yet` unless real backend data exists. The topbar uses Manual
+  refresh mode, not `System Status: LIVE`. There is no auto-load, polling,
+  live control, dispatch, or activation; the cockpit remains read-only
+  decision support and requires human review. Meteo / Weather remains a
+  placeholder only.
+- Observed manual cockpit smoke confirmed the cockpit buttons were clickable
+  and KPI tiles updated after manual clicks. Example observed values may
+  include Current risk `Medium`, Risk score `35/100`, Next surplus window
+  `0-24h`, Confidence `100%`, Data freshness `OK`, and Economic potential
+  `Not calculated yet`. These values came from existing backend/manual flows
+  when available and are not fake frontend values.
 - Frontend now includes a frontend-only navigation shell with visible
   product branding set to N&O Predict, left sidebar sections for Dashboard,
   Reports, Audit, Forecast, Data, and Meteo / Weather, plus a topbar showing
-  `System Status: LIVE`. Section switching uses local frontend state only and
+  Manual refresh mode. Section switching uses local frontend state only and
   keeps existing manual dashboard cards accessible. A frontend-only premium
   theme polish keeps the deep green shell while using cleaner neutral card
   surfaces, logo-inspired green as the primary accent, refined sidebar/topbar

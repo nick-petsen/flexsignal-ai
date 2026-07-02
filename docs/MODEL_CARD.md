@@ -36,6 +36,28 @@ MVP foundation. It is simple, deterministic, testable, and explainable. It is
 not a trained forecasting model, not an LLM decision engine, and not validated
 for production operations.
 
+The Dashboard cockpit state wiring is a frontend display path over existing
+manual flows, not a new model. KPI tiles update only after manual user clicks.
+`Load latest risk view` updates Current risk and Recommended action from the
+existing current risk flow when available. `Review forecast window` updates
+Next surplus window and Confidence from the existing forecast preview flow
+when available. `Check data freshness` updates Data freshness from the
+existing freshness flow when available. Economic potential remains `Not
+calculated yet` unless real backend data exists.
+
+Observed manual cockpit smoke confirmed the cockpit buttons were clickable and
+KPI tiles updated after manual clicks. Example observed values may include
+Current risk `Medium`, Risk score `35/100`, Next surplus window `0-24h`,
+Confidence `100%`, Data freshness `OK`, and Economic potential `Not
+calculated yet`. These values came from existing backend/manual flows when
+available and are not fake frontend values. This does not change
+`rule-engine-v0`, `forecast-window-v0`, scoring thresholds, input composition,
+backtest pairing, model validation status, or predictive-performance claims.
+There is no auto-load, polling, live control, dispatch, activation, or
+Meteo / Weather data integration; Meteo / Weather remains placeholder-only.
+The topbar uses Manual refresh mode, not `System Status: LIVE`, and human
+review remains required.
+
 The frontend spot price and power balance trend charts are not part of
 `rule-engine-v0` and do not change scoring, forecasting, backtest pairing,
 thresholds, input composition, or predictive-performance claims. They are
