@@ -118,6 +118,13 @@ type EnergyCardProps<Row> = {
   renderAfterTable?: (data: EnergyApiResponse<Row>) => ReactNode;
 };
 
+type CockpitKpi = {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: "neutral" | "good" | "warning" | "danger";
+};
+
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
 
 const navigationItems: {
@@ -205,12 +212,12 @@ function EnergyCard<Row extends { source_record_id: string }>({
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
           <p className="muted">
-            No request has been made. Use the manual button to load backend API
-            data.
+            Awaiting manual load. Use the button to load read-only data for
+            review.
           </p>
         )}
         {state.status === "loading" && (
-          <p className="muted">Loading read-only backend data...</p>
+          <p className="muted">Loading read-only data...</p>
         )}
         {state.status === "error" && (
           <p className="error">Backend unavailable: {state.message}</p>
@@ -674,7 +681,7 @@ function CurrentRiskCard({
         <div>
           <h2 id="current-risk-title">Current surplus risk</h2>
           <p className="card__description">
-            Manual read-only request to the backend current risk endpoint.
+            Manual read-only risk view for human review.
           </p>
         </div>
         <span className="status">Read-only</span>
@@ -685,17 +692,16 @@ function CurrentRiskCard({
         onClick={onLoad}
         disabled={isLoading}
       >
-        {isLoading ? "Loading..." : "Load current risk"}
+        {isLoading ? "Loading..." : "Load latest risk view"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
           <p className="muted">
-            No request has been made. Use the manual button to load backend API
-            risk data.
+            Awaiting manual load. Use the button to load the latest risk view.
           </p>
         )}
         {state.status === "loading" && (
-          <p className="muted">Loading read-only backend risk data...</p>
+          <p className="muted">Loading read-only risk view...</p>
         )}
         {state.status === "error" && (
           <p className="error">Backend unavailable: {state.message}</p>
@@ -852,6 +858,216 @@ function getRiskLevelClass(value: unknown): string {
   return "risk-score__level--unknown";
 }
 
+function formatRiskLabel(value: CurrentRiskResponse["risk_level"]): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatConfidence(value: unknown): string {
+  const parsed = parseNumber(
+    typeof value === "string" || typeof value === "number" ? value : null
+  );
+
+  if (parsed === null) {
+    return "Not available";
+  }
+
+  return parsed > 0 && parsed <= 1
+    ? `${formatNumber(parsed * 100)}%`
+    : formatNumber(parsed);
+}
+
+function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
+  if (state.status === "loading") {
+    return {
+      label: "Current risk",
+      value: "Loading...",
+      detail: "Manual risk view is being loaded."
+    };
+  }
+
+  if (state.status === "error") {
+    return {
+      label: "Current risk",
+      value: "Not loaded yet",
+      detail: "Manual review is still required."
+    };
+  }
+
+  if (state.status === "success") {
+    return {
+      label: "Current risk",
+      value: formatRiskLabel(state.data.risk_level),
+      detail: `Risk score ${formatValue(state.data.risk_score)}. Human review required.`,
+      tone:
+        state.data.risk_level === "high"
+          ? "danger"
+          : state.data.risk_level === "medium"
+            ? "warning"
+            : "good"
+    };
+  }
+
+  return {
+    label: "Current risk",
+    value: "Not loaded yet",
+    detail: "Awaiting manual review."
+  };
+}
+
+function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
+  if (state.status === "loading") {
+    return {
+      label: "Next surplus window",
+      value: "Loading...",
+      detail: "Manual forecast window review is running."
+    };
+  }
+
+  if (state.status === "error") {
+    return {
+      label: "Next surplus window",
+      value: "Not calculated yet",
+      detail: "Awaiting manual review."
+    };
+  }
+
+  if (state.status === "success") {
+    const windows = Array.isArray(state.data.windows) ? state.data.windows : [];
+    const nextWindow = windows[0];
+
+    return {
+      label: "Next surplus window",
+      value: nextWindow?.window_label
+        ? formatValue(nextWindow.window_label)
+        : "Not calculated yet",
+      detail: nextWindow
+        ? `Risk ${formatValue(nextWindow.risk_level)}. Human review required.`
+        : "No forecast window returned."
+    };
+  }
+
+  return {
+    label: "Next surplus window",
+    value: "Not calculated yet",
+    detail: "Awaiting manual review."
+  };
+}
+
+function getConfidenceKpi(state: RiskRequestState): CockpitKpi {
+  if (state.status === "loading") {
+    return {
+      label: "Confidence",
+      value: "Loading...",
+      detail: "Awaiting current risk view."
+    };
+  }
+
+  if (state.status === "success") {
+    return {
+      label: "Confidence",
+      value: formatConfidence(state.data.confidence_score),
+      detail: "From the loaded risk view."
+    };
+  }
+
+  return {
+    label: "Confidence",
+    value: "Not available",
+    detail: "Awaiting manual review."
+  };
+}
+
+function getLatestFreshnessTimestamp(data: EnergyFreshnessResponse): string | null {
+  const spotPriceFreshness =
+    data.spot_price_freshness ??
+    data.freshness_result?.spot_price_freshness;
+  const powerBalanceFreshness =
+    data.power_balance_freshness ??
+    data.freshness_result?.power_balance_freshness;
+  const timestamps = [
+    spotPriceFreshness?.latest_timestamp,
+    powerBalanceFreshness?.latest_timestamp
+  ].filter((timestamp): timestamp is string => Boolean(timestamp));
+
+  if (timestamps.length === 0) {
+    return null;
+  }
+
+  return timestamps.sort().at(-1) ?? null;
+}
+
+function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
+  if (state.status === "loading") {
+    return {
+      label: "Data freshness",
+      value: "Loading...",
+      detail: "Manual freshness check is running."
+    };
+  }
+
+  if (state.status === "error") {
+    return {
+      label: "Data freshness",
+      value: "Not loaded yet",
+      detail: "Manual freshness review is still required."
+    };
+  }
+
+  if (state.status === "success") {
+    if (state.data.dry_run) {
+      return {
+        label: "Data freshness",
+        value: "Manual plan reviewed",
+        detail: "Dry-run plan only. No freshness result calculated."
+      };
+    }
+
+    const latestTimestamp = getLatestFreshnessTimestamp(state.data);
+
+    return {
+      label: "Data freshness",
+      value: latestTimestamp
+        ? formatShortTimestamp(latestTimestamp)
+        : "Not calculated yet",
+      detail: latestTimestamp
+        ? "Latest stored timestamp from manual freshness read."
+        : "No stored timestamp returned."
+    };
+  }
+
+  return {
+    label: "Data freshness",
+    value: "Not loaded yet",
+    detail: "Awaiting manual freshness review."
+  };
+}
+
+function getRecommendedActionKpi(state: RiskRequestState): CockpitKpi {
+  if (state.status === "loading") {
+    return {
+      label: "Recommended action",
+      value: "Loading...",
+      detail: "Awaiting manual risk view."
+    };
+  }
+
+  if (state.status === "success") {
+    return {
+      label: "Recommended action",
+      value:
+        state.data.recommended_human_action?.trim() ||
+        "No recommendation available yet",
+      detail: "Decision support only. Human review required."
+    };
+  }
+
+  return {
+    label: "Recommended action",
+    value: "No recommendation available yet",
+    detail: "No recommendation available yet."
+  };
+}
+
 function ForecastPreviewCard({
   state,
   onLoad
@@ -867,8 +1083,7 @@ function ForecastPreviewCard({
         <div>
           <h2 id="forecast-preview-title">Forecast preview</h2>
           <p className="card__description">
-            Manual request to preview deterministic forecast windows from
-            synthetic/caller-provided rows only.
+            Manual review of deterministic forecast windows from provided rows.
           </p>
         </div>
         <span className="status">Read-only</span>
@@ -879,13 +1094,13 @@ function ForecastPreviewCard({
         onClick={onLoad}
         disabled={isLoading}
       >
-        {isLoading ? "Loading..." : "Load forecast preview"}
+        {isLoading ? "Loading..." : "Review forecast window"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
           <p className="muted">
-            No request has been made. Use the manual button to call{" "}
-            <code>POST /api/forecast/preview</code>.
+            Not calculated. Use the manual button to review the forecast
+            window.
           </p>
         )}
         {state.status === "loading" && (
@@ -2444,55 +2659,104 @@ function WeatherPlaceholder() {
   );
 }
 
-function DecisionOverview({ selectedArea }: { selectedArea: PriceArea }) {
-  const overviewItems = [
+function DecisionOverview({
+  selectedArea,
+  currentRiskState,
+  forecastPreviewState,
+  freshnessState,
+  onLoadRisk,
+  onLoadForecast,
+  onCheckFreshness
+}: {
+  selectedArea: PriceArea;
+  currentRiskState: RiskRequestState;
+  forecastPreviewState: ForecastRequestState;
+  freshnessState: FreshnessRequestState;
+  onLoadRisk: () => void;
+  onLoadForecast: () => void;
+  onCheckFreshness: () => void;
+}) {
+  const isRiskLoading = currentRiskState.status === "loading";
+  const isForecastLoading = forecastPreviewState.status === "loading";
+  const isFreshnessLoading = freshnessState.status === "loading";
+  const overviewItems: CockpitKpi[] = [
+    getCurrentRiskKpi(currentRiskState),
+    getForecastWindowKpi(forecastPreviewState),
+    getRecommendedActionKpi(currentRiskState),
+    getConfidenceKpi(currentRiskState),
     {
-      label: "Current surplus risk",
-      value: "Awaiting manual load",
-      detail: "Use the current risk card below."
+      label: "Expected impact",
+      value: "Not calculated yet",
+      detail: "No impact model is loaded in v0.1."
     },
     {
-      label: "Next risk window",
-      value: "Not calculated",
-      detail: "Forecast preview has not been loaded."
+      label: "Economic potential",
+      value: "Not calculated yet",
+      detail: "No economic model is loaded in v0.1."
     },
-    {
-      label: "Price area",
-      value: selectedArea,
-      detail: "Manual selection"
-    },
-    {
-      label: "Data freshness",
-      value: "Manual check required",
-      detail: "Use the freshness card in Data."
-    },
-    {
-      label: "Recommended action",
-      value: "Human review required",
-      detail: "No automatic action is available."
-    }
+    getFreshnessKpi(freshnessState)
   ];
 
   return (
     <section className="decision-overview" aria-labelledby="decision-overview-title">
       <div className="decision-overview__header">
         <div>
-          <p className="eyebrow">Decision overview</p>
-          <h2 id="decision-overview-title">Operations cockpit</h2>
+          <p className="eyebrow">Dashboard</p>
+          <h2 id="decision-overview-title">Decision overview</h2>
+          <p>
+            Calm manual decision-support view for {selectedArea}. Values stay
+            empty until a reviewer loads or calculates them.
+          </p>
         </div>
-        <div className="mode-indicator">
-          <span>Decision support mode</span>
-          <strong>Read-only · Human review required</strong>
-        </div>
+      </div>
+      <div className="decision-overview__actions" aria-label="Manual cockpit actions">
+        <button
+          className="load-button load-button--cockpit"
+          type="button"
+          onClick={onLoadRisk}
+          disabled={isRiskLoading}
+        >
+          {isRiskLoading ? "Loading..." : "Load latest risk view"}
+        </button>
+        <button
+          className="load-button load-button--secondary load-button--cockpit"
+          type="button"
+          onClick={onLoadForecast}
+          disabled={isForecastLoading}
+        >
+          {isForecastLoading ? "Reviewing..." : "Review forecast window"}
+        </button>
+        <button
+          className="load-button load-button--secondary load-button--cockpit"
+          type="button"
+          onClick={onCheckFreshness}
+          disabled={isFreshnessLoading}
+        >
+          {isFreshnessLoading ? "Checking..." : "Check data freshness"}
+        </button>
       </div>
       <div className="decision-overview__grid">
         {overviewItems.map((item) => (
-          <article className="decision-overview__item" key={item.label}>
+          <article
+            className={
+              item.tone
+                ? `decision-overview__item decision-overview__item--${item.tone}`
+                : "decision-overview__item"
+            }
+            key={item.label}
+          >
             <span>{item.label}</span>
             <strong>{item.value}</strong>
             <p>{item.detail}</p>
           </article>
         ))}
+      </div>
+      <div className="decision-overview__boundary" aria-label="Cockpit safety boundary">
+        <span>Safety boundary</span>
+        <p>
+          Read-only decision support. No automatic control, no dispatch, no
+          activation. Human review remains required.
+        </p>
       </div>
     </section>
   );
@@ -2716,9 +2980,9 @@ export default function DashboardPage() {
   const spotPriceCard = (
     <EnergyCard
       title="Spot prices"
-      description="Manual read-only spot price rows from the backend request."
+      description="Manual read-only spot price rows for the selected price area."
       endpointName="spot-prices"
-      buttonLabel="Load spot prices"
+      buttonLabel="Load spot price view"
       state={spotPricesState}
       columns={spotPriceColumns}
       onLoad={handleLoadSpotPrices}
@@ -2728,9 +2992,9 @@ export default function DashboardPage() {
   const powerBalanceCard = (
     <EnergyCard
       title="Power balance"
-      description="Manual read-only power balance rows from the backend request."
+      description="Manual read-only power balance rows for the selected price area."
       endpointName="power-balance"
-      buttonLabel="Load power balance"
+      buttonLabel="Load power balance view"
       state={powerBalanceState}
       columns={powerBalanceColumns}
       onLoad={handleLoadPowerBalance}
@@ -2859,10 +3123,18 @@ export default function DashboardPage() {
           <>
             <SectionIntro
               eyebrow="Dashboard"
-              title="N&O Predict overview"
-              description="Minimal dashboard for Danish electricity decision support. Data loads only when requested from the backend API helper, and the frontend does not dispatch, activate, poll, control energy assets, run forecasting logic, or call external data APIs directly."
+              title="Operations cockpit"
+              description="Executive and operations view for Danish electricity decision support. Values appear only after manual review actions; unavailable values remain clearly marked until calculated."
             />
-            <DecisionOverview selectedArea={selectedArea} />
+            <DecisionOverview
+              selectedArea={selectedArea}
+              currentRiskState={currentRiskState}
+              forecastPreviewState={forecastPreviewState}
+              freshnessState={freshnessState}
+              onLoadRisk={handleLoadCurrentRisk}
+              onLoadForecast={handleLoadForecastPreview}
+              onCheckFreshness={handleLoadFreshnessRead}
+            />
             <div className="summary">
               {spotPriceCard}
               {powerBalanceCard}
@@ -2921,9 +3193,9 @@ export default function DashboardPage() {
           </div>
           <div className="topbar__meta">
             <div className="topbar__product">N&amp;O Predict</div>
-            <div className="system-status" aria-label="System Status: LIVE">
+            <div className="system-status" aria-label="System status: manual mode">
               <span className="system-status__dot" aria-hidden="true" />
-              <span>System Status: LIVE</span>
+              <span>Manual mode</span>
             </div>
           </div>
         </header>
