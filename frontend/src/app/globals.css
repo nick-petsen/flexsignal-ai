@@ -588,24 +588,27 @@ h1 {
   line-height: 1.45;
 }
 
-.decision-overview__data-notes {
+.decision-overview__notes {
   display: grid;
-  gap: 5px;
+  gap: 6px;
   margin-top: -3px;
   padding: 0 2px;
   color: var(--muted-soft);
 }
 
-.decision-overview__data-notes span {
+.decision-overview__notes span {
   color: var(--steel);
   font-size: 0.72rem;
   font-weight: 760;
   text-transform: uppercase;
 }
 
-.decision-overview__data-notes p {
+.decision-overview__notes ul {
+  display: grid;
+  gap: 5px;
   max-width: 820px;
   margin: 0;
+  padding-left: 16px;
   color: var(--muted-soft);
   font-size: 0.78rem;
   line-height: 1.5;
