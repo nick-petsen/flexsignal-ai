@@ -30,6 +30,16 @@ historical batch write:
 
 Current read-only foundation:
 
+- `POST /api/dashboard/decision-summary/preview` exposes a backend-only N&O
+  Predict Dashboard cockpit decision summary preview. It composes existing
+  read-only current-risk and freshness sources when available and otherwise
+  returns explicit `not_available` / `not_calculated` states. It does not
+  affect backtest scoring, pairing, thresholds, validation status, forecast
+  performance claims, or model behavior. It does not change the database
+  schema, add migrations, write to the database, call live EDS/DMI/weather or
+  external APIs, use ML/LLM decisioning, estimate fake economic potential,
+  dispatch, activate, control, or integrate with operational energy assets.
+  Human review remains required.
 - Dashboard cockpit state wiring is a read-only display surface over existing
   manual flows and does not affect backtest scoring. KPI tiles update only
   after manual user clicks. `Load latest risk view` updates Current risk and

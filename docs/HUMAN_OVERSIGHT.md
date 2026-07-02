@@ -1,5 +1,33 @@
 # Human Oversight
 
+## Backend Dashboard Decision Summary Preview
+
+`POST /api/dashboard/decision-summary/preview` provides a backend-only
+read-only decision summary for future N&O Predict Dashboard cockpit wiring.
+The request body is `{"price_area":"DK1"}` or `{"price_area":"DK2"}`.
+
+Every successful response includes `decision_support_only=true`,
+`human_review_required=true`, `no_automatic_control=true`, `no_dispatch=true`,
+and `no_activation=true`. The endpoint may include current risk,
+confidence, and data freshness only when those values are derivable from
+existing backend read models. Missing values are returned as explicit
+`not_available` or `not_calculated` states with warnings and source notes.
+
+Human oversight requirements:
+
+- Human review is required before any real-world planning or action.
+- The endpoint does not perform automatic control.
+- The endpoint does not dispatch or activate anything.
+- The endpoint does not write to the database or create audit/energy records.
+- The endpoint does not call live Energi Data Service, DMI, weather, or
+  external APIs.
+- Economic potential is not faked; it remains `not_calculated` unless a future
+  real backend source exists.
+- Expected impact remains `not_calculated` unless a future real backend source
+  exists.
+- Future frontend wiring should display the response as manual decision
+  support only, with unavailable fields visibly marked.
+
 ## Dashboard Cockpit State Wiring
 
 The Dashboard cockpit KPI tiles update only after manual user clicks. `Load

@@ -20,6 +20,19 @@ read-only decision support for human review only.
 
 Working read-only core:
 
+- Backend `POST /api/dashboard/decision-summary/preview` exists as a
+  backend-only Dashboard cockpit decision summary preview for N&O Predict. It
+  accepts `{"price_area":"DK1"}` or `{"price_area":"DK2"}` and returns
+  read-only decision-support flags, human-review requirements, no automatic
+  control, no dispatch, no activation, optional current risk from existing
+  stored backend data when available, explicit `not_available` /
+  `not_calculated` states for missing fields, and source notes. It does not
+  modify the frontend, write to the database, add migrations, call live EDS,
+  DMI, weather, or external APIs, add ML/LLM decisioning, estimate fake
+  economic potential, or add operational asset integration. Economic
+  potential and expected impact remain `not_calculated` unless future real
+  backend sources exist. The endpoint is intended for future manual frontend
+  cockpit wiring only.
 - Local PostgreSQL schema and Alembic baseline exist.
 - Manual local Energi Data Service ingestion exists for `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`.

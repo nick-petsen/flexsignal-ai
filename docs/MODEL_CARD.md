@@ -29,6 +29,17 @@ returns source-table metadata, and does not write to the database, fetch live
 Energi Data Service data, schedule ingestion, or connect to operational
 systems.
 
+`POST /api/dashboard/decision-summary/preview` is a backend-only dashboard
+composition endpoint, not a new model. It accepts a DK1/DK2 `price_area` and
+returns a read-only cockpit decision summary for future N&O Predict Dashboard
+wiring. Current risk and confidence are populated only when existing stored
+backend risk data can be read and scored through `rule-engine-v0`; otherwise
+they are explicitly `not_available`. Next surplus window, expected impact, and
+economic potential remain `not_calculated` unless future real backend sources
+provide them. The endpoint does not invent prices, savings, weather,
+confidence, or economic values, and it does not call live EDS, DMI, weather, or
+external APIs.
+
 ## Current MVP Status
 
 `rule-engine-v0` is the current read-only scoring baseline for the technical
@@ -57,6 +68,14 @@ There is no auto-load, polling, live control, dispatch, activation, or
 Meteo / Weather data integration; Meteo / Weather remains placeholder-only.
 The topbar uses Manual refresh mode, not `System Status: LIVE`, and human
 review remains required.
+
+The backend dashboard decision summary preview preserves the same boundary. It
+sets `decision_support_only=true`, `human_review_required=true`,
+`no_automatic_control=true`, `no_dispatch=true`, and `no_activation=true` on
+every successful response. It is a composition/read endpoint for human review
+only and is not a forecasting engine, ML model, LLM decision engine, dispatch
+workflow, activation workflow, automatic control workflow, or critical
+operational system.
 
 The frontend spot price and power balance trend charts are not part of
 `rule-engine-v0` and do not change scoring, forecasting, backtest pairing,

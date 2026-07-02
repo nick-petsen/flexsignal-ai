@@ -2,6 +2,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.audit import router as audit_router
+from app.api.dashboard import router as dashboard_router
 from app.api.energy import router as energy_router
 from app.api.energy_freshness import router as energy_freshness_router
 from app.api.energy_freshness_read import router as energy_freshness_read_router
@@ -53,6 +54,7 @@ _include_materialized_router(app, energy_freshness_router)
 _include_materialized_router(app, energy_freshness_read_router)
 _include_materialized_router(app, forecast_router)
 _include_materialized_router(app, risk_router)
+_include_materialized_router(app, dashboard_router)
 _include_materialized_router(app, audit_router)
 _include_materialized_router(app, report_router)
 
