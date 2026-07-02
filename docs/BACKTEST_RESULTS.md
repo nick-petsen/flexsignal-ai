@@ -30,26 +30,32 @@ historical batch write:
 
 Current read-only foundation:
 
-- `POST /api/dashboard/decision-summary/preview` exposes a backend-only N&O
-  Predict Dashboard cockpit decision summary preview. It composes existing
-  read-only current-risk and freshness sources when available and otherwise
-  returns explicit `not_available` / `not_calculated` states. It does not
-  affect backtest scoring, pairing, thresholds, validation status, forecast
-  performance claims, or model behavior. It does not change the database
-  schema, add migrations, write to the database, call live EDS/DMI/weather or
-  external APIs, use ML/LLM decisioning, estimate fake economic potential,
-  dispatch, activate, control, or integrate with operational energy assets.
-  Human review remains required.
+- `POST /api/dashboard/decision-summary/preview` exposes the N&O Predict
+  Dashboard cockpit decision summary preview. The frontend calls it only from
+  the manual `Load decision summary` flow after human action. It composes
+  existing read-only current-risk and freshness sources when available and
+  otherwise returns explicit `not_available` / `not_calculated` states. DK1
+  and DK2 values come from existing backend read models where available; no
+  fake or synthetic dashboard KPI values are introduced. Expected impact,
+  economic potential, and next surplus window remain `not_calculated` unless
+  backed by real backend logic. It does not affect backtest scoring, pairing,
+  thresholds, validation status, forecast performance claims, or model
+  behavior. It does not change the database schema, add migrations, write to
+  the database, call live EDS/DMI/weather or external APIs, use ML/LLM
+  decisioning, dispatch, activate, control, or integrate with operational
+  energy assets. Human review remains required.
 - Dashboard cockpit state wiring is a read-only display surface over existing
   manual flows and does not affect backtest scoring. KPI tiles update only
-  after manual user clicks. `Load latest risk view` updates Current risk and
-  Recommended action from the existing current risk flow when available.
-  `Review forecast window` updates Next surplus window and Confidence from
-  the existing forecast preview flow when available. `Check data freshness`
-  updates Data freshness from the existing freshness flow when available.
-  Economic potential remains `Not calculated yet` unless real backend data
-  exists. The topbar uses Manual refresh mode, not `System Status: LIVE`;
-  Meteo / Weather remains placeholder-only.
+  after manual user clicks. `Load decision summary` calls
+  `POST /api/dashboard/decision-summary/preview` with no auto-load and no
+  polling. `Load latest risk view` updates Current risk and Recommended
+  action from the existing current risk flow when available. `Review forecast
+  window` updates Next surplus window and Confidence from the existing
+  forecast preview flow when available. `Check data freshness` updates Data
+  freshness from the existing freshness flow when available. Economic
+  potential remains `Not calculated yet` unless real backend data exists. The
+  topbar uses Manual refresh mode, not `System Status: LIVE`; Meteo / Weather
+  remains placeholder-only.
 - Observed manual cockpit smoke confirmed the cockpit buttons were clickable
   and KPI tiles updated after manual clicks. Example observed values may
   include Current risk `Medium`, Risk score `35/100`, Next surplus window

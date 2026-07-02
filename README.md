@@ -20,9 +20,9 @@ read-only decision support for human review only.
 
 Working read-only core:
 
-- Backend `POST /api/dashboard/decision-summary/preview` exists as a
-  backend-only Dashboard cockpit decision summary preview for N&O Predict. It
-  accepts `{"price_area":"DK1"}` or `{"price_area":"DK2"}` and returns
+- Backend `POST /api/dashboard/decision-summary/preview` exists as the
+  Dashboard cockpit decision summary preview for N&O Predict. It accepts
+  `{"price_area":"DK1"}` or `{"price_area":"DK2"}` and returns
   read-only decision-support flags, human-review requirements, no automatic
   control, no dispatch, no activation, optional current risk from existing
   stored backend data when available, explicit `not_available` /
@@ -30,9 +30,16 @@ Working read-only core:
   modify the frontend, write to the database, add migrations, call live EDS,
   DMI, weather, or external APIs, add ML/LLM decisioning, estimate fake
   economic potential, or add operational asset integration. Economic
-  potential and expected impact remain `not_calculated` unless future real
-  backend sources exist. The endpoint is intended for future manual frontend
-  cockpit wiring only.
+  potential, expected impact, and next surplus window remain
+  `not_calculated` unless real backend logic backs them.
+- Dashboard now has a manual `Load decision summary` cockpit flow. The
+  frontend calls `POST /api/dashboard/decision-summary/preview` only after
+  human action, with no auto-load and no polling. Loaded DK1/DK2 values come
+  from existing backend read models where available; the dashboard does not
+  display fake or synthetic KPI values for this flow. The decision summary
+  does not use an LLM, remains read-only decision support, requires human
+  review, and does not add automatic control, dispatch, activation, or
+  operational asset integration.
 - Local PostgreSQL schema and Alembic baseline exist.
 - Manual local Energi Data Service ingestion exists for `DayAheadPrices` and
   `ElectricityProdex5MinRealtime`.
@@ -46,16 +53,19 @@ Working read-only core:
   query-plan preview, and a DB-backed freshness read from stored
   local/configured database data.
 - Dashboard cockpit KPI tiles update only after manual user clicks. `Load
-  latest risk view` updates Current risk and Recommended action from the
-  existing current risk flow when available. `Review forecast window` updates
-  Next surplus window and Confidence from the existing forecast preview flow
-  when available. `Check data freshness` updates Data freshness from the
-  existing freshness flow when available. Economic potential remains `Not
-  calculated yet` unless real backend data exists. The topbar uses Manual
-  refresh mode, not `System Status: LIVE`. There is no auto-load, polling,
-  live control, dispatch, or activation; the cockpit remains read-only
-  decision support and requires human review. Meteo / Weather remains a
-  placeholder only.
+  decision summary` loads the merged decision summary through
+  `POST /api/dashboard/decision-summary/preview`. `Load latest risk view`
+  updates Current risk and Recommended action from the existing current risk
+  flow when available. `Review forecast window` updates Next surplus window
+  and Confidence from the existing forecast preview flow when available.
+  `Check data freshness` updates Data freshness from the existing freshness
+  flow when available. Economic potential remains `Not calculated yet` unless
+  real backend data exists. Expected impact and next surplus window remain
+  `not_calculated` in the decision summary unless backed by real backend
+  logic. The topbar uses Manual refresh mode, not `System Status: LIVE`.
+  There is no auto-load, polling, live control, dispatch, or activation; the
+  cockpit remains read-only decision support and requires human review.
+  Meteo / Weather remains a placeholder only.
 - Observed manual cockpit smoke confirmed the cockpit buttons were clickable
   and KPI tiles updated after manual clicks. Example observed values may
   include Current risk `Medium`, Risk score `35/100`, Next surplus window
