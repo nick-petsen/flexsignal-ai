@@ -29,16 +29,18 @@ returns source-table metadata, and does not write to the database, fetch live
 Energi Data Service data, schedule ingestion, or connect to operational
 systems.
 
-`POST /api/dashboard/decision-summary/preview` is a backend-only dashboard
-composition endpoint, not a new model. It accepts a DK1/DK2 `price_area` and
-returns a read-only cockpit decision summary for future N&O Predict Dashboard
-wiring. Current risk and confidence are populated only when existing stored
+`POST /api/dashboard/decision-summary/preview` is a dashboard composition
+endpoint, not a new model. It accepts a DK1/DK2 `price_area` and returns a
+read-only cockpit decision summary for the N&O Predict Dashboard. The frontend
+calls it only through the manual `Load decision summary` flow, after human
+action. Current risk and confidence are populated only when existing stored
 backend risk data can be read and scored through `rule-engine-v0`; otherwise
-they are explicitly `not_available`. Next surplus window, expected impact, and
-economic potential remain `not_calculated` unless future real backend sources
-provide them. The endpoint does not invent prices, savings, weather,
-confidence, or economic values, and it does not call live EDS, DMI, weather, or
-external APIs.
+they are explicitly `not_available`. DK1/DK2 values come from existing backend
+read models where available. Next surplus window, expected impact, and
+economic potential remain `not_calculated` unless real backend logic provides
+them. The endpoint does not invent prices, savings, weather, confidence, or
+economic values, does not use an LLM, and does not call live EDS, DMI,
+weather, or external APIs.
 
 ## Current MVP Status
 
@@ -49,12 +51,16 @@ for production operations.
 
 The Dashboard cockpit state wiring is a frontend display path over existing
 manual flows, not a new model. KPI tiles update only after manual user clicks.
-`Load latest risk view` updates Current risk and Recommended action from the
-existing current risk flow when available. `Review forecast window` updates
-Next surplus window and Confidence from the existing forecast preview flow
-when available. `Check data freshness` updates Data freshness from the
-existing freshness flow when available. Economic potential remains `Not
-calculated yet` unless real backend data exists.
+`Load decision summary` calls
+`POST /api/dashboard/decision-summary/preview`. `Load latest risk view`
+updates Current risk and Recommended action from the existing current risk
+flow when available. `Review forecast window` updates Next surplus window and
+Confidence from the existing forecast preview flow when available. `Check data
+freshness` updates Data freshness from the existing freshness flow when
+available. Economic potential remains `Not calculated yet` unless real
+backend data exists. Expected impact, economic potential, and next surplus
+window remain `not_calculated` in the decision summary unless backed by real
+backend logic. The flow does not use fake or synthetic dashboard KPI values.
 
 Observed manual cockpit smoke confirmed the cockpit buttons were clickable and
 KPI tiles updated after manual clicks. Example observed values may include

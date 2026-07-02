@@ -2,6 +2,19 @@
 
 ## v0.1.0 - TODO
 
+- Documented the merged manual Dashboard decision summary cockpit flow. The
+  dashboard now has a human-triggered `Load decision summary` action that
+  calls `POST /api/dashboard/decision-summary/preview`; values load only
+  after that manual action, with no auto-load and no polling. DK1/DK2 values
+  come from existing backend read models where available, and the dashboard
+  must not show fake or synthetic KPI values for this flow. Expected impact,
+  economic potential, and next surplus window remain `not_calculated` unless
+  backed by real backend logic. The decision summary does not use an LLM and
+  remains read-only decision support requiring human review, with no
+  automatic control, dispatch, activation, or operational asset integration.
+  This documentation-only update changed no frontend code, backend code,
+  tests, database code, migrations, API behavior, Azure, auth, ML/LLM,
+  weather, maps, control, dispatch, or activation behavior.
 - Added backend-only `POST /api/dashboard/decision-summary/preview` for the
   N&O Predict Dashboard cockpit decision summary. The endpoint accepts DK1/DK2
   `price_area`, returns read-only decision-support and human-review flags,

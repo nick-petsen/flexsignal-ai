@@ -1,10 +1,17 @@
 # Human Oversight
 
-## Backend Dashboard Decision Summary Preview
+## Dashboard Decision Summary Preview
 
-`POST /api/dashboard/decision-summary/preview` provides a backend-only
-read-only decision summary for future N&O Predict Dashboard cockpit wiring.
-The request body is `{"price_area":"DK1"}` or `{"price_area":"DK2"}`.
+`POST /api/dashboard/decision-summary/preview` provides the read-only decision
+summary for the N&O Predict Dashboard cockpit. The request body is
+`{"price_area":"DK1"}` or `{"price_area":"DK2"}`.
+
+The frontend Dashboard now exposes this through a manual `Load decision
+summary` flow. The POST request is made only after human action. There is no
+auto-load, no polling, and no background refresh for this decision summary
+flow. The dashboard must not display fake or synthetic KPI values for the
+decision summary; DK1/DK2 values come from existing backend read models where
+available.
 
 Every successful response includes `decision_support_only=true`,
 `human_review_required=true`, `no_automatic_control=true`, `no_dispatch=true`,
@@ -25,12 +32,17 @@ Human oversight requirements:
   real backend source exists.
 - Expected impact remains `not_calculated` unless a future real backend source
   exists.
-- Future frontend wiring should display the response as manual decision
-  support only, with unavailable fields visibly marked.
+- Next surplus window remains `not_calculated` unless real backend logic
+  backs it.
+- LLMs are not used for the decision summary.
+- The frontend displays the response as manual decision support only, with
+  unavailable fields visibly marked.
 
 ## Dashboard Cockpit State Wiring
 
 The Dashboard cockpit KPI tiles update only after manual user clicks. `Load
+decision summary` calls `POST /api/dashboard/decision-summary/preview` and
+loads DK1/DK2 values from existing backend read models where available. `Load
 latest risk view` updates Current risk and Recommended action from the
 existing current risk flow when available. `Review forecast window` updates
 Next surplus window and Confidence from the existing forecast preview flow
@@ -38,10 +50,12 @@ when available. `Check data freshness` updates Data freshness from the
 existing freshness flow when available.
 
 Economic potential remains `Not calculated yet` unless real backend data
-exists. The cockpit has no auto-load, polling, live control, dispatch, or
-activation behavior. It remains read-only decision support and requires human
-review before any real-world action. Meteo / Weather remains placeholder-only,
-and the topbar uses Manual refresh mode, not `System Status: LIVE`.
+exists. Expected impact, economic potential, and next surplus window remain
+`not_calculated` in the decision summary unless backed by real backend logic.
+The cockpit has no auto-load, polling, live control, dispatch, or activation
+behavior. It remains read-only decision support and requires human review
+before any real-world action. Meteo / Weather remains placeholder-only, and
+the topbar uses Manual refresh mode, not `System Status: LIVE`.
 
 Observed manual cockpit smoke:
 
