@@ -1,0 +1,15 @@
+
+# Python generated artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+backend/.venv/
+.venv/
+
+# Frontend generated artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
