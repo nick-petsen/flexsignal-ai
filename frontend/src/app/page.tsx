@@ -893,7 +893,7 @@ function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
     return {
       label: "Current risk",
       value: "Not loaded yet",
-      detail: "Manual review is still required."
+      detail: "Awaiting manual refresh."
     };
   }
 
@@ -923,7 +923,7 @@ function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
   return {
     label: "Current risk",
     value: "Not loaded yet",
-    detail: "Awaiting manual review."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -940,7 +940,7 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
     return {
       label: "Next surplus window",
       value: "Not calculated yet",
-      detail: "Awaiting manual review."
+      detail: "Forecast window is not available in this summary yet."
     };
   }
 
@@ -954,14 +954,14 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
         : "Not calculated yet",
       detail: nextWindow
         ? `Risk ${formatValue(nextWindow.risk_level)}. Human review required.`
-        : "No forecast window returned."
+        : "Forecast window is not available in this summary yet."
     };
   }
 
   return {
     label: "Next surplus window",
     value: "Not calculated yet",
-    detail: "Awaiting manual review."
+    detail: "Forecast window is not available in this summary yet."
   };
 }
 
@@ -986,7 +986,7 @@ function getConfidenceKpi(
       value: formatConfidence(confidence),
       detail: nextWindow
         ? "From the reviewed forecast window."
-        : "No forecast window confidence returned."
+        : "Forecast window is not available in this summary yet."
     };
   }
 
@@ -1001,7 +1001,7 @@ function getConfidenceKpi(
   return {
     label: "Confidence",
     value: "Not available",
-    detail: "Awaiting manual review."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -1036,14 +1036,14 @@ function getExpectedImpactKpi(state: ForecastRequestState): CockpitKpi {
       value: impact ?? "Not calculated yet",
       detail: impact
         ? "From the reviewed forecast window."
-        : "No impact estimate returned."
+        : "Expected impact model is not enabled yet."
     };
   }
 
   return {
     label: "Expected impact",
     value: "Not calculated yet",
-    detail: "No impact model is loaded in v0.1."
+    detail: "Expected impact model is not enabled yet."
   };
 }
 
@@ -1153,7 +1153,7 @@ function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
     return {
       label: "Data freshness",
       value: "Not loaded yet",
-      detail: "Manual freshness review is still required."
+      detail: "Awaiting manual refresh."
     };
   }
 
@@ -1183,7 +1183,7 @@ function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
   return {
     label: "Data freshness",
     value: "Not loaded yet",
-    detail: "Awaiting manual freshness review."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -1212,7 +1212,7 @@ function getRecommendedActionKpi(state: RiskRequestState): CockpitKpi {
   return {
     label: "Recommended action",
     value: "No recommendation available yet",
-    detail: "No recommendation available yet."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -2894,7 +2894,7 @@ function DecisionOverview({
     {
       label: "Economic potential",
       value: "Not calculated yet",
-      detail: "No economic model is loaded in v0.1."
+      detail: "Economic potential model is not enabled yet."
     },
     getFreshnessKpi(freshnessState)
   ];
@@ -2963,6 +2963,15 @@ function DecisionOverview({
             <p>{item.detail}</p>
           </article>
         ))}
+      </div>
+      <div className="decision-overview__data-notes" aria-label="Data notes">
+        <span>Data notes</span>
+        <p>
+          Forecast-window details depend on the existing manual forecast preview
+          response; no window is invented when the response has no available
+          window. Expected impact and economic potential remain unavailable
+          unless an existing backend source returns those fields.
+        </p>
       </div>
       <div className="decision-overview__boundary" aria-label="Cockpit safety boundary">
         <span>Safety boundary</span>
