@@ -590,28 +590,28 @@ h1 {
 
 .decision-overview__notes {
   display: grid;
-  gap: 8px;
-  padding: 11px 13px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.018);
+  gap: 6px;
+  margin-top: -3px;
+  padding: 0 2px;
+  color: var(--muted-soft);
 }
 
 .decision-overview__notes span {
   color: var(--steel);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 760;
   text-transform: uppercase;
 }
 
 .decision-overview__notes ul {
   display: grid;
-  gap: 6px;
+  gap: 5px;
+  max-width: 820px;
   margin: 0;
-  padding-left: 17px;
-  color: var(--muted);
-  font-size: 0.8rem;
-  line-height: 1.45;
+  padding-left: 16px;
+  color: var(--muted-soft);
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .decision-overview__boundary {

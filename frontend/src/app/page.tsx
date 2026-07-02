@@ -925,7 +925,7 @@ function getDecisionSummaryIdleKpis(): CockpitKpi[] {
     {
       label: "Next surplus window",
       value: "Not calculated yet",
-      detail: "Awaiting manual refresh."
+      detail: "Forecast window is not available in this summary yet."
     },
     {
       label: "Confidence",
@@ -935,12 +935,12 @@ function getDecisionSummaryIdleKpis(): CockpitKpi[] {
     {
       label: "Expected impact",
       value: "Not calculated yet",
-      detail: "Awaiting manual refresh."
+      detail: "Expected impact model is not enabled yet."
     },
     {
       label: "Economic potential",
       value: "Not calculated yet",
-      detail: "Awaiting manual refresh."
+      detail: "Economic potential model is not enabled yet."
     },
     {
       label: "Data freshness",
@@ -1008,7 +1008,7 @@ function getDecisionSummaryCurrentRiskKpi(
     return {
       label: "Current risk",
       value: "Not available",
-      detail: currentRisk.reason || "No current risk value was returned."
+      detail: "Awaiting manual refresh."
     };
   }
 
@@ -1016,7 +1016,7 @@ function getDecisionSummaryCurrentRiskKpi(
   const riskScore = parseRiskScore(currentRisk.risk_score);
   const detail =
     riskScore === null
-      ? currentRisk.explanation || "Risk score not available. Human review required."
+      ? "Risk score not available. Human review required."
       : `Risk score ${formatNumber(riskScore)}. Human review required.`;
 
   return {
@@ -1043,7 +1043,7 @@ function getDecisionSummaryWindowKpi(
     return {
       label: "Next surplus window",
       value: "Not calculated yet",
-      detail: window.reason || "No surplus window was calculated."
+      detail: "Forecast window is not available in this summary yet."
     };
   }
 
@@ -1051,7 +1051,7 @@ function getDecisionSummaryWindowKpi(
     return {
       label: "Next surplus window",
       value: "Not available",
-      detail: window.reason || "No surplus window was returned."
+      detail: "Forecast window is not available in this summary yet."
     };
   }
 
@@ -1060,7 +1060,7 @@ function getDecisionSummaryWindowKpi(
     value:
       getSummaryValue(window) ??
       formatSummaryStatus(window.status, "Data available"),
-    detail: window.reason || "Human review required."
+    detail: "Human review required."
   };
 }
 
@@ -1081,7 +1081,7 @@ function getDecisionSummaryConfidenceKpi(
   return {
     label: "Confidence",
     value: formatSummaryStatus(data.confidence.status),
-    detail: data.confidence.reason || "No confidence value was returned."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -1091,7 +1091,7 @@ function getDecisionSummaryExpectedImpactKpi(
   return getDecisionSummaryMetricKpi(
     "Expected impact",
     expectedImpact,
-    "No impact estimate was returned."
+    "Expected impact model is not enabled yet."
   );
 }
 
@@ -1101,7 +1101,7 @@ function getDecisionSummaryEconomicPotentialKpi(
   return getDecisionSummaryMetricKpi(
     "Economic potential",
     economicPotential,
-    "No economic potential was returned."
+    "Economic potential model is not enabled yet."
   );
 }
 
@@ -1114,7 +1114,7 @@ function getDecisionSummaryMetricKpi(
     return {
       label,
       value: "Not calculated yet",
-      detail: metric.reason || fallbackDetail
+      detail: fallbackDetail
     };
   }
 
@@ -1122,7 +1122,7 @@ function getDecisionSummaryMetricKpi(
     return {
       label,
       value: "Not available",
-      detail: metric.reason || fallbackDetail
+      detail: fallbackDetail
     };
   }
 
@@ -1131,7 +1131,7 @@ function getDecisionSummaryMetricKpi(
     value:
       getSummaryValue(metric) ??
       formatSummaryStatus(metric.status, "Data available"),
-    detail: metric.reason || "Human review required."
+    detail: "Human review required."
   };
 }
 
@@ -1148,7 +1148,7 @@ function getDecisionSummaryFreshnessKpi(
   return {
     label: "Data freshness",
     value: formatSummaryStatus(freshness.status, "Data available"),
-    detail: freshness.reason || rowCounts || "Human review required.",
+    detail: rowCounts || "Awaiting manual refresh.",
     tone:
       freshness.status === "available"
         ? "good"
@@ -1222,7 +1222,7 @@ function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
     return {
       label: "Current risk",
       value: "Not loaded yet",
-      detail: "Manual review is still required."
+      detail: "Awaiting manual refresh."
     };
   }
 
@@ -1252,7 +1252,7 @@ function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
   return {
     label: "Current risk",
     value: "Not loaded yet",
-    detail: "Awaiting manual review."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -1269,7 +1269,7 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
     return {
       label: "Next surplus window",
       value: "Not calculated yet",
-      detail: "Awaiting manual review."
+      detail: "Forecast window is not available in this summary yet."
     };
   }
 
@@ -1283,14 +1283,14 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
         : "Not calculated yet",
       detail: nextWindow
         ? `Risk ${formatValue(nextWindow.risk_level)}. Human review required.`
-        : "No forecast window returned."
+        : "Forecast window is not available in this summary yet."
     };
   }
 
   return {
     label: "Next surplus window",
     value: "Not calculated yet",
-    detail: "Awaiting manual review."
+    detail: "Forecast window is not available in this summary yet."
   };
 }
 
@@ -1315,7 +1315,7 @@ function getConfidenceKpi(
       value: formatConfidence(confidence),
       detail: nextWindow
         ? "From the reviewed forecast window."
-        : "No forecast window confidence returned."
+        : "Forecast window is not available in this summary yet."
     };
   }
 
@@ -1330,7 +1330,7 @@ function getConfidenceKpi(
   return {
     label: "Confidence",
     value: "Not available",
-    detail: "Awaiting manual review."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -1365,14 +1365,14 @@ function getExpectedImpactKpi(state: ForecastRequestState): CockpitKpi {
       value: impact ?? "Not calculated yet",
       detail: impact
         ? "From the reviewed forecast window."
-        : "No impact estimate returned."
+        : "Expected impact model is not enabled yet."
     };
   }
 
   return {
     label: "Expected impact",
     value: "Not calculated yet",
-    detail: "No impact model is loaded in v0.1."
+    detail: "Expected impact model is not enabled yet."
   };
 }
 
@@ -1482,7 +1482,7 @@ function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
     return {
       label: "Data freshness",
       value: "Not loaded yet",
-      detail: "Manual freshness review is still required."
+      detail: "Awaiting manual refresh."
     };
   }
 
@@ -1512,7 +1512,7 @@ function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
   return {
     label: "Data freshness",
     value: "Not loaded yet",
-    detail: "Awaiting manual freshness review."
+    detail: "Awaiting manual refresh."
   };
 }
 
@@ -1541,7 +1541,7 @@ function getRecommendedActionKpi(state: RiskRequestState): CockpitKpi {
   return {
     label: "Recommended action",
     value: "No recommendation available yet",
-    detail: "No recommendation available yet."
+    detail: "Awaiting manual refresh."
   };
 }
 

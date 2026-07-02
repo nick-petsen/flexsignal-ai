@@ -1,9 +1,0 @@
-alembic
-fastapi
-reportlab
-uvicorn
-
-[dev]
-httpx
-psycopg[binary]
-pytest
