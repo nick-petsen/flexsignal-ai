@@ -491,6 +491,36 @@ h1 {
   padding-top: 2px;
 }
 
+.decision-overview__action-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.decision-overview__action-status-item {
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.decision-overview__action-status-item--success {
+  border-color: rgba(112, 184, 60, 0.24);
+  background: rgba(94, 159, 47, 0.1);
+  color: #b8d89a;
+}
+
+.decision-overview__action-status-item--error {
+  border-color: rgba(255, 139, 139, 0.24);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 .decision-overview__grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

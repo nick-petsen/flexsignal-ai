@@ -858,8 +858,12 @@ function getRiskLevelClass(value: unknown): string {
   return "risk-score__level--unknown";
 }
 
-function formatRiskLabel(value: CurrentRiskResponse["risk_level"]): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
+function formatRiskLabel(value: unknown): string {
+  if (value === "low" || value === "medium" || value === "high") {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  return "Not available";
 }
 
 function formatConfidence(value: unknown): string {
@@ -894,16 +898,25 @@ function getCurrentRiskKpi(state: RiskRequestState): CockpitKpi {
   }
 
   if (state.status === "success") {
+    const riskLevel = state.data.risk_level;
+    const riskScore = parseRiskScore(state.data.risk_score);
+    const riskDetail =
+      riskScore === null
+        ? "Risk score not available. Human review required."
+        : `Risk score ${formatNumber(riskScore)}. Human review required.`;
+
     return {
       label: "Current risk",
-      value: formatRiskLabel(state.data.risk_level),
-      detail: `Risk score ${formatValue(state.data.risk_score)}. Human review required.`,
+      value: formatRiskLabel(riskLevel),
+      detail: riskDetail,
       tone:
-        state.data.risk_level === "high"
+        riskLevel === "high"
           ? "danger"
-          : state.data.risk_level === "medium"
+          : riskLevel === "medium"
             ? "warning"
-            : "good"
+            : riskLevel === "low"
+              ? "good"
+              : undefined
     };
   }
 
@@ -932,8 +945,7 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
   }
 
   if (state.status === "success") {
-    const windows = Array.isArray(state.data.windows) ? state.data.windows : [];
-    const nextWindow = windows[0];
+    const nextWindow = getNextForecastWindow(state.data);
 
     return {
       label: "Next surplus window",
@@ -953,19 +965,35 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
   };
 }
 
-function getConfidenceKpi(state: RiskRequestState): CockpitKpi {
-  if (state.status === "loading") {
+function getConfidenceKpi(
+  riskState: RiskRequestState,
+  forecastState: ForecastRequestState
+): CockpitKpi {
+  if (riskState.status === "loading" || forecastState.status === "loading") {
     return {
       label: "Confidence",
       value: "Loading...",
-      detail: "Awaiting current risk view."
+      detail: "Manual review is being loaded."
     };
   }
 
-  if (state.status === "success") {
+  if (forecastState.status === "success") {
+    const nextWindow = getNextForecastWindow(forecastState.data);
+    const confidence = nextWindow?.average_confidence_score;
+
     return {
       label: "Confidence",
-      value: formatConfidence(state.data.confidence_score),
+      value: formatConfidence(confidence),
+      detail: nextWindow
+        ? "From the reviewed forecast window."
+        : "No forecast window confidence returned."
+    };
+  }
+
+  if (riskState.status === "success") {
+    return {
+      label: "Confidence",
+      value: formatConfidence(riskState.data.confidence_score),
       detail: "From the loaded risk view."
     };
   }
@@ -975,6 +1003,73 @@ function getConfidenceKpi(state: RiskRequestState): CockpitKpi {
     value: "Not available",
     detail: "Awaiting manual review."
   };
+}
+
+function getNextForecastWindow(
+  data: ForecastPreviewResponse
+): ForecastWindowSummary | undefined {
+  const windows = Array.isArray(data.windows) ? data.windows : [];
+
+  return windows[0];
+}
+
+function getExpectedImpactKpi(state: ForecastRequestState): CockpitKpi {
+  if (state.status === "loading") {
+    return {
+      label: "Expected impact",
+      value: "Loading...",
+      detail: "Manual forecast window review is running."
+    };
+  }
+
+  if (state.status === "success") {
+    const nextWindow = getNextForecastWindow(state.data);
+    const impact = getExistingStringOrNumberField(
+      nextWindow,
+      "expected_impact",
+      "impact",
+      "estimated_impact"
+    );
+
+    return {
+      label: "Expected impact",
+      value: impact ?? "Not calculated yet",
+      detail: impact
+        ? "From the reviewed forecast window."
+        : "No impact estimate returned."
+    };
+  }
+
+  return {
+    label: "Expected impact",
+    value: "Not calculated yet",
+    detail: "No impact model is loaded in v0.1."
+  };
+}
+
+function getExistingStringOrNumberField(
+  source: unknown,
+  ...fieldNames: string[]
+): string | null {
+  if (!source || typeof source !== "object") {
+    return null;
+  }
+
+  const record = source as Record<string, unknown>;
+
+  for (const fieldName of fieldNames) {
+    const value = record[fieldName];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return formatNumber(value);
+    }
+  }
+
+  return null;
 }
 
 function getLatestFreshnessTimestamp(data: EnergyFreshnessResponse): string | null {
@@ -994,6 +1089,55 @@ function getLatestFreshnessTimestamp(data: EnergyFreshnessResponse): string | nu
   }
 
   return timestamps.sort().at(-1) ?? null;
+}
+
+function getFreshnessReadResults(
+  data: EnergyFreshnessResponse
+): EnergyFreshnessReadResult[] {
+  const results = [
+    data.spot_price_freshness ??
+      data.freshness_result?.spot_price_freshness,
+    data.power_balance_freshness ??
+      data.freshness_result?.power_balance_freshness
+  ].filter((result): result is EnergyFreshnessReadResult => Boolean(result));
+
+  return results;
+}
+
+function getFreshnessStatus(data: EnergyFreshnessResponse): {
+  label: "OK" | "stale" | "missing" | "not available";
+  tone?: CockpitKpi["tone"];
+} {
+  const results = getFreshnessReadResults(data);
+
+  if (data.dry_run || results.length === 0) {
+    return { label: "not available" };
+  }
+
+  const warnings = [
+    ...(data.warnings ?? []),
+    ...(data.freshness_result?.warnings ?? []),
+    ...results
+      .map((result) => result.warning)
+      .filter((warning): warning is string => Boolean(warning))
+  ];
+  const warningText = warnings.join(" ").toLowerCase();
+  const hasMissingRows = results.some((result) => result.row_count === 0);
+  const hasTimestamp = results.some((result) => Boolean(result.latest_timestamp));
+
+  if (hasMissingRows || warningText.includes("missing") || warningText.includes("no ")) {
+    return { label: "missing", tone: "warning" };
+  }
+
+  if (warningText.includes("stale") || warningText.includes("outdated")) {
+    return { label: "stale", tone: "warning" };
+  }
+
+  if (hasTimestamp) {
+    return { label: "OK", tone: "good" };
+  }
+
+  return { label: "not available" };
 }
 
 function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
@@ -1017,21 +1161,22 @@ function getFreshnessKpi(state: FreshnessRequestState): CockpitKpi {
     if (state.data.dry_run) {
       return {
         label: "Data freshness",
-        value: "Manual plan reviewed",
+        value: "not available",
         detail: "Dry-run plan only. No freshness result calculated."
       };
     }
 
     const latestTimestamp = getLatestFreshnessTimestamp(state.data);
+    const freshnessStatus = getFreshnessStatus(state.data);
+    const timestampDetail = latestTimestamp
+      ? `Last updated ${formatShortTimestamp(latestTimestamp)}.`
+      : "No stored timestamp returned.";
 
     return {
       label: "Data freshness",
-      value: latestTimestamp
-        ? formatShortTimestamp(latestTimestamp)
-        : "Not calculated yet",
-      detail: latestTimestamp
-        ? "Latest stored timestamp from manual freshness read."
-        : "No stored timestamp returned."
+      value: freshnessStatus.label,
+      detail: `${timestampDetail} Manual freshness read only.`,
+      tone: freshnessStatus.tone
     };
   }
 
@@ -1052,11 +1197,14 @@ function getRecommendedActionKpi(state: RiskRequestState): CockpitKpi {
   }
 
   if (state.status === "success") {
+    const action =
+      typeof state.data.recommended_human_action === "string"
+        ? state.data.recommended_human_action.trim()
+        : "";
+
     return {
       label: "Recommended action",
-      value:
-        state.data.recommended_human_action?.trim() ||
-        "No recommendation available yet",
+      value: action || "No recommendation available yet",
       detail: "Decision support only. Human review required."
     };
   }
@@ -1066,6 +1214,64 @@ function getRecommendedActionKpi(state: RiskRequestState): CockpitKpi {
     value: "No recommendation available yet",
     detail: "No recommendation available yet."
   };
+}
+
+function getRiskActionStatus(state: RiskRequestState): string {
+  switch (state.status) {
+    case "loading":
+      return "Loading latest risk view...";
+    case "success":
+      return "Latest risk view loaded.";
+    case "error":
+      return `Risk view unavailable: ${state.message}`;
+    case "idle":
+    default:
+      return "Awaiting manual review.";
+  }
+}
+
+function getForecastActionStatus(state: ForecastRequestState): string {
+  switch (state.status) {
+    case "loading":
+      return "Reviewing forecast window...";
+    case "success":
+      return "Forecast window reviewed.";
+    case "error":
+      return `Forecast window unavailable: ${state.message}`;
+    case "idle":
+    default:
+      return "Awaiting manual review.";
+  }
+}
+
+function getFreshnessActionStatus(state: FreshnessRequestState): string {
+  switch (state.status) {
+    case "loading":
+      return "Checking data freshness...";
+    case "success":
+      return "Data freshness checked.";
+    case "error":
+      return `Data freshness unavailable: ${state.message}`;
+    case "idle":
+    default:
+      return "Awaiting manual review.";
+  }
+}
+
+function getActionStatusClass(
+  state: RiskRequestState | ForecastRequestState | FreshnessRequestState
+): string {
+  const baseClass = "decision-overview__action-status-item";
+
+  if (state.status === "success") {
+    return `${baseClass} ${baseClass}--success`;
+  }
+
+  if (state.status === "error") {
+    return `${baseClass} ${baseClass}--error`;
+  }
+
+  return baseClass;
 }
 
 function ForecastPreviewCard({
@@ -2683,12 +2889,8 @@ function DecisionOverview({
     getCurrentRiskKpi(currentRiskState),
     getForecastWindowKpi(forecastPreviewState),
     getRecommendedActionKpi(currentRiskState),
-    getConfidenceKpi(currentRiskState),
-    {
-      label: "Expected impact",
-      value: "Not calculated yet",
-      detail: "No impact model is loaded in v0.1."
-    },
+    getConfidenceKpi(currentRiskState, forecastPreviewState),
+    getExpectedImpactKpi(forecastPreviewState),
     {
       label: "Economic potential",
       value: "Not calculated yet",
@@ -2734,6 +2936,17 @@ function DecisionOverview({
         >
           {isFreshnessLoading ? "Checking..." : "Check data freshness"}
         </button>
+      </div>
+      <div className="decision-overview__action-status" aria-live="polite">
+        <span className={getActionStatusClass(currentRiskState)}>
+          {getRiskActionStatus(currentRiskState)}
+        </span>
+        <span className={getActionStatusClass(forecastPreviewState)}>
+          {getForecastActionStatus(forecastPreviewState)}
+        </span>
+        <span className={getActionStatusClass(freshnessState)}>
+          {getFreshnessActionStatus(freshnessState)}
+        </span>
       </div>
       <div className="decision-overview__grid">
         {overviewItems.map((item) => (
@@ -3193,9 +3406,12 @@ export default function DashboardPage() {
           </div>
           <div className="topbar__meta">
             <div className="topbar__product">N&amp;O Predict</div>
-            <div className="system-status" aria-label="System status: manual mode">
+            <div
+              className="system-status"
+              aria-label="System status: manual refresh mode"
+            >
               <span className="system-status__dot" aria-hidden="true" />
-              <span>Manual mode</span>
+              <span>Manual refresh mode</span>
             </div>
           </div>
         </header>
