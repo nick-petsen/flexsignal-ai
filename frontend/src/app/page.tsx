@@ -1112,6 +1112,24 @@ function getDecisionSummaryExpectedImpactKpi(
 function getDecisionSummaryEconomicPotentialKpi(
   economicPotential: DashboardDecisionSummaryValue
 ): CockpitKpi {
+  if (economicPotential.status === "calculated") {
+    const value =
+      typeof economicPotential.value === "string" &&
+      economicPotential.value.trim()
+        ? economicPotential.value.trim()
+        : typeof economicPotential.value === "number" &&
+            Number.isFinite(economicPotential.value)
+          ? String(economicPotential.value)
+          : "Not available";
+
+    return {
+      label: "Economic potential",
+      value,
+      detail:
+        "Estimated €/MWh opportunity based on forecast inputs. Not a revenue forecast."
+    };
+  }
+
   return getDecisionSummaryMetricKpi(
     "Economic potential",
     economicPotential,
@@ -1642,6 +1660,10 @@ function getDecisionOverviewItemClass(item: CockpitKpi): string {
 
   if (item.label === "Current risk" || item.label === "Next surplus window") {
     classNames.push("decision-overview__item--primary");
+  }
+
+  if (item.label === "Economic potential") {
+    classNames.push("decision-overview__item--secondary-feature");
   }
 
   if (item.tone) {

@@ -560,6 +560,13 @@ h1 {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
+.decision-overview__item--secondary-feature {
+  min-height: 148px;
+  border-color: rgba(240, 200, 106, 0.24);
+  background: rgba(240, 200, 106, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(240, 200, 106, 0.06);
+}
+
 .decision-overview__item span {
   display: block;
   margin-bottom: 10px;
@@ -580,6 +587,10 @@ h1 {
 
 .decision-overview__item--primary strong {
   font-size: 1.28rem;
+}
+
+.decision-overview__item--secondary-feature strong {
+  font-size: 1.16rem;
 }
 
 .decision-overview__item p {
