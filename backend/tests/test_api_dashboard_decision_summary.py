@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import subprocess
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -44,6 +44,22 @@ def _power_balance_row(price_area: str) -> dict[str, Any]:
         "source": "energi_data_service:ElectricityProdex5MinRealtime",
         "source_record_id": f"balance-{price_area}",
         "ingested_at_utc": datetime(2026, 1, 1, 0, 6, tzinfo=timezone.utc),
+    }
+
+
+def _forecast_row(hours: int, *, price_area: str = "DK1") -> dict[str, Any]:
+    return {
+        "price_area": price_area,
+        "timestamp_utc": (
+            datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc) + timedelta(hours=hours)
+        ).isoformat(),
+        "price_dkk_per_mwh": -25,
+        "production_mw": 100,
+        "consumption_mw": 80,
+        "wind_onshore_mw": 50,
+        "wind_offshore_mw": 30,
+        "solar_mw": 5,
+        "exchange_net_mw": -10,
     }
 
 
@@ -93,7 +109,81 @@ def test_missing_values_are_explicit_not_fake(monkeypatch: pytest.MonkeyPatch) -
     assert body["economic_potential"]["status"] == "not_calculated"
     assert body["data_freshness"]["status"] == "not_available"
     assert "current_risk is not_available" in body["warnings"]
+    assert "next_surplus_window is not_calculated" in body["warnings"]
     assert "economic_potential is not_calculated" in body["warnings"]
+
+
+def test_empty_forecast_rows_keep_next_surplus_window_not_calculated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    response = client.post(
+        "/api/dashboard/decision-summary/preview",
+        json={"price_area": "DK1", "forecast_rows": []},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["next_surplus_window"]["status"] == "not_calculated"
+    assert "forecast_rows" in body["next_surplus_window"]["reason"]
+    assert (
+        body["source_notes"]["next_surplus_window"]
+        == "Not calculated because this preview did not receive forecast_rows."
+    )
+    assert "next_surplus_window is not_calculated" in body["warnings"]
+
+
+def test_forecast_rows_calculate_next_surplus_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    response = client.post(
+        "/api/dashboard/decision-summary/preview",
+        json={
+            "price_area": "DK1",
+            "forecast_rows": [_forecast_row(0), _forecast_row(25)],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    next_window = body["next_surplus_window"]
+    assert next_window["status"] == "available"
+    assert next_window["value"] == "0-24h"
+    assert next_window["window_label"] == "0-24h"
+    assert next_window["risk_level"] == "high"
+    assert next_window["risk_score"] == 75
+    assert next_window["row_count"] == 1
+    assert next_window["source"] == "caller_provided_forecast_rows"
+    assert next_window["model_version"] == "rule-engine-v0+forecast-window-v0"
+    assert next_window["decision_support_only"] is True
+    assert "caller-provided forecast row" in next_window["summary"]
+    assert "next_surplus_window is not_calculated" not in body["warnings"]
+    assert "caller-provided forecast_rows" in body["source_notes"]["next_surplus_window"]
+    assert "no forecast rows were invented" in body["source_notes"]["next_surplus_window"]
+
+
+def test_forecast_rows_without_database_url_still_return_safe_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    response = client.post(
+        "/api/dashboard/decision-summary/preview",
+        json={"price_area": "DK1", "forecast_rows": [_forecast_row(0)]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data_freshness"]["status"] == "not_available"
+    assert body["next_surplus_window"]["status"] == "available"
+    assert body["decision_support_only"] is True
+    assert body["human_review_required"] is True
+    assert body["no_automatic_control"] is True
+    assert body["no_dispatch"] is True
+    assert body["no_activation"] is True
 
 
 def test_economic_potential_remains_not_calculated_without_real_source(

@@ -22,15 +22,19 @@ Working read-only core:
 
 - Backend `POST /api/dashboard/decision-summary/preview` exists as the
   Dashboard cockpit decision summary preview for N&O Predict. It accepts
-  `{"price_area":"DK1"}` or `{"price_area":"DK2"}` and returns
-  read-only decision-support flags, human-review requirements, no automatic
-  control, no dispatch, no activation, optional current risk from existing
-  stored backend data when available, explicit `not_available` /
-  `not_calculated` states for missing fields, and source notes. It does not
-  modify the frontend, write to the database, add migrations, call live EDS,
-  DMI, weather, or external APIs, add ML/LLM decisioning, estimate fake
-  economic potential, or add operational asset integration. Economic
-  potential, expected impact, and next surplus window remain
+  `{"price_area":"DK1"}` or `{"price_area":"DK2"}`, with optional
+  caller-provided `forecast_rows` for dashboard forecast-window summarization.
+  It returns read-only decision-support flags, human-review requirements, no
+  automatic control, no dispatch, no activation, optional current risk from
+  existing stored backend data when available, explicit `not_available` /
+  `not_calculated` states for missing fields, and source notes. When
+  `forecast_rows` are supplied, `next_surplus_window` is calculated through the
+  existing deterministic forecast-window preview logic. When `forecast_rows`
+  are missing or empty, `next_surplus_window` remains `not_calculated`. The
+  endpoint does not invent forecast rows, modify the frontend, write to the
+  database, add migrations, call live EDS, DMI, weather, or external APIs, add
+  ML/LLM decisioning, estimate fake economic potential, or add operational
+  asset integration. Economic potential and expected impact remain
   `not_calculated` unless real backend logic backs them.
 - Dashboard now has a manual `Load decision summary` cockpit flow. The
   frontend calls `POST /api/dashboard/decision-summary/preview` only after
@@ -60,9 +64,11 @@ Working read-only core:
   and Confidence from the existing forecast preview flow when available.
   `Check data freshness` updates Data freshness from the existing freshness
   flow when available. Economic potential remains `Not calculated yet` unless
-  real backend data exists. Expected impact and next surplus window remain
-  `not_calculated` in the decision summary unless backed by real backend
-  logic. The topbar uses Manual refresh mode, not `System Status: LIVE`.
+  real backend data exists. Expected impact remains `not_calculated` in the
+  decision summary unless backed by real backend logic. The decision summary
+  calculates `next_surplus_window` only from caller-provided `forecast_rows`;
+  without those rows it remains `not_calculated`. The topbar uses Manual
+  refresh mode, not `System Status: LIVE`.
   There is no auto-load, polling, live control, dispatch, or activation; the
   cockpit remains read-only decision support and requires human review.
   Meteo / Weather remains a placeholder only.
