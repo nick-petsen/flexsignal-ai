@@ -30,8 +30,15 @@ Human oversight requirements:
 - The endpoint does not write to the database or create audit/energy records.
 - The endpoint does not call live Energi Data Service, DMI, weather, or
   external APIs.
-- Economic potential is not faked; it remains `not_calculated` unless a future
-  real backend source exists.
+- Economic potential is not faked; it remains `not_calculated` unless
+  caller-provided `forecast_rows` contain usable low or negative price data
+  and deterministic surplus-risk signals.
+- Calculated economic potential v0 is a conservative `EUR/MWh` price
+  opportunity signal only. It is not a revenue forecast, site-specific savings
+  estimate, profit estimate, automatic trading recommendation, control
+  recommendation, dispatch workflow, or activation workflow.
+- The economic potential signal does not invent load size, MW, MWh, tariffs,
+  taxes, fees, customer assets, volume, revenue, profit, or synthetic rows.
 - Expected impact remains `not_calculated` unless a future real backend source
   exists.
 - Next surplus window is calculated only when caller-provided `forecast_rows`
@@ -54,15 +61,18 @@ Next surplus window and Confidence from the existing forecast preview flow
 when available. `Check data freshness` updates Data freshness from the
 existing freshness flow when available.
 
-Economic potential remains `Not calculated yet` unless real backend data
-exists. Expected impact and economic potential remain `not_calculated` in the
-decision summary unless backed by real backend logic. The decision summary
-calculates next surplus window only from caller-provided `forecast_rows`; when
-those rows are missing or empty, it remains `not_calculated`. The cockpit has
-no auto-load, polling, live control, dispatch, or activation behavior. It
-remains read-only decision support and requires human review before any
-real-world action. Meteo / Weather remains placeholder-only, and the topbar
-uses Manual refresh mode, not `System Status: LIVE`.
+Economic potential remains `Not calculated yet` unless caller-provided
+forecast rows include usable price and surplus-risk signals. When calculated,
+it is a conservative `EUR/MWh` opportunity signal only and not revenue,
+site-specific savings, profit, automatic trading, dispatch, activation, or
+control advice. Expected impact remains `not_calculated` in the decision
+summary unless backed by real backend logic. The decision summary calculates
+next surplus window only from caller-provided `forecast_rows`; when those rows
+are missing or empty, it remains `not_calculated`. The cockpit has no
+auto-load, polling, live control, dispatch, or activation behavior. It remains
+read-only decision support and requires human review before any real-world
+action. Meteo / Weather remains placeholder-only, and the topbar uses Manual
+refresh mode, not `System Status: LIVE`.
 
 Observed manual cockpit smoke:
 

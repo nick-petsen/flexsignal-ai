@@ -40,9 +40,16 @@ read and scored through `rule-engine-v0`; otherwise they are explicitly
 available. Next surplus window is calculated only when caller-provided
 `forecast_rows` are supplied, using existing deterministic `forecast-window-v0`
 preview logic. When `forecast_rows` are missing or empty, next surplus window
-remains `not_calculated`. The endpoint does not invent forecast rows, prices,
-savings, weather, confidence, or economic values, does not use an LLM, and
-does not call live EDS, DMI, weather, or external APIs.
+remains `not_calculated`. Economic potential v0 is calculated only when
+caller-provided `forecast_rows` contain usable low or negative price data and
+deterministic surplus-risk signals. The calculated value is a conservative
+`EUR/MWh` price opportunity signal only; it is not a revenue forecast,
+site-specific savings estimate, profit estimate, automatic trading
+recommendation, control recommendation, dispatch workflow, or activation
+workflow. The endpoint does not invent forecast rows, prices, load size, MW,
+MWh, tariffs, taxes, fees, customer assets, savings, weather, confidence, or
+economic values, does not use an LLM, and does not call live EDS, DMI,
+weather, or external APIs.
 
 ## Current MVP Status
 
@@ -59,12 +66,15 @@ updates Current risk and Recommended action from the existing current risk
 flow when available. `Review forecast window` updates Next surplus window and
 Confidence from the existing forecast preview flow when available. `Check data
 freshness` updates Data freshness from the existing freshness flow when
-available. Economic potential remains `Not calculated yet` unless real
-backend data exists. Expected impact and economic potential remain
-`not_calculated` in the decision summary unless backed by real backend logic.
-Next surplus window is calculated only from caller-provided `forecast_rows`;
-without those rows it remains `not_calculated`. The flow does not use fake or
-synthetic dashboard KPI values.
+available. Economic potential remains `Not calculated yet` unless
+caller-provided forecast rows include usable price and surplus-risk signals;
+when calculated, it is a conservative `EUR/MWh` opportunity signal only and not
+revenue, site-specific savings, profit, automatic trading, dispatch,
+activation, or control advice. Expected impact remains `not_calculated` in the
+decision summary unless backed by real backend logic. Next surplus window is
+calculated only from caller-provided `forecast_rows`; without those rows it
+remains `not_calculated`. The flow does not use fake or synthetic dashboard
+KPI values.
 
 Observed manual cockpit smoke confirmed the cockpit buttons were clickable and
 KPI tiles updated after manual clicks. Example observed values may include

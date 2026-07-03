@@ -2,6 +2,19 @@
 
 ## v0.1.0 - TODO
 
+- Added backend-only Dashboard decision summary economic potential v0.
+  `POST /api/dashboard/decision-summary/preview` now keeps
+  `economic_potential` as `not_calculated` when no `forecast_rows` are
+  provided or when caller-provided rows lack usable price and surplus-risk
+  signals. When caller-provided rows contain usable low or negative
+  DKK/MWh price data plus deterministic surplus-risk signals, the endpoint
+  returns a conservative `EUR/MWh` price opportunity signal only. It is not a
+  revenue forecast, site-specific savings estimate, profit estimate, automatic
+  trading recommendation, control recommendation, dispatch workflow, or
+  activation workflow. The endpoint still invents no forecast rows, load size,
+  MW, MWh, tariffs, taxes, fees, customer assets, or fake data; calls no
+  external APIs; uses no LLM/AI; changes no frontend files; and adds no
+  database schema changes or migrations.
 - Improved backend-only Dashboard decision summary forecast-window handling.
   `POST /api/dashboard/decision-summary/preview` now optionally accepts
   caller-provided `forecast_rows` and reuses the existing deterministic

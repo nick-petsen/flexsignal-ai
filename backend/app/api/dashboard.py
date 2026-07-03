@@ -39,6 +39,9 @@ NUMERIC_FORECAST_ROW_FIELDS = (
     "solar_mw",
     "exchange_net_mw",
 )
+LOW_PRICE_THRESHOLD_DKK_PER_MWH = 100
+DKK_PER_EUR_FOR_DASHBOARD_SIGNAL = 7.45
+ECONOMIC_POTENTIAL_MODEL_VERSION = "dashboard-economic-potential-v0"
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -95,11 +98,13 @@ def preview_dashboard_decision_summary(
     current_risk = _read_current_risk_if_available(payload.price_area)
     data_freshness = _read_data_freshness_if_available(payload.price_area)
     next_surplus_window = _calculate_next_surplus_window_if_available(payload)
+    economic_potential = _calculate_economic_potential_if_available(payload)
 
     warnings = _build_warnings(
         current_risk=current_risk,
         next_surplus_window=next_surplus_window,
         data_freshness=data_freshness,
+        economic_potential=economic_potential,
     )
 
     return {
@@ -116,13 +121,7 @@ def preview_dashboard_decision_summary(
             "status": "not_calculated",
             "reason": "No existing backend expected-impact calculation is available.",
         },
-        "economic_potential": {
-            "status": "not_calculated",
-            "reason": (
-                "No existing real backend economic-potential calculation is "
-                "available for this preview."
-            ),
-        },
+        "economic_potential": economic_potential,
         "recommended_human_action": _recommended_human_action(current_risk),
         "data_freshness": data_freshness,
         "warnings": warnings,
@@ -130,6 +129,7 @@ def preview_dashboard_decision_summary(
             current_risk=current_risk,
             next_surplus_window=next_surplus_window,
             data_freshness=data_freshness,
+            economic_potential=economic_potential,
         ),
     }
 
@@ -216,6 +216,122 @@ def _first_populated_forecast_window(
         if window.get("row_count", 0) > 0:
             return window
     return None
+
+
+def _calculate_economic_potential_if_available(
+    payload: DashboardDecisionSummaryPreviewRequest,
+) -> dict[str, Any]:
+    if not payload.forecast_rows:
+        return {
+            "status": "not_calculated",
+            "reason": (
+                "Economic potential v0 requires caller-provided forecast_rows "
+                "with usable price and surplus-risk signals."
+            ),
+        }
+
+    matching_rows = [
+        row for row in payload.forecast_rows if row.price_area == payload.price_area
+    ]
+    qualified_rows: list[dict[str, Any]] = []
+    for row in matching_rows:
+        price = row.price_dkk_per_mwh
+        if price is None or price >= LOW_PRICE_THRESHOLD_DKK_PER_MWH:
+            continue
+
+        try:
+            risk_result = calculate_surplus_risk(
+                _normalize_rule_engine_input(row.model_dump())
+            )
+        except (TypeError, ValueError):
+            continue
+
+        if not _has_usable_surplus_risk_signal(risk_result):
+            continue
+
+        opportunity_dkk_per_mwh = LOW_PRICE_THRESHOLD_DKK_PER_MWH - float(price)
+        qualified_rows.append(
+            {
+                "row": row,
+                "risk_result": risk_result,
+                "opportunity_dkk_per_mwh": opportunity_dkk_per_mwh,
+            }
+        )
+
+    if not qualified_rows:
+        return {
+            "status": "not_calculated",
+            "reason": (
+                "Caller-provided forecast_rows did not contain both usable "
+                "low or negative price data and surplus-risk signals."
+            ),
+            "source": "caller_provided_forecast_rows",
+        }
+
+    selected = max(
+        qualified_rows,
+        key=lambda candidate: (
+            candidate["opportunity_dkk_per_mwh"],
+            candidate["risk_result"]["risk_score"],
+        ),
+    )
+    selected_row = selected["row"]
+    selected_risk = selected["risk_result"]
+    opportunity_eur_per_mwh = round(
+        selected["opportunity_dkk_per_mwh"] / DKK_PER_EUR_FOR_DASHBOARD_SIGNAL,
+        2,
+    )
+
+    return {
+        "status": "calculated",
+        "label": "Potential price opportunity",
+        "value": f"Potential price opportunity: {opportunity_eur_per_mwh:.2f} EUR/MWh",
+        "unit": "EUR/MWh",
+        "opportunity_eur_per_mwh": opportunity_eur_per_mwh,
+        "basis": (
+            "Conservative price-only opportunity signal: deterministic "
+            f"{LOW_PRICE_THRESHOLD_DKK_PER_MWH} DKK/MWh low-price threshold "
+            "minus a qualifying caller-provided forecast-row price, converted "
+            f"with fixed {DKK_PER_EUR_FOR_DASHBOARD_SIGNAL} DKK/EUR."
+        ),
+        "confidence_note": (
+            "Limited deterministic signal from caller-provided forecast rows "
+            "only; not a revenue, savings, profit, trading, dispatch, "
+            "activation, or control estimate."
+        ),
+        "source": "caller_provided_forecast_rows",
+        "source_notes": (
+            "Calculated only from caller-provided forecast_rows for the "
+            "requested price_area. No forecast rows, load size, volume, MW, "
+            "MWh, tariffs, taxes, fees, site savings, revenue, profit, or "
+            "customer assets were invented."
+        ),
+        "row_count": len(qualified_rows),
+        "selected_timestamp_utc": selected_row.timestamp_utc.astimezone(
+            timezone.utc
+        ).isoformat(),
+        "selected_price_dkk_per_mwh": selected_row.price_dkk_per_mwh,
+        "risk_level": selected_risk["risk_level"],
+        "risk_score": selected_risk["risk_score"],
+        "model_version": ECONOMIC_POTENTIAL_MODEL_VERSION,
+    }
+
+
+def _has_usable_surplus_risk_signal(risk_result: dict[str, Any]) -> bool:
+    if risk_result.get("risk_level") not in {"medium", "high"}:
+        return False
+
+    reason_codes = set(risk_result.get("reason_codes", ()))
+    has_price_signal = bool(reason_codes & {"NEGATIVE_PRICE", "LOW_PRICE"})
+    has_surplus_signal = bool(
+        reason_codes
+        & {
+            "ELEVATED_RENEWABLE_SHARE",
+            "MODERATE_RENEWABLE_SHARE",
+            "HIGH_RENEWABLE_SHARE",
+        }
+    )
+    return has_price_signal and has_surplus_signal
 
 
 def _read_current_risk_if_available(price_area: str) -> dict[str, Any]:
@@ -332,11 +448,12 @@ def _build_warnings(
     current_risk: dict[str, Any],
     next_surplus_window: dict[str, Any],
     data_freshness: dict[str, Any],
+    economic_potential: dict[str, Any],
 ) -> list[str]:
-    warnings = [
-        UNCALCULATED_EXPECTED_IMPACT_WARNING,
-        UNCALCULATED_ECONOMIC_POTENTIAL_WARNING,
-    ]
+    warnings = [UNCALCULATED_EXPECTED_IMPACT_WARNING]
+
+    if economic_potential.get("status") == "not_calculated":
+        warnings.append(UNCALCULATED_ECONOMIC_POTENTIAL_WARNING)
 
     if next_surplus_window.get("status") == "not_calculated":
         warnings.insert(0, UNCALCULATED_NEXT_WINDOW_WARNING)
@@ -360,6 +477,7 @@ def _build_source_notes(
     current_risk: dict[str, Any],
     next_surplus_window: dict[str, Any],
     data_freshness: dict[str, Any],
+    economic_potential: dict[str, Any],
 ) -> dict[str, str]:
     current_risk_note = (
         "Calculated from existing current-risk rule-engine logic when recent "
@@ -384,6 +502,17 @@ def _build_source_notes(
             "caller-provided forecast_rows; no forecast rows were invented."
         )
 
+    economic_potential_note = (
+        "Not calculated; caller-provided forecast_rows did not contain usable "
+        "price and surplus-risk signals."
+    )
+    if economic_potential.get("status") == "calculated":
+        economic_potential_note = (
+            "Calculated only from caller-provided forecast_rows as a "
+            "conservative EUR/MWh price opportunity signal; not revenue, "
+            "site-specific savings, trading advice, or control advice."
+        )
+
     return {
         "current_risk": current_risk_note,
         "next_surplus_window": next_window_note,
@@ -391,9 +520,7 @@ def _build_source_notes(
             "Uses current_risk.confidence_score only when current risk is available."
         ),
         "expected_impact": "Not calculated; no existing backend source is available.",
-        "economic_potential": (
-            "Not calculated; no existing real backend economic source is available."
-        ),
+        "economic_potential": economic_potential_note,
         "recommended_human_action": (
             "Uses existing risk recommendation when available; otherwise defaults "
             "to Human review required."
