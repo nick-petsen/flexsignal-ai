@@ -47,8 +47,13 @@ def _power_balance_row(price_area: str) -> dict[str, Any]:
     }
 
 
-def _forecast_row(hours: int, *, price_area: str = "DK1") -> dict[str, Any]:
-    return {
+def _forecast_row(
+    hours: int,
+    *,
+    price_area: str = "DK1",
+    **overrides: Any,
+) -> dict[str, Any]:
+    row = {
         "price_area": price_area,
         "timestamp_utc": (
             datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc) + timedelta(hours=hours)
@@ -61,6 +66,8 @@ def _forecast_row(hours: int, *, price_area: str = "DK1") -> dict[str, Any]:
         "solar_mw": 5,
         "exchange_net_mw": -10,
     }
+    row.update(overrides)
+    return row
 
 
 def test_endpoint_exists() -> None:
@@ -126,6 +133,7 @@ def test_empty_forecast_rows_keep_next_surplus_window_not_calculated(
     assert response.status_code == 200
     body = response.json()
     assert body["next_surplus_window"]["status"] == "not_calculated"
+    assert body["economic_potential"]["status"] == "not_calculated"
     assert "forecast_rows" in body["next_surplus_window"]["reason"]
     assert (
         body["source_notes"]["next_surplus_window"]
@@ -179,6 +187,7 @@ def test_forecast_rows_without_database_url_still_return_safe_response(
     body = response.json()
     assert body["data_freshness"]["status"] == "not_available"
     assert body["next_surplus_window"]["status"] == "available"
+    assert body["economic_potential"]["status"] == "calculated"
     assert body["decision_support_only"] is True
     assert body["human_review_required"] is True
     assert body["no_automatic_control"] is True
@@ -186,7 +195,7 @@ def test_forecast_rows_without_database_url_still_return_safe_response(
     assert body["no_activation"] is True
 
 
-def test_economic_potential_remains_not_calculated_without_real_source(
+def test_economic_potential_remains_not_calculated_without_forecast_rows(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("DATABASE_URL", raising=False)
@@ -198,13 +207,84 @@ def test_economic_potential_remains_not_calculated_without_real_source(
 
     assert response.status_code == 200
     economic_potential = response.json()["economic_potential"]
-    assert economic_potential == {
-        "status": "not_calculated",
-        "reason": (
-            "No existing real backend economic-potential calculation is available "
-            "for this preview."
-        ),
-    }
+    assert economic_potential["status"] == "not_calculated"
+    assert "forecast_rows" in economic_potential["reason"]
+
+
+def test_economic_potential_remains_not_calculated_without_usable_price_risk_data(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    response = client.post(
+        "/api/dashboard/decision-summary/preview",
+        json={
+            "price_area": "DK1",
+            "forecast_rows": [
+                _forecast_row(
+                    0,
+                    price_dkk_per_mwh=250,
+                    production_mw=100,
+                    wind_onshore_mw=10,
+                    wind_offshore_mw=5,
+                    solar_mw=5,
+                ),
+                _forecast_row(
+                    1,
+                    price_dkk_per_mwh=None,
+                    production_mw=100,
+                    wind_onshore_mw=90,
+                    wind_offshore_mw=5,
+                    solar_mw=5,
+                ),
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    economic_potential = body["economic_potential"]
+    assert economic_potential["status"] == "not_calculated"
+    assert "usable" in economic_potential["reason"]
+    assert "economic_potential is not_calculated" in body["warnings"]
+    assert "usable price and surplus-risk signals" in body["source_notes"][
+        "economic_potential"
+    ]
+
+
+def test_forecast_rows_with_price_and_surplus_risk_calculate_economic_potential(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    response = client.post(
+        "/api/dashboard/decision-summary/preview",
+        json={"price_area": "DK1", "forecast_rows": [_forecast_row(0)]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    economic_potential = body["economic_potential"]
+    assert economic_potential["status"] == "calculated"
+    assert economic_potential["label"] == "Potential price opportunity"
+    assert economic_potential["value"] == "Potential price opportunity: 16.78 EUR/MWh"
+    assert economic_potential["unit"] == "EUR/MWh"
+    assert economic_potential["opportunity_eur_per_mwh"] == 16.78
+    assert economic_potential["source"] == "caller_provided_forecast_rows"
+    assert "caller-provided forecast_rows" in economic_potential["source_notes"]
+    assert "revenue" in economic_potential["confidence_note"]
+    assert economic_potential["risk_level"] == "high"
+    assert economic_potential["risk_score"] == 75
+    assert economic_potential["model_version"] == "dashboard-economic-potential-v0"
+    assert "economic_potential is not_calculated" not in body["warnings"]
+    assert body["decision_support_only"] is True
+    assert body["human_review_required"] is True
+    assert body["no_automatic_control"] is True
+    assert body["no_dispatch"] is True
+    assert body["no_activation"] is True
+    assert "EUR/MWh price opportunity signal" in body["source_notes"][
+        "economic_potential"
+    ]
 
 
 def test_current_risk_and_confidence_use_existing_read_model_when_available(

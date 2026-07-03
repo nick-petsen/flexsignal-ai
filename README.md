@@ -31,11 +31,18 @@ Working read-only core:
   `forecast_rows` are supplied, `next_surplus_window` is calculated through the
   existing deterministic forecast-window preview logic. When `forecast_rows`
   are missing or empty, `next_surplus_window` remains `not_calculated`. The
-  endpoint does not invent forecast rows, modify the frontend, write to the
-  database, add migrations, call live EDS, DMI, weather, or external APIs, add
-  ML/LLM decisioning, estimate fake economic potential, or add operational
-  asset integration. Economic potential and expected impact remain
-  `not_calculated` unless real backend logic backs them.
+  endpoint can also calculate `economic_potential` as a conservative
+  `EUR/MWh` price opportunity signal only when caller-provided `forecast_rows`
+  contain usable low or negative price data and deterministic surplus-risk
+  signals. It is not a revenue forecast, site-specific savings estimate,
+  profit estimate, automatic trading recommendation, control recommendation,
+  dispatch workflow, or activation workflow. The endpoint does not invent
+  forecast rows, load size, MW, MWh, tariffs, taxes, fees, customer assets, or
+  fake data; does not modify the frontend; does not write to the database; does
+  not add migrations; does not call live EDS, DMI, weather, or external APIs;
+  does not add ML/LLM decisioning; and does not add operational asset
+  integration. Expected impact remains `not_calculated` unless real backend
+  logic backs it.
 - Dashboard now has a manual `Load decision summary` cockpit flow. The
   frontend calls `POST /api/dashboard/decision-summary/preview` only after
   human action, with no auto-load and no polling. Loaded DK1/DK2 values come
@@ -64,10 +71,13 @@ Working read-only core:
   and Confidence from the existing forecast preview flow when available.
   `Check data freshness` updates Data freshness from the existing freshness
   flow when available. Economic potential remains `Not calculated yet` unless
-  real backend data exists. Expected impact remains `not_calculated` in the
-  decision summary unless backed by real backend logic. The decision summary
-  calculates `next_surplus_window` only from caller-provided `forecast_rows`;
-  without those rows it remains `not_calculated`. The topbar uses Manual
+  caller-provided forecast rows include usable low or negative price data plus
+  deterministic surplus-risk signals; when calculated, it is a conservative
+  `EUR/MWh` opportunity signal only, not revenue, savings, profit, trading, or
+  control advice. Expected impact remains `not_calculated` in the decision
+  summary unless backed by real backend logic. The decision summary calculates
+  `next_surplus_window` only from caller-provided `forecast_rows`; without
+  those rows it remains `not_calculated`. The topbar uses Manual
   refresh mode, not `System Status: LIVE`.
   There is no auto-load, polling, live control, dispatch, or activation; the
   cockpit remains read-only decision support and requires human review.
