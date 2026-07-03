@@ -9,6 +9,7 @@ from app.api.energy_freshness_read import router as energy_freshness_read_router
 from app.api.forecast import router as forecast_router
 from app.api.report import router as report_router
 from app.api.risk import router as risk_router
+from app.api.system import router as system_router
 
 
 APP_VERSION = "0.1.0"
@@ -57,6 +58,7 @@ _include_materialized_router(app, risk_router)
 _include_materialized_router(app, dashboard_router)
 _include_materialized_router(app, audit_router)
 _include_materialized_router(app, report_router)
+_include_materialized_router(app, system_router)
 
 
 @app.get("/health")
