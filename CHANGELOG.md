@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added documentation-only staging and test-user readiness guidance in
+  `README.md`, `docs/SECURITY.md`, `docs/HUMAN_OVERSIGHT.md`, and
+  `docs/INCIDENT_RESPONSE.md`. The docs state that the current MVP is
+  local/manual read-only decision support, not production live; list required
+  staging configuration for `DATABASE_URL`, `NEXT_PUBLIC_API_BASE_URL`,
+  allowed CORS origins, and future Entra ID auth settings; require backend
+  tests, frontend build, secret checks, known migration status, DK1/DK2
+  dashboard smoke, and report/audit/export smoke before external test users;
+  restate human review before acting on recommendations; and document
+  incidents for incorrect recommendations, stale data, failed ingestion, and
+  unavailable API. The docs also state that "System Status: LIVE" must not be
+  used until staging health, auth, monitoring, and data freshness checks exist.
+  This changed documentation only and added no frontend, backend, test,
+  database, migration, Azure, auth, weather, maps, fake data, control,
+  dispatch, activation, or asset-integration behavior.
 - Added backend-only Dashboard decision summary economic potential v0.
   `POST /api/dashboard/decision-summary/preview` now keeps
   `economic_potential` as `not_calculated` when no `forecast_rows` are

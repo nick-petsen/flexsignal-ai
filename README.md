@@ -18,6 +18,43 @@ FlexSignal AI is ready for a local technical MVP demo. It is not ready for
 production, is not a validated commercial forecasting product, and must remain
 read-only decision support for human review only.
 
+## Staging And Test-User Readiness
+
+The current MVP is local/manual decision support only. It is not production
+live, is not externally test-user ready, and must not be represented as a live
+operational system. External test-user access requires a reviewed staging
+environment first.
+
+Required staging configuration before external test users:
+
+- `DATABASE_URL` for the staging database, stored only in the staging secret or
+  environment configuration and never committed.
+- `NEXT_PUBLIC_API_BASE_URL` pointing the staging frontend to the staging API.
+- Allowed CORS origins limited to the approved staging frontend origin or
+  origins. The current backend CORS configuration is local-development-only and
+  must not be treated as staging access control.
+- Future Entra ID auth settings, once auth is implemented, including tenant,
+  client/application identifiers, issuer/JWKS validation, API audience/scopes,
+  redirect/origin settings, and allowed users/groups/roles. Auth is not
+  implemented in this docs-only update.
+
+Required checks before any external test-user session:
+
+- Backend tests pass.
+- Frontend build passes.
+- No secrets, tokens, raw `DATABASE_URL` values, or credentials are committed.
+- Database migration status is known for the staging database before use.
+- Dashboard smoke works for both `DK1` and `DK2`.
+- Report, audit, and export flows are smoke-tested in staging.
+- Human review is required before acting on any recommendation.
+- No automatic control, dispatch, activation, live control signals, or asset
+  integration are present.
+
+The UI label "System Status: LIVE" must not be used until staging health,
+authentication, monitoring, and data freshness checks exist and have been
+reviewed. Until then, the product should continue to use manual/read-only status
+language such as Manual refresh mode or decision-support mode.
+
 Working read-only core:
 
 - Backend `POST /api/dashboard/decision-summary/preview` exists as the
