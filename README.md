@@ -25,6 +25,22 @@ live, is not externally test-user ready, and must not be represented as a live
 operational system. External test-user access requires a reviewed staging
 environment first.
 
+Backend `GET /api/system/readiness` exists for staging smoke/readiness checks.
+It returns JSON-only safe status fields for the backend service, read-only
+decision-support safety flags, whether `DATABASE_URL` is configured, and the
+allowed system label `Manual refresh mode`. It does not expose raw
+`DATABASE_URL` values, credentials, hostnames, tokens, connection strings,
+API keys, or other environment variable values. It does not connect to the
+database, run migrations, perform writes, call external APIs, add auth, add
+Azure resources, add weather/maps, add fake data, or add control, dispatch,
+activation, or asset integration. If `DATABASE_URL` is missing, it still
+returns HTTP 200 with `status: degraded` and `database_configured: false`.
+
+This endpoint is not production monitoring. It is a narrow staging smoke
+signal for MVP preparation only. System Status must remain Manual refresh mode
+until auth, staging health checks, monitoring, and data freshness checks exist
+and have been reviewed.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or

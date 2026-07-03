@@ -2,6 +2,22 @@
 
 ## v0.1.0 - TODO
 
+- Added backend-only staging smoke readiness endpoint
+  `GET /api/system/readiness`. The endpoint returns JSON-only safe status
+  fields for `flexsignal-ai-backend`, read-only decision-support and
+  human-review flags, no automatic control, no dispatch, no activation,
+  `database_configured`, `auth_configured=false`,
+  `external_control_enabled=false`, and
+  `system_status_label_allowed="Manual refresh mode"`. Missing
+  `DATABASE_URL` returns HTTP 200 with degraded status and does not prevent
+  app startup. Present `DATABASE_URL` is reported only as a boolean and is not
+  leaked. The endpoint does not connect to the database, run migrations,
+  perform writes, call external APIs, add auth, add Azure resources, add
+  weather/maps, add fake data, modify frontend files, modify database schema,
+  add migrations, or add control, dispatch, activation, or asset integration.
+  Documentation now states this is a staging smoke/readiness endpoint, not
+  production monitoring, and that System Status must remain Manual refresh
+  mode until auth, staging health, monitoring, and data freshness checks exist.
 - Added documentation-only staging and test-user readiness guidance in
   `README.md`, `docs/SECURITY.md`, `docs/HUMAN_OVERSIGHT.md`, and
   `docs/INCIDENT_RESPONSE.md`. The docs state that the current MVP is
