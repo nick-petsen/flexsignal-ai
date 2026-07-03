@@ -106,6 +106,11 @@ export type ForecastPreviewRequest = {
   rows: ForecastPreviewRow[];
 };
 
+export type DashboardDecisionSummaryPreviewRequest = {
+  price_area: PriceArea;
+  forecast_rows?: ForecastPreviewRow[];
+};
+
 export type ForecastReasonCodeCount = {
   reason_code: string;
   count: number;
@@ -134,6 +139,11 @@ export type ForecastPreviewResponse = {
   decision_support_only: boolean;
   safety: string;
   windows: ForecastWindowSummary[];
+};
+
+export type ForecastPreviewLoadResult = {
+  data: ForecastPreviewResponse;
+  rows: ForecastPreviewRow[];
 };
 
 export type EnergyFreshnessQueryPlan = {
@@ -402,16 +412,17 @@ export async function fetchCurrentRisk(
 
 export async function fetchForecastPreview(
   priceArea: PriceArea
-): Promise<ForecastPreviewResponse> {
+): Promise<ForecastPreviewLoadResult> {
   const url = new URL(
     `${backendApiBaseUrl.replace(/\/+$/, "")}/api/forecast/preview`
   );
+  const request = buildForecastPreviewRequest(priceArea);
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(buildForecastPreviewRequest(priceArea))
+    body: JSON.stringify(request)
   });
   const body: unknown = await response.json().catch(() => null);
 
@@ -419,21 +430,33 @@ export async function fetchForecastPreview(
     throw new Error(getApiErrorMessage(body, response.status));
   }
 
-  return body as ForecastPreviewResponse;
+  return {
+    data: body as ForecastPreviewResponse,
+    rows: request.rows
+  };
 }
 
 export async function fetchDashboardDecisionSummaryPreview(
-  priceArea: PriceArea
+  priceArea: PriceArea,
+  forecastRows?: ForecastPreviewRow[]
 ): Promise<DashboardDecisionSummaryPreviewResponse> {
   const url = new URL(
     `${backendApiBaseUrl.replace(/\/+$/, "")}/api/dashboard/decision-summary/preview`
   );
+  const request: DashboardDecisionSummaryPreviewRequest = {
+    price_area: priceArea
+  };
+
+  if (forecastRows && forecastRows.length > 0) {
+    request.forecast_rows = forecastRows;
+  }
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ price_area: priceArea })
+    body: JSON.stringify(request)
   });
   const body: unknown = await response.json().catch(() => null);
 

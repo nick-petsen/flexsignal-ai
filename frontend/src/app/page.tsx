@@ -27,6 +27,7 @@ import {
   type EnergyFreshnessReadResult,
   type EnergyFreshnessResponse,
   type ForecastPreviewResponse,
+  type ForecastPreviewRow,
   type ForecastWindowSummary,
   type PowerBalanceRow,
   type PriceArea,
@@ -53,7 +54,11 @@ type RiskRequestState =
 type ForecastRequestState =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "success"; data: ForecastPreviewResponse }
+  | {
+      status: "success";
+      data: ForecastPreviewResponse;
+      rows: ForecastPreviewRow[];
+    }
   | { status: "error"; message: string };
 
 type DecisionSummaryRequestState =
@@ -136,6 +141,15 @@ type CockpitKpi = {
 };
 
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
+const forecastPreviewNumericFields: (keyof ForecastPreviewRow)[] = [
+  "price_dkk_per_mwh",
+  "production_mw",
+  "consumption_mw",
+  "wind_onshore_mw",
+  "wind_offshore_mw",
+  "solar_mw",
+  "exchange_net_mw"
+];
 
 const navigationItems: {
   id: DashboardSection;
@@ -1621,6 +1635,64 @@ function getActionStatusClass(
   }
 
   return baseClass;
+}
+
+function getDecisionOverviewItemClass(item: CockpitKpi): string {
+  const classNames = ["decision-overview__item"];
+
+  if (item.label === "Current risk" || item.label === "Next surplus window") {
+    classNames.push("decision-overview__item--primary");
+  }
+
+  if (item.tone) {
+    classNames.push(`decision-overview__item--${item.tone}`);
+  }
+
+  return classNames.join(" ");
+}
+
+function getForecastRowsForDecisionSummary(
+  state: ForecastRequestState,
+  selectedArea: PriceArea
+): ForecastPreviewRow[] | undefined {
+  if (
+    state.status !== "success" ||
+    state.data.price_area !== selectedArea ||
+    state.rows.length === 0
+  ) {
+    return undefined;
+  }
+
+  const rows = state.rows.filter((row) =>
+    isValidForecastPreviewRowForArea(row, selectedArea)
+  );
+
+  return rows.length === state.rows.length ? rows : undefined;
+}
+
+function isValidForecastPreviewRowForArea(
+  row: ForecastPreviewRow,
+  selectedArea: PriceArea
+): boolean {
+  return (
+    row.price_area === selectedArea &&
+    isTimezoneAwareTimestamp(row.timestamp_utc) &&
+    forecastPreviewNumericFields.every((field) =>
+      isNullableFiniteNumber(row[field])
+    )
+  );
+}
+
+function isTimezoneAwareTimestamp(value: string): boolean {
+  return (
+    value.trim().length > 0 &&
+    /(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
+    Number.isFinite(Date.parse(value))
+  );
+}
+
+function isNullableFiniteNumber(value: unknown): boolean {
+  return value === undefined || value === null || Number.isFinite(value);
 }
 
 function ForecastPreviewCard({
@@ -3260,11 +3332,7 @@ function DecisionOverview({
       <div className="decision-overview__grid">
         {overviewItems.map((item) => (
           <article
-            className={
-              item.tone
-                ? `decision-overview__item decision-overview__item--${item.tone}`
-                : "decision-overview__item"
-            }
+            className={getDecisionOverviewItemClass(item)}
             key={item.label}
           >
             <span>{item.label}</span>
@@ -3392,7 +3460,14 @@ export default function DashboardPage() {
   async function handleLoadDecisionSummary() {
     setDecisionSummaryState({ status: "loading" });
     try {
-      const data = await fetchDashboardDecisionSummaryPreview(selectedArea);
+      const forecastRows = getForecastRowsForDecisionSummary(
+        forecastPreviewState,
+        selectedArea
+      );
+      const data = await fetchDashboardDecisionSummaryPreview(
+        selectedArea,
+        forecastRows
+      );
       setDecisionSummaryState({ status: "success", data });
     } catch (error) {
       setDecisionSummaryState({
@@ -3405,8 +3480,12 @@ export default function DashboardPage() {
   async function handleLoadForecastPreview() {
     setForecastPreviewState({ status: "loading" });
     try {
-      const data = await fetchForecastPreview(selectedArea);
-      setForecastPreviewState({ status: "success", data });
+      const result = await fetchForecastPreview(selectedArea);
+      setForecastPreviewState({
+        status: "success",
+        data: result.data,
+        rows: result.rows
+      });
     } catch (error) {
       setForecastPreviewState({
         status: "error",
