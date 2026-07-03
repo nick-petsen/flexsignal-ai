@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Any, Literal
+from math import isfinite
+from typing import Any, Literal, Union
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictFloat,
+    StrictInt,
+    field_validator,
+)
 
 from app.api.energy import execute_read_query
 from app.api.energy_freshness_read import connect_with_psycopg
@@ -15,11 +23,22 @@ from app.db.read_queries import (
     build_recent_spot_prices_query,
 )
 from app.db.repositories.energy_freshness_reader import read_energy_freshness_summary
+from app.forecast import build_forecast_window_forecast
 from app.risk.input_composer import compose_surplus_risk_input
 from app.risk.rule_engine import calculate_surplus_risk
 
 
 PriceArea = Literal["DK1", "DK2"]
+StrictNumber = Union[StrictInt, StrictFloat]
+NUMERIC_FORECAST_ROW_FIELDS = (
+    "price_dkk_per_mwh",
+    "production_mw",
+    "consumption_mw",
+    "wind_onshore_mw",
+    "wind_offshore_mw",
+    "solar_mw",
+    "exchange_net_mw",
+)
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -31,10 +50,42 @@ UNCALCULATED_ECONOMIC_POTENTIAL_WARNING = "economic_potential is not_calculated"
 UNAVAILABLE_FRESHNESS_WARNING = "data_freshness is not_available"
 
 
+class DashboardDecisionSummaryForecastRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    price_area: PriceArea
+    timestamp_utc: datetime
+    price_dkk_per_mwh: StrictNumber | None = None
+    production_mw: StrictNumber | None = Field(default=None, ge=0)
+    consumption_mw: StrictNumber | None = Field(default=None, ge=0)
+    wind_onshore_mw: StrictNumber | None = Field(default=None, ge=0)
+    wind_offshore_mw: StrictNumber | None = Field(default=None, ge=0)
+    solar_mw: StrictNumber | None = Field(default=None, ge=0)
+    exchange_net_mw: StrictNumber | None = None
+
+    @field_validator("timestamp_utc")
+    @classmethod
+    def timestamp_must_be_timezone_aware(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("timestamp_utc must be timezone-aware")
+        return value
+
+    @field_validator(*NUMERIC_FORECAST_ROW_FIELDS)
+    @classmethod
+    def numeric_values_must_be_finite(
+        cls,
+        value: StrictNumber | None,
+    ) -> StrictNumber | None:
+        if value is not None and not isfinite(value):
+            raise ValueError("numeric values must be finite")
+        return value
+
+
 class DashboardDecisionSummaryPreviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     price_area: PriceArea
+    forecast_rows: list[DashboardDecisionSummaryForecastRow] | None = None
 
 
 @router.post("/decision-summary/preview")
@@ -43,9 +94,11 @@ def preview_dashboard_decision_summary(
 ) -> dict[str, Any]:
     current_risk = _read_current_risk_if_available(payload.price_area)
     data_freshness = _read_data_freshness_if_available(payload.price_area)
+    next_surplus_window = _calculate_next_surplus_window_if_available(payload)
 
     warnings = _build_warnings(
         current_risk=current_risk,
+        next_surplus_window=next_surplus_window,
         data_freshness=data_freshness,
     )
 
@@ -57,13 +110,7 @@ def preview_dashboard_decision_summary(
         "no_dispatch": True,
         "no_activation": True,
         "current_risk": current_risk,
-        "next_surplus_window": {
-            "status": "not_calculated",
-            "reason": (
-                "Forecast-window preview requires caller-provided forecast rows; "
-                "this dashboard summary request only includes price_area."
-            ),
-        },
+        "next_surplus_window": next_surplus_window,
         "confidence": _confidence_from_current_risk(current_risk),
         "expected_impact": {
             "status": "not_calculated",
@@ -81,9 +128,94 @@ def preview_dashboard_decision_summary(
         "warnings": warnings,
         "source_notes": _build_source_notes(
             current_risk=current_risk,
+            next_surplus_window=next_surplus_window,
             data_freshness=data_freshness,
         ),
     }
+
+
+def _calculate_next_surplus_window_if_available(
+    payload: DashboardDecisionSummaryPreviewRequest,
+) -> dict[str, Any]:
+    if not payload.forecast_rows:
+        return {
+            "status": "not_calculated",
+            "reason": (
+                "Forecast-window preview requires caller-provided forecast rows; "
+                "this dashboard summary request did not include forecast_rows."
+            ),
+        }
+
+    matching_rows = [
+        row for row in payload.forecast_rows if row.price_area == payload.price_area
+    ]
+    if not matching_rows:
+        return {
+            "status": "limited",
+            "value": "no_matching_forecast_rows",
+            "reason": (
+                "Caller-provided forecast_rows were supplied, but none matched "
+                f"price_area {payload.price_area}."
+            ),
+            "source": "caller_provided_forecast_rows",
+        }
+
+    generated_at_utc = min(
+        row.timestamp_utc.astimezone(timezone.utc) for row in matching_rows
+    )
+
+    try:
+        forecast = build_forecast_window_forecast(
+            price_area=payload.price_area,
+            generated_at_utc=generated_at_utc,
+            rows=payload.forecast_rows,
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    selected_window = _first_populated_forecast_window(forecast["windows"])
+    if selected_window is None:
+        return {
+            "status": "limited",
+            "value": "no_populated_forecast_window",
+            "reason": (
+                "Caller-provided forecast_rows were supplied, but no rows fell "
+                "inside the existing 0-72h forecast-window preview range."
+            ),
+            "source": "caller_provided_forecast_rows",
+            "model_version": forecast["model_version"],
+        }
+
+    return {
+        "status": "available",
+        "value": selected_window["window_label"],
+        "window_label": selected_window["window_label"],
+        "risk_level": selected_window["risk_level"],
+        "risk_score": selected_window["max_risk_score"],
+        "confidence_score": selected_window["average_confidence_score"],
+        "row_count": selected_window["row_count"],
+        "start_utc": selected_window["start_utc"],
+        "end_utc": selected_window["end_utc"],
+        "summary": (
+            f"{selected_window['window_label']} "
+            f"{selected_window['risk_level']} surplus risk from "
+            f"{selected_window['row_count']} caller-provided forecast row(s)."
+        ),
+        "explanation": selected_window["explanation"],
+        "recommended_human_action": selected_window["recommended_human_action"],
+        "decision_support_only": selected_window["decision_support_only"],
+        "source": "caller_provided_forecast_rows",
+        "model_version": forecast["model_version"],
+    }
+
+
+def _first_populated_forecast_window(
+    windows: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    for window in windows:
+        if window.get("row_count", 0) > 0:
+            return window
+    return None
 
 
 def _read_current_risk_if_available(price_area: str) -> dict[str, Any]:
@@ -198,13 +330,16 @@ def _recommended_human_action(current_risk: dict[str, Any]) -> str:
 def _build_warnings(
     *,
     current_risk: dict[str, Any],
+    next_surplus_window: dict[str, Any],
     data_freshness: dict[str, Any],
 ) -> list[str]:
     warnings = [
-        UNCALCULATED_NEXT_WINDOW_WARNING,
         UNCALCULATED_EXPECTED_IMPACT_WARNING,
         UNCALCULATED_ECONOMIC_POTENTIAL_WARNING,
     ]
+
+    if next_surplus_window.get("status") == "not_calculated":
+        warnings.insert(0, UNCALCULATED_NEXT_WINDOW_WARNING)
 
     if current_risk.get("status") == "not_available":
         warnings.extend(
@@ -223,6 +358,7 @@ def _build_warnings(
 def _build_source_notes(
     *,
     current_risk: dict[str, Any],
+    next_surplus_window: dict[str, Any],
     data_freshness: dict[str, Any],
 ) -> dict[str, str]:
     current_risk_note = (
@@ -239,11 +375,18 @@ def _build_source_notes(
     if data_freshness.get("status") == "not_available":
         freshness_note = "Unavailable; no freshness status was invented."
 
+    next_window_note = (
+        "Not calculated because this preview did not receive forecast_rows."
+    )
+    if next_surplus_window.get("source") == "caller_provided_forecast_rows":
+        next_window_note = (
+            "Calculated with existing forecast-window preview logic from "
+            "caller-provided forecast_rows; no forecast rows were invented."
+        )
+
     return {
         "current_risk": current_risk_note,
-        "next_surplus_window": (
-            "Not calculated because this preview does not receive forecast rows."
-        ),
+        "next_surplus_window": next_window_note,
         "confidence": (
             "Uses current_risk.confidence_score only when current risk is available."
         ),

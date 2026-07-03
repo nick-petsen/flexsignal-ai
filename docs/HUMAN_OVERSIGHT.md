@@ -4,7 +4,9 @@
 
 `POST /api/dashboard/decision-summary/preview` provides the read-only decision
 summary for the N&O Predict Dashboard cockpit. The request body is
-`{"price_area":"DK1"}` or `{"price_area":"DK2"}`.
+`{"price_area":"DK1"}` or `{"price_area":"DK2"}`. The backend request may
+also include optional caller-provided `forecast_rows` for dashboard
+forecast-window summarization.
 
 The frontend Dashboard now exposes this through a manual `Load decision
 summary` flow. The POST request is made only after human action. There is no
@@ -32,8 +34,11 @@ Human oversight requirements:
   real backend source exists.
 - Expected impact remains `not_calculated` unless a future real backend source
   exists.
-- Next surplus window remains `not_calculated` unless real backend logic
-  backs it.
+- Next surplus window is calculated only when caller-provided `forecast_rows`
+  are supplied and can be evaluated by the existing deterministic
+  forecast-window preview logic.
+- No fake forecast rows are generated. Missing or empty `forecast_rows` keep
+  next surplus window as `not_calculated`.
 - LLMs are not used for the decision summary.
 - The frontend displays the response as manual decision support only, with
   unavailable fields visibly marked.
@@ -50,12 +55,14 @@ when available. `Check data freshness` updates Data freshness from the
 existing freshness flow when available.
 
 Economic potential remains `Not calculated yet` unless real backend data
-exists. Expected impact, economic potential, and next surplus window remain
-`not_calculated` in the decision summary unless backed by real backend logic.
-The cockpit has no auto-load, polling, live control, dispatch, or activation
-behavior. It remains read-only decision support and requires human review
-before any real-world action. Meteo / Weather remains placeholder-only, and
-the topbar uses Manual refresh mode, not `System Status: LIVE`.
+exists. Expected impact and economic potential remain `not_calculated` in the
+decision summary unless backed by real backend logic. The decision summary
+calculates next surplus window only from caller-provided `forecast_rows`; when
+those rows are missing or empty, it remains `not_calculated`. The cockpit has
+no auto-load, polling, live control, dispatch, or activation behavior. It
+remains read-only decision support and requires human review before any
+real-world action. Meteo / Weather remains placeholder-only, and the topbar
+uses Manual refresh mode, not `System Status: LIVE`.
 
 Observed manual cockpit smoke:
 

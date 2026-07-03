@@ -30,17 +30,19 @@ Energi Data Service data, schedule ingestion, or connect to operational
 systems.
 
 `POST /api/dashboard/decision-summary/preview` is a dashboard composition
-endpoint, not a new model. It accepts a DK1/DK2 `price_area` and returns a
-read-only cockpit decision summary for the N&O Predict Dashboard. The frontend
-calls it only through the manual `Load decision summary` flow, after human
-action. Current risk and confidence are populated only when existing stored
-backend risk data can be read and scored through `rule-engine-v0`; otherwise
-they are explicitly `not_available`. DK1/DK2 values come from existing backend
-read models where available. Next surplus window, expected impact, and
-economic potential remain `not_calculated` unless real backend logic provides
-them. The endpoint does not invent prices, savings, weather, confidence, or
-economic values, does not use an LLM, and does not call live EDS, DMI,
-weather, or external APIs.
+endpoint, not a new model. It accepts a DK1/DK2 `price_area` and optional
+caller-provided `forecast_rows`, then returns a read-only cockpit decision
+summary for the N&O Predict Dashboard. The frontend calls it only through the
+manual `Load decision summary` flow, after human action. Current risk and
+confidence are populated only when existing stored backend risk data can be
+read and scored through `rule-engine-v0`; otherwise they are explicitly
+`not_available`. DK1/DK2 values come from existing backend read models where
+available. Next surplus window is calculated only when caller-provided
+`forecast_rows` are supplied, using existing deterministic `forecast-window-v0`
+preview logic. When `forecast_rows` are missing or empty, next surplus window
+remains `not_calculated`. The endpoint does not invent forecast rows, prices,
+savings, weather, confidence, or economic values, does not use an LLM, and
+does not call live EDS, DMI, weather, or external APIs.
 
 ## Current MVP Status
 
@@ -58,9 +60,11 @@ flow when available. `Review forecast window` updates Next surplus window and
 Confidence from the existing forecast preview flow when available. `Check data
 freshness` updates Data freshness from the existing freshness flow when
 available. Economic potential remains `Not calculated yet` unless real
-backend data exists. Expected impact, economic potential, and next surplus
-window remain `not_calculated` in the decision summary unless backed by real
-backend logic. The flow does not use fake or synthetic dashboard KPI values.
+backend data exists. Expected impact and economic potential remain
+`not_calculated` in the decision summary unless backed by real backend logic.
+Next surplus window is calculated only from caller-provided `forecast_rows`;
+without those rows it remains `not_calculated`. The flow does not use fake or
+synthetic dashboard KPI values.
 
 Observed manual cockpit smoke confirmed the cockpit buttons were clickable and
 KPI tiles updated after manual clicks. Example observed values may include

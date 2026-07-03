@@ -2,6 +2,16 @@
 
 ## v0.1.0 - TODO
 
+- Improved backend-only Dashboard decision summary forecast-window handling.
+  `POST /api/dashboard/decision-summary/preview` now optionally accepts
+  caller-provided `forecast_rows` and reuses the existing deterministic
+  forecast-window preview logic to populate `next_surplus_window` when those
+  rows are supplied. Missing or empty `forecast_rows` keep
+  `next_surplus_window` as `not_calculated` with the honest source note. The
+  endpoint does not invent forecast rows, generate fake KPI values, call
+  external APIs, use LLM/AI explanations, modify the frontend, change the
+  database schema, add migrations, or add control, dispatch, activation, or
+  asset integration behavior.
 - Documented the merged manual Dashboard decision summary cockpit flow. The
   dashboard now has a human-triggered `Load decision summary` action that
   calls `POST /api/dashboard/decision-summary/preview`; values load only
