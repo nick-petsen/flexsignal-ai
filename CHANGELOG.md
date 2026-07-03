@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/staging_smoke.py`, a script-only local/staging backend smoke
+  check for MVP readiness. Usage:
+  `BACKEND_BASE_URL=http://127.0.0.1:8000 python scripts/staging_smoke.py`.
+  The script calls `GET /health`, `GET /api/system/readiness`, and
+  `POST /api/dashboard/decision-summary/preview` for `DK1` and `DK2`; verifies
+  read-only decision-support, human-review, no automatic control, no dispatch,
+  and no activation flags; does not require `DATABASE_URL`; writes no files or
+  database records; calls no external APIs beyond the configured backend; and
+  does not print raw environment values. Added lightweight mocked tests for the
+  script. This changed scripts/docs/tests only and added no frontend app code,
+  backend API behavior, database schema, migrations, auth, Azure resources,
+  weather/maps, fake data, control, dispatch, activation, or asset integration.
 - Added backend-only staging smoke readiness endpoint
   `GET /api/system/readiness`. The endpoint returns JSON-only safe status
   fields for `flexsignal-ai-backend`, read-only decision-support and
