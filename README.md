@@ -41,6 +41,21 @@ signal for MVP preparation only. System Status must remain Manual refresh mode
 until auth, staging health checks, monitoring, and data freshness checks exist
 and have been reviewed.
 
+Manual backend staging smoke:
+
+```bash
+BACKEND_BASE_URL=http://127.0.0.1:8000 python scripts/staging_smoke.py
+```
+
+The smoke script calls only the configured backend `GET /health`,
+`GET /api/system/readiness`, and
+`POST /api/dashboard/decision-summary/preview` for `DK1` and `DK2`. It does
+not require `DATABASE_URL`, write files, write to the database, call external
+APIs, print raw environment values, or add control, dispatch, activation, or
+asset integration. It exits non-zero if the backend is unreachable, the
+readiness endpoint is missing, required read-only safety flags are not true,
+or either dashboard summary does not return safe JSON.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or
