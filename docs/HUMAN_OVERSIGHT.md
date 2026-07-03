@@ -1,5 +1,37 @@
 # Human Oversight
 
+## Staging And External Test Users
+
+The current MVP is local/manual decision support only. It is not production
+live, is not an operational energy-system control product, and is not ready for
+external test users until staging readiness checks are complete.
+
+Human review is mandatory before any person acts on a recommendation,
+forecast, report, export, or dashboard signal. Recommendations are advisory
+inputs for review, not instructions to control electricity consumption, dispatch
+resources, activate assets, trade automatically, or operate energy
+infrastructure.
+
+Before external test-user access, a reviewer must confirm:
+
+- Backend tests pass.
+- Frontend build passes.
+- No secrets, tokens, raw `DATABASE_URL` values, or credentials are committed.
+- Staging `DATABASE_URL` is configured outside the repository.
+- Staging `NEXT_PUBLIC_API_BASE_URL` points only to the staging API.
+- Allowed CORS origins are limited to approved staging frontend origins.
+- Future Entra ID auth settings are defined and reviewed before auth-backed
+  access is enabled.
+- Staging database migration status is known.
+- Dashboard smoke works for both `DK1` and `DK2`.
+- Report, audit, and export flows are smoke-tested.
+- There is no automatic control, dispatch, activation, live control signal, or
+  asset integration.
+
+The label "System Status: LIVE" must not be used until staging health,
+authentication, monitoring, and data freshness checks exist. Until then, any
+status wording must keep the manual/read-only decision-support boundary clear.
+
 ## Dashboard Decision Summary Preview
 
 `POST /api/dashboard/decision-summary/preview` provides the read-only decision
