@@ -102,6 +102,23 @@ operational data. Full surplus-risk backtesting requires adding production,
 consumption, renewables, and other relevant data sources later; v0 uses
 spot/day-ahead prices only, not full surplus-production data.
 
+Manual public surplus-risk data source mapping check:
+
+```bash
+python3 scripts/public_surplus_data_source_check.py
+```
+
+The source mapping for the next public surplus-risk backtest step is documented
+in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). It identifies candidate Energi
+Data Service datasets and fields beyond `DayAheadPrices`, including
+production/consumption, wind/solar/renewable generation, and optional exchange
+context. The required historical surplus-risk v1 sources are `DayAheadPrices`
+and `ProductionConsumptionSettlement`; near-live and optional-later source gaps
+are reported separately. The checker is dry-run/read-only, calls only Energi
+Data Service, writes no files, writes no database records, and does not
+calculate customer-specific savings. Weather/DMI remains later work and is not
+part of this mapping.
+
 ## Public Market Backtest Snapshot
 
 Snapshot v0 documents the first observed public DK1/DK2 market
