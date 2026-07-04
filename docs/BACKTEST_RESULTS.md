@@ -112,6 +112,29 @@ Public DK1/DK2 market price-opportunity backtest v0:
   production, consumption, renewables, and other relevant data sources later;
   v0 uses spot/day-ahead prices only, not full surplus-production data.
 
+Public DK1/DK2 surplus-risk backtest input foundation v1:
+
+- `scripts/public_surplus_risk_backtest_input.py` prepares a
+  backend/script-only input foundation using Energi Data Service
+  `DayAheadPrices` and `ProductionConsumptionSettlement` for DK1/DK2 from
+  `2026-01-01` to `now` by default.
+- Manual usage:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python3 scripts/public_surplus_risk_backtest_input.py`.
+- The script is dry-run/read-only by default, writes no files, writes no
+  database records, calls no non-EDS APIs, and does not modify frontend code,
+  backend API behavior, database schema, or migrations.
+- The normalized rows carry timestamp, price area, day-ahead EUR/MWh price,
+  gross consumption MWh when present, renewable generation MWh derived only
+  from available wind/solar/hydro/renewable fields, wind MWh, solar MWh,
+  production total MWh where safely derivable, and optional exchange fields
+  when present.
+- Missing optional settlement fields are reported as warnings and are not
+  replaced with fake values. Required dataset failures fail safely.
+- This is not a final surplus-risk backtest and does not calculate final
+  surplus-risk scores, customer-specific savings, revenue, profit, tariffs,
+  taxes, fees, customer load, asset behavior, trading advice, dispatch,
+  activation, or control. Full surplus-risk scoring comes in the next step.
+
 Latest documented local DB backtest results after the confirmed manual EDS
 historical batch write:
 

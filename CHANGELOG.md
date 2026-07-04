@@ -2,6 +2,34 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/public_surplus_risk_backtest_input.py`, a
+  backend/script-only dry-run public surplus-risk backtest input foundation for
+  DK1/DK2 using Energi Data Service `DayAheadPrices` and
+  `ProductionConsumptionSettlement`. It reads `BACKTEST_START_DATE`,
+  `BACKTEST_END_DATE`, `BACKTEST_PRICE_AREAS`, `BACKTEST_DRY_RUN`,
+  `BACKTEST_EDS_REQUEST_DELAY_SECONDS`, and `BACKTEST_EDS_MAX_RETRIES`, with
+  defaults of `2026-01-01`, `now`, `DK1,DK2`, dry-run mode, `1.0`, and `3`.
+  The script reuses the public market input parsing, chunking, EDS host
+  validation, and retry fetcher where practical; fetches both required public
+  EDS datasets; normalizes rows into safe timestamped market/system-level
+  structures with price, consumption, renewable generation, wind, solar,
+  production-total-when-safe, and optional exchange fields; derives renewable
+  generation only from available renewable fields; reports missing optional
+  fields as warnings; and fails safely when a required dataset has no records
+  or invalid required fields. The dry-run summary reports period, price areas,
+  requested datasets, record counts, normalized row counts, dataset timestamp
+  ranges, missing field warnings, source, dry-run status, and a note that this
+  is public market/system-level data only and not customer-specific savings.
+  Added mocked tests for default config, DK1/DK2 validation, both dataset
+  normalizers, renewable derivation, missing optional field warnings, required
+  dataset failure, dry-run no-write behavior, no customer-specific savings
+  calculation, required dataset requests, EDS URL safety, and HTTP 429 retry
+  handling. Updated README and backtest/data-source docs to state this is an
+  input foundation only and that full surplus-risk scoring comes next. This
+  changed scripts/docs/tests only and added no frontend app code, dashboard UI,
+  backend API behavior, database schema, migrations, auth, Azure,
+  weather/maps, fake data, customer-specific savings, control, dispatch,
+  activation, or asset integration.
 - Added public surplus-risk data source mapping v0 in `docs/DATA_SOURCES.md`
   and linked it from `README.md` and root `DATA_SOURCES.md`. The mapping
   documents candidate Energi Data Service sources beyond `DayAheadPrices` for a
