@@ -2,6 +2,28 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/public_market_backtest.py`, a backend/script-only dry-run
+  public DK1/DK2 market price-opportunity backtest using only Energi Data
+  Service `DayAheadPrices`. Usage:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_market_backtest.py`.
+  It reuses the existing public market input foundation, reads
+  `BACKTEST_START_DATE`, `BACKTEST_END_DATE`, `BACKTEST_PRICE_AREAS`,
+  `BACKTEST_DRY_RUN`, and
+  `BACKTEST_LOW_PRICE_THRESHOLD_EUR_PER_MWH` (default `25`), and reports
+  per-price-area record counts, timestamp range, EUR/MWh average/min/max,
+  negative-price counts, low-price counts/share, an observed-market
+  EUR/MWh opportunity signal, and a clearly labelled scenario-only value per
+  1 MWh. It writes no files or database rows by default or during the v0
+  script path, calls no non-EDS APIs, and does not calculate revenue, profit,
+  savings, site-specific value, MW, customer load, tariffs, taxes, fees, or
+  asset behavior. Added mocked tests for negative and low-price counting,
+  average/min/max, scenario value calculation, customer-specific savings
+  warning, DayAheadPrices-only limitation wording, invalid price areas,
+  missing records, invalid price values, and dry-run no-write behavior. This
+  changed scripts/docs/tests only and added no frontend app code, dashboard
+  UI, backend API behavior, database schema, migrations, auth, Azure,
+  weather/maps, fake data, control, dispatch, activation, or asset
+  integration.
 - Added `scripts/public_market_backtest_input.py`, a backend/script-only
   dry-run public market input preview for DK1/DK2 backtest preparation. It
   reads `BACKTEST_START_DATE`, `BACKTEST_END_DATE`, `BACKTEST_PRICE_AREAS`,

@@ -78,6 +78,30 @@ only and does not calculate customer-specific savings. Customer-specific
 savings require customer load, asset, tariff, and operational data that is not
 part of this v0.1 public input layer.
 
+Manual public DK1/DK2 market price-opportunity backtest:
+
+```bash
+BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_market_backtest.py
+```
+
+The script runs a backend/script-only public market price-opportunity backtest
+for DK1/DK2 using only Energi Data Service `DayAheadPrices` from `2026-01-01`
+to `now` by default. It reuses the public market backtest input foundation,
+defaults to dry-run/read-only mode, writes no files, writes no database
+records, calls no non-EDS APIs, and prints per-price-area record counts,
+timestamp range, EUR/MWh average/min/max prices, negative-price counts,
+low-price counts and share, and an observed-market EUR/MWh opportunity signal.
+`BACKTEST_LOW_PRICE_THRESHOLD_EUR_PER_MWH` defaults to `25`.
+
+This is proof-of-work on public DK1/DK2 market data, not customer-specific
+savings. The 1 MWh scenario value is labelled as scenario-only and is based
+only on observed public market prices. It is not revenue, profit, savings,
+tariff, tax, fee, customer load, MW, asset behavior, dispatch, activation, or
+control. Customer-specific results require customer load, asset, tariff, and
+operational data. Full surplus-risk backtesting requires adding production,
+consumption, renewables, and other relevant data sources later; v0 uses
+spot/day-ahead prices only, not full surplus-production data.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or

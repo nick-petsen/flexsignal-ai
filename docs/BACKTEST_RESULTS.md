@@ -44,6 +44,34 @@ Public DK1/DK2 market backtest input foundation:
   activation. Customer-specific savings require customer load, asset, tariff,
   and operational data that is outside this public v0.1 foundation.
 
+Public DK1/DK2 market price-opportunity backtest v0:
+
+- `scripts/public_market_backtest.py` runs a backend/script-only public market
+  price-opportunity backtest using only Energi Data Service `DayAheadPrices`
+  for DK1/DK2 from `2026-01-01` to `now` by default.
+- Manual usage:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_market_backtest.py`.
+- The script reuses the public market backtest input foundation, remains
+  dry-run/read-only by default, writes no files, writes no database records,
+  calls no non-EDS APIs, and does not modify frontend code, backend API
+  behavior, database schema, or migrations.
+- The summary reports per price area: `record_count`,
+  `earliest_timestamp_utc`, `latest_timestamp_utc`,
+  `average_price_eur_per_mwh`, `minimum_price_eur_per_mwh`,
+  `maximum_price_eur_per_mwh`, `negative_price_record_count`,
+  `low_price_record_count`, `low_price_share`,
+  `opportunity_eur_per_mwh_signal`, and a scenario-only
+  `scenario_value_per_1_mwh`. The low-price threshold is configured with
+  `BACKTEST_LOW_PRICE_THRESHOLD_EUR_PER_MWH` and defaults to `25`.
+- The opportunity signal and 1 MWh scenario value are based only on observed
+  public market prices. They are not customer-specific savings, revenue,
+  profit, site-specific value, tariff, tax, fee, customer load, MW, asset
+  behavior, trading advice, dispatch, activation, or control.
+- This is proof-of-work on public DK1/DK2 market data, not a full
+  surplus-production backtest. Full surplus-risk backtesting requires adding
+  production, consumption, renewables, and other relevant data sources later;
+  v0 uses spot/day-ahead prices only, not full surplus-production data.
+
 Latest documented local DB backtest results after the confirmed manual EDS
 historical batch write:
 
