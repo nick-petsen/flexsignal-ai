@@ -97,6 +97,21 @@ only and is not a forecasting engine, ML model, LLM decision engine, dispatch
 workflow, activation workflow, automatic control workflow, or critical
 operational system.
 
+`scripts/public_surplus_risk_backtest.py` documents and exercises a
+script-only public surplus-risk backtest engine v1. It is not a trained model
+and does not use ML or LLM reasoning. It uses only public Energi Data Service
+`DayAheadPrices` and `ProductionConsumptionSettlement`, aggregates sub-hourly
+price rows to hourly averages, joins only by price area and hourly UTC
+timestamp, skips missing or unjoinable rows instead of inventing data, and
+scores joined rows with deterministic rules: negative price, low price,
+medium/high renewable share, and renewable generation above gross consumption.
+Default thresholds are `25` EUR/MWh for low price, `0.65` for medium renewable
+share, and `0.80` for high renewable share. The output is public
+market/system-level decision support only, not customer-specific savings,
+revenue, profit, tariff, tax, fee, load, asset behavior, dispatch, activation,
+or control. Customer-specific results require customer load, asset, tariff, and
+operational data outside this v0.1 public backtest.
+
 The frontend spot price and power balance trend charts are not part of
 `rule-engine-v0` and do not change scoring, forecasting, backtest pairing,
 thresholds, input composition, or predictive-performance claims. They are

@@ -130,10 +130,49 @@ Public DK1/DK2 surplus-risk backtest input foundation v1:
   when present.
 - Missing optional settlement fields are reported as warnings and are not
   replaced with fake values. Required dataset failures fail safely.
-- This is not a final surplus-risk backtest and does not calculate final
-  surplus-risk scores, customer-specific savings, revenue, profit, tariffs,
-  taxes, fees, customer load, asset behavior, trading advice, dispatch,
-  activation, or control. Full surplus-risk scoring comes in the next step.
+- This input foundation does not calculate final surplus-risk scores,
+  customer-specific savings, revenue, profit, tariffs, taxes, fees, customer
+  load, asset behavior, trading advice, dispatch, activation, or control. The
+  separate public surplus-risk backtest engine handles deterministic scoring
+  and risk-window grouping.
+
+Public DK1/DK2 surplus-risk backtest engine v1:
+
+- `scripts/public_surplus_risk_backtest.py` runs a backend/script-only public
+  surplus-risk backtest using Energi Data Service `DayAheadPrices` and
+  `ProductionConsumptionSettlement` for DK1/DK2 from `2026-01-01` to `now` by
+  default.
+- Manual usage:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_surplus_risk_backtest.py`.
+- The script reuses the public surplus-risk input foundation, remains
+  dry-run/read-only by default, writes no files, writes no database records,
+  calls no non-EDS APIs, and does not modify frontend code, backend API
+  behavior, database schema, or migrations.
+- Day-ahead price rows are aggregated to hourly average EUR/MWh when sub-hourly
+  rows exist. Price and settlement rows are paired only by price area and
+  hourly UTC timestamp. Unjoinable rows and rows missing required calculation
+  values are skipped and counted; missing values are not invented.
+- Per joined hourly row, the engine calculates `price_eur_per_mwh`,
+  `gross_consumption_mwh`, `renewable_generation_mwh`, `renewable_share`,
+  `risk_score` from `0` to `100`, `risk_level`, and transparent
+  `reason_codes`.
+- Deterministic scoring rules are:
+  negative price adds risk, price at or below
+  `BACKTEST_LOW_PRICE_THRESHOLD_EUR_PER_MWH` adds risk, renewable share at or
+  above `BACKTEST_RENEWABLE_SHARE_MEDIUM_THRESHOLD` or
+  `BACKTEST_RENEWABLE_SHARE_HIGH_THRESHOLD` adds risk, and renewable
+  generation above gross consumption adds risk. Defaults are `25` EUR/MWh,
+  `0.65`, and `0.80`.
+- Consecutive medium/high hourly rows are grouped into risk windows per price
+  area. Per-area summaries include joined hours, skipped rows, medium/high
+  hours, risk-window count, highest and average risk score, negative/low-price
+  hours, average and max renewable share, and top reason codes.
+- This is public market/system-level backtesting only. It is not
+  customer-specific savings, revenue, profit, site-specific value, tariff,
+  tax, fee, customer load, MW, asset behavior, trading advice, dispatch,
+  activation, or control. Customer-specific results require customer load,
+  asset, tariff, and operational data. The engine uses no ML or LLM and remains
+  read-only decision support.
 
 Latest documented local DB backtest results after the confirmed manual EDS
 historical batch write:

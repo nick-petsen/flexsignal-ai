@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/public_surplus_risk_backtest.py`, a
+  backend/script-only dry-run public surplus-risk backtest engine v1 for DK1
+  and DK2 using only Energi Data Service `DayAheadPrices` and
+  `ProductionConsumptionSettlement`. It reuses the public surplus-risk input
+  foundation, reads the requested `BACKTEST_*` environment configuration,
+  aggregates sub-hourly day-ahead price rows to hourly average EUR/MWh, joins
+  rows by price area and hourly UTC timestamp, skips unjoinable or incomplete
+  rows without inventing values, calculates renewable share and deterministic
+  risk scores from transparent price/renewable rules, groups consecutive
+  medium/high hours into risk windows, and prints per-area summaries with
+  skipped counts and top reason codes. Added mocked tests for hourly price
+  aggregation, joins, renewable-share calculation, low/medium/high scoring,
+  risk-window grouping, skipped unjoinable rows, missing optional values,
+  no customer-specific savings, dry-run no-write behavior, and safety notes.
+  Updated README and backtest/model-card docs. This changed scripts/docs/tests
+  only and added no frontend app code, dashboard UI, backend API behavior,
+  database schema, migrations, auth, Azure, weather/maps, fake data,
+  customer-specific savings, control, dispatch, activation, or asset
+  integration.
 - Added `scripts/public_surplus_risk_backtest_input.py`, a
   backend/script-only dry-run public surplus-risk backtest input foundation for
   DK1/DK2 using Energi Data Service `DayAheadPrices` and
