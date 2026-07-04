@@ -36,6 +36,19 @@ non-EDS external APIs, and does not print environment variables or secrets. The
 request delay defaults to `SURPLUS_SOURCE_CHECK_REQUEST_DELAY_SECONDS` when set,
 otherwise `1.0` second.
 
+The first public surplus-risk input foundation can be prepared with:
+
+```bash
+BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python3 scripts/public_surplus_risk_backtest_input.py
+```
+
+This script fetches only the required historical v1 sources,
+`DayAheadPrices` and `ProductionConsumptionSettlement`, for DK1/DK2. It
+normalizes public market/system-level rows for later scoring, reports missing
+optional fields as warnings, writes no files or database records by default,
+and does not calculate final surplus-risk scores or customer-specific savings.
+Full scoring comes in the next step.
+
 ## Candidate Sources
 
 | Source | Purpose | Expected key fields | DK1/DK2 or bidding-zone support | Timestamp field | Area field | Classification | Known limitation / validation needed |
@@ -54,6 +67,11 @@ A first public surplus-risk v1 backtest should require:
 - `DayAheadPrices` for DK1/DK2 price opportunity context.
 - `ProductionConsumptionSettlement` for historical demand, production, wind,
   solar, and hourly settlement context.
+- The input foundation script normalizes these sources into `timestamp_utc`,
+  `price_area`, `day_ahead_price_eur_per_mwh`, `gross_consumption_mwh`,
+  `renewable_generation_mwh`, `wind_generation_mwh`, `solar_generation_mwh`,
+  `production_total_mwh` where safely derivable, and optional exchange fields
+  when available.
 
 Optional later inputs:
 

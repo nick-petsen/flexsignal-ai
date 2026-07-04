@@ -119,6 +119,27 @@ Data Service, writes no files, writes no database records, and does not
 calculate customer-specific savings. Weather/DMI remains later work and is not
 part of this mapping.
 
+Manual public surplus-risk backtest input foundation:
+
+```bash
+BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python3 scripts/public_surplus_risk_backtest_input.py
+```
+
+The script prepares a backend/script-only public surplus-risk backtest input
+foundation for DK1/DK2 using Energi Data Service `DayAheadPrices` and
+`ProductionConsumptionSettlement` from `2026-01-01` to `now` by default. It
+normalizes public market/system-level rows into timestamped price,
+consumption, renewable generation, wind, solar, production-total-when-safe,
+and optional exchange fields. It does not calculate final surplus-risk scores,
+customer-specific savings, revenue, profit, dispatch, activation, or control.
+
+The script is dry-run/read-only by default, writes no files, writes no database
+records, calls no non-EDS APIs, chunks longer EDS ranges, retries EDS HTTP 429
+and transient 5xx responses, and prints only a summary of period, price areas,
+datasets requested, record counts, normalized row counts, dataset timestamp
+ranges, missing optional field warnings, source, dry-run status, and safety
+note. Full surplus-risk scoring comes in the next step.
+
 ## Public Market Backtest Snapshot
 
 Snapshot v0 documents the first observed public DK1/DK2 market
