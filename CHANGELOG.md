@@ -2,6 +2,27 @@
 
 ## v0.1.0 - TODO
 
+- Added a docs-only public surplus-risk backtest snapshot v1 to `README.md`,
+  `docs/BACKTEST_RESULTS.md`, and `docs/MODEL_CARD.md`. The snapshot records
+  observed dry-run Energi Data Service `DayAheadPrices` and
+  `ProductionConsumptionSettlement` results for `2026-01-01` to `now`:
+  DK1 `4,208` joined hours, `233` skipped rows, `1,663` medium-risk hours,
+  `174` high-risk hours, `129` risk windows, highest risk score `100`,
+  `132` negative-price hours, `479` low-price hours, average renewable share
+  `0.688094`, and max renewable share `1.922448`; DK2 `4,208` joined hours,
+  `233` skipped rows, `288` medium-risk hours, `2` high-risk hours, `72` risk
+  windows, highest risk score `85`, `78` negative-price hours, `491`
+  low-price hours, average renewable share `0.38228`, and max renewable share
+  `1.085669`. The documentation states that the system identified historical
+  public DK1/DK2 surplus-risk windows using market price, consumption, and
+  renewable production context. It also states that the result is not
+  customer-specific savings, site revenue, or site profit; uses no customer
+  load, asset, tariff, or operational data; and adds no automatic control,
+  dispatch, activation, or asset integration. This changed documentation only
+  and added no frontend app code, dashboard UI, backend API behavior, tests,
+  database schema, migrations, auth, Azure, weather/maps, fake data,
+  customer-specific savings, control, dispatch, activation, or asset
+  integration.
 - Added `scripts/public_surplus_risk_backtest.py`, a
   backend/script-only dry-run public surplus-risk backtest engine v1 for DK1
   and DK2 using only Energi Data Service `DayAheadPrices` and
