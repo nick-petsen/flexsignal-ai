@@ -140,6 +140,20 @@ type CockpitKpi = {
   tone?: "neutral" | "good" | "warning" | "danger";
 };
 
+type PublicBacktestSnapshotArea = {
+  area: PriceArea;
+  joinedHours: number;
+  skippedRows: number;
+  mediumRiskHours: number;
+  highRiskHours: number;
+  riskWindows: number;
+  highestRiskScore: number;
+  negativePriceHours: number;
+  lowPriceHours: number;
+  averageRenewableShare: string;
+  maxRenewableShare: string;
+};
+
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
 const forecastPreviewNumericFields: (keyof ForecastPreviewRow)[] = [
   "price_dkk_per_mwh",
@@ -202,6 +216,35 @@ const powerBalanceColumns: Column<PowerBalanceRow>[] = [
   { key: "wind_onshore_mw", label: "Wind onshore MW" },
   { key: "wind_offshore_mw", label: "Wind offshore MW" },
   { key: "solar_mw", label: "Solar MW" }
+];
+
+const publicBacktestSnapshotAreas: PublicBacktestSnapshotArea[] = [
+  {
+    area: "DK1",
+    joinedHours: 4208,
+    skippedRows: 233,
+    mediumRiskHours: 1663,
+    highRiskHours: 174,
+    riskWindows: 129,
+    highestRiskScore: 100,
+    negativePriceHours: 132,
+    lowPriceHours: 479,
+    averageRenewableShare: "68.8%",
+    maxRenewableShare: "192.2%"
+  },
+  {
+    area: "DK2",
+    joinedHours: 4208,
+    skippedRows: 233,
+    mediumRiskHours: 288,
+    highRiskHours: 2,
+    riskWindows: 72,
+    highestRiskScore: 85,
+    negativePriceHours: 78,
+    lowPriceHours: 491,
+    averageRenewableShare: "38.2%",
+    maxRenewableShare: "108.6%"
+  }
 ];
 
 function EnergyCard<Row extends { source_record_id: string }>({
@@ -1763,6 +1806,140 @@ function ForecastPreviewCard({
         )}
       </div>
     </section>
+  );
+}
+
+function PublicBacktestSnapshot() {
+  return (
+    <section
+      className="public-backtest"
+      aria-labelledby="public-backtest-title"
+    >
+      <div className="public-backtest__header">
+        <div>
+          <p className="eyebrow">Public surplus-risk proof-of-work</p>
+          <h2 id="public-backtest-title">
+            Identified historical DK1/DK2 risk windows
+          </h2>
+          <p>
+            Documented verified public backtest snapshot from Energi Data
+            Service DayAheadPrices and ProductionConsumptionSettlement data.
+            Not customer-specific savings.
+          </p>
+        </div>
+        <span className="status">Read-only snapshot</span>
+      </div>
+
+      <dl className="public-backtest__meta" aria-label="Snapshot metadata">
+        <div>
+          <dt>Period</dt>
+          <dd>2026-01-01 to now</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>
+            Energi Data Service DayAheadPrices +
+            ProductionConsumptionSettlement
+          </dd>
+        </div>
+        <div>
+          <dt>dry_run</dt>
+          <dd>true</dd>
+        </div>
+        <div>
+          <dt>file_written</dt>
+          <dd>false</dd>
+        </div>
+        <div>
+          <dt>database_write_performed</dt>
+          <dd>false</dd>
+        </div>
+      </dl>
+
+      <div className="public-backtest__cards">
+        {publicBacktestSnapshotAreas.map((snapshot) => (
+          <PublicBacktestSnapshotCard
+            key={snapshot.area}
+            snapshot={snapshot}
+          />
+        ))}
+      </div>
+
+      <div className="public-backtest__explanation">
+        <section>
+          <h3>Interpretation</h3>
+          <p>
+            The result shows that the system can identify historical
+            surplus-risk windows using public market, consumption, and
+            renewable production data.
+          </p>
+        </section>
+        <section>
+          <h3>Limitations</h3>
+          <ul className="plain-list">
+            <li>Public market/system-level only.</li>
+            <li>Not customer-specific savings.</li>
+            <li>No customer load/asset/tariff data.</li>
+            <li>Read-only decision support.</li>
+            <li>No automatic control, dispatch, or activation.</li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function PublicBacktestSnapshotCard({
+  snapshot
+}: {
+  snapshot: PublicBacktestSnapshotArea;
+}) {
+  return (
+    <article className="public-backtest-card">
+      <div className="public-backtest-card__header">
+        <div>
+          <span>{snapshot.area}</span>
+          <strong>{formatNumber(snapshot.riskWindows)}</strong>
+        </div>
+        <p>Risk windows</p>
+      </div>
+      <dl className="public-backtest-card__metrics">
+        <div>
+          <dt>Joined hours</dt>
+          <dd>{formatNumber(snapshot.joinedHours)}</dd>
+        </div>
+        <div>
+          <dt>Skipped rows</dt>
+          <dd>{formatNumber(snapshot.skippedRows)}</dd>
+        </div>
+        <div>
+          <dt>Medium-risk hours</dt>
+          <dd>{formatNumber(snapshot.mediumRiskHours)}</dd>
+        </div>
+        <div>
+          <dt>High-risk hours</dt>
+          <dd>{formatNumber(snapshot.highRiskHours)}</dd>
+        </div>
+        <div>
+          <dt>Highest score</dt>
+          <dd>{formatNumber(snapshot.highestRiskScore)}</dd>
+        </div>
+        <div>
+          <dt>Negative price hours</dt>
+          <dd>{formatNumber(snapshot.negativePriceHours)}</dd>
+        </div>
+        <div>
+          <dt>Low price hours</dt>
+          <dd>{formatNumber(snapshot.lowPriceHours)}</dd>
+        </div>
+        <div>
+          <dt>Avg / max renewable share</dt>
+          <dd>
+            {snapshot.averageRenewableShare} / {snapshot.maxRenewableShare}
+          </dd>
+        </div>
+      </dl>
+    </article>
   );
 }
 
@@ -3714,6 +3891,7 @@ export default function DashboardPage() {
               title="Report previews and PDF export"
               description="Manual report summary, Markdown, PDF dry-run, and unaudited PDF download flows. No files are written by the frontend and no live external data APIs are called."
             />
+            <PublicBacktestSnapshot />
             <div className="summary summary--two">{reportCards}</div>
           </>
         );
