@@ -138,7 +138,37 @@ records, calls no non-EDS APIs, chunks longer EDS ranges, retries EDS HTTP 429
 and transient 5xx responses, and prints only a summary of period, price areas,
 datasets requested, record counts, normalized row counts, dataset timestamp
 ranges, missing optional field warnings, source, dry-run status, and safety
-note. Full surplus-risk scoring comes in the next step.
+note. The separate public surplus-risk backtest engine handles deterministic
+scoring and risk-window grouping.
+
+Manual public surplus-risk backtest v1:
+
+```bash
+BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_surplus_risk_backtest.py
+```
+
+The script runs a backend/script-only public DK1/DK2 surplus-risk backtest v1
+using only Energi Data Service `DayAheadPrices` and
+`ProductionConsumptionSettlement` from `2026-01-01` to `now` by default. It
+reuses the public surplus-risk input foundation, aggregates any sub-hourly
+day-ahead price rows to hourly average EUR/MWh before joining, pairs records by
+price area and hourly UTC timestamp, skips unjoinable or incomplete rows
+without inventing values, and reports skipped counts.
+
+The deterministic v1 score uses transparent rules only: negative prices,
+prices at or below `BACKTEST_LOW_PRICE_THRESHOLD_EUR_PER_MWH` (default `25`),
+renewable share at or above
+`BACKTEST_RENEWABLE_SHARE_MEDIUM_THRESHOLD` (default `0.65`) or
+`BACKTEST_RENEWABLE_SHARE_HIGH_THRESHOLD` (default `0.80`), and renewable
+generation above gross consumption. Consecutive medium/high hourly rows are
+grouped into risk windows per price area.
+
+The script is dry-run/read-only by default, writes no files, writes no database
+records, calls no non-EDS APIs, uses no ML or LLM, and prints a readable
+summary. This is public market/system-level backtesting only, not
+customer-specific savings. Customer-specific results require customer load,
+asset, tariff, and operational data. It remains read-only decision support with
+no automatic control, dispatch, or activation.
 
 ## Public Market Backtest Snapshot
 
