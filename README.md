@@ -56,6 +56,28 @@ asset integration. It exits non-zero if the backend is unreachable, the
 readiness endpoint is missing, required read-only safety flags are not true,
 or either dashboard summary does not return safe JSON.
 
+Manual public market backtest input preview:
+
+```bash
+BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_market_backtest_input.py
+```
+
+The script prepares a backend/script-only public market input foundation for
+DK1/DK2 using Energi Data Service `DayAheadPrices` from `2026-01-01` to `now`
+by default. It is dry-run/read-only by default, writes no files, writes no
+database records, calls no non-EDS APIs, resolves `BACKTEST_END_DATE=now` to
+an Energi Data Service-compatible Danish-local `YYYY-MM-DDTHH:MM` timestamp,
+splits longer ranges into bounded chunks, waits
+`BACKTEST_EDS_REQUEST_DELAY_SECONDS` seconds between EDS requests by default
+(`1.0`), and retries EDS HTTP 429/transient 5xx responses up to
+`BACKTEST_EDS_MAX_RETRIES` times by default (`3`). If EDS returns
+`Retry-After`, the script respects it. It prints only a short summary of the
+period, price areas, requested datasets, record counts, timestamp range,
+dry-run mode, source, and safety note. It uses public market/system-level data
+only and does not calculate customer-specific savings. Customer-specific
+savings require customer load, asset, tariff, and operational data that is not
+part of this v0.1 public input layer.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or
