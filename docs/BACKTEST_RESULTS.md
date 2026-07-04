@@ -20,6 +20,46 @@ The current backtest work is a read-only technical validation layer for
 paired with `nearest_timestamp_v0_1`, scored, and summarized. It does not
 validate commercial performance or operational readiness.
 
+## Public Market Backtest Snapshot
+
+Snapshot v0 documents the first observed public DK1/DK2 market
+price-opportunity backtest result as a shareable proof-of-work artifact.
+
+This snapshot uses public DK1/DK2 market/system-level data only. It is not
+customer-specific savings, revenue, profit, site-specific value, trading
+advice, dispatch, activation, or control. v0 uses Energi Data Service
+`DayAheadPrices` only, not full surplus-production data.
+
+Observed dry-run configuration:
+
+- Period: `2026-01-01` to `now`
+- Source: Energi Data Service `DayAheadPrices`
+- `dry_run`: `true`
+
+Observed dry-run results:
+
+| Area | Records | Negative price records | Low price records | Opportunity signal |
+| --- | ---: | ---: | ---: | ---: |
+| DK1 | 17,756 | 601 | 2,205 | 94.32 EUR/MWh |
+| DK2 | 17,756 | 325 | 2,234 | 93.28 EUR/MWh |
+
+Commercial interpretation:
+
+The system identified historical price-opportunity windows that could be
+relevant for flexible consumption, production planning, or flexibility
+screening.
+
+Limitations:
+
+- No customer load data.
+- No asset behavior.
+- No tariffs, taxes, or fees.
+- No production, consumption, or renewables backtest yet.
+- No automatic control.
+
+Next step: a customer pilot requires customer load, asset, tariff, and
+operational data.
+
 Public DK1/DK2 market backtest input foundation:
 
 - `scripts/public_market_backtest_input.py` prepares a backend/script-only
