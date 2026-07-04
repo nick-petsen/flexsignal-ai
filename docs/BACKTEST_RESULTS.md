@@ -20,6 +20,30 @@ The current backtest work is a read-only technical validation layer for
 paired with `nearest_timestamp_v0_1`, scored, and summarized. It does not
 validate commercial performance or operational readiness.
 
+Public DK1/DK2 market backtest input foundation:
+
+- `scripts/public_market_backtest_input.py` prepares a backend/script-only
+  public market input preview using Energi Data Service `DayAheadPrices` for
+  DK1/DK2 from `2026-01-01` to `now` by default.
+- Manual usage:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_market_backtest_input.py`.
+- The script is dry-run/read-only by default, writes no files, writes no
+  database records, calls no non-EDS external APIs, resolves
+  `BACKTEST_END_DATE=now` to an EDS-compatible Danish-local
+  `YYYY-MM-DDTHH:MM` timestamp, chunks longer date ranges, de-duplicates
+  normalized rows across chunks by source record id, waits
+  `BACKTEST_EDS_REQUEST_DELAY_SECONDS` seconds between EDS requests by default
+  (`1.0`), retries HTTP 429/transient 5xx responses up to
+  `BACKTEST_EDS_MAX_RETRIES` times by default (`3`), respects `Retry-After`,
+  and uses existing EDS URL validation and day-ahead price normalization.
+- The summary reports the period, price areas, datasets requested, record
+  counts, earliest and latest timestamps, dry-run mode, `Energi Data Service`
+  as source, and the note that this is public market/system-level data only.
+- This input layer does not calculate customer-specific savings, revenue,
+  profit, trading recommendations, control recommendations, dispatch, or
+  activation. Customer-specific savings require customer load, asset, tariff,
+  and operational data that is outside this public v0.1 foundation.
+
 Latest documented local DB backtest results after the confirmed manual EDS
 historical batch write:
 

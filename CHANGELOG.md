@@ -2,6 +2,29 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/public_market_backtest_input.py`, a backend/script-only
+  dry-run public market input preview for DK1/DK2 backtest preparation. It
+  reads `BACKTEST_START_DATE`, `BACKTEST_END_DATE`, `BACKTEST_PRICE_AREAS`,
+  and `BACKTEST_DRY_RUN`; defaults to `2026-01-01`, `now`, `DK1,DK2`, and
+  dry-run mode; fetches only Energi Data Service `DayAheadPrices`; normalizes
+  records through the existing EDS normalizer; resolves
+  `BACKTEST_END_DATE=now` to an EDS-compatible Danish-local
+  `YYYY-MM-DDTHH:MM` timestamp before building requests; chunks longer date
+  ranges; de-duplicates normalized rows across chunks by source record id;
+  waits `BACKTEST_EDS_REQUEST_DELAY_SECONDS` seconds between EDS requests
+  by default (`1.0`); retries EDS HTTP 429/transient 5xx responses up to
+  `BACKTEST_EDS_MAX_RETRIES` times by default (`3`); respects `Retry-After`;
+  writes no files or database rows; calls no non-EDS APIs; and prints a short
+  summary that states the data is public market/system-level only and not
+  customer-specific savings. Added mocked backend tests for config defaults,
+  invalid price areas, dry-run no-write behavior, normalization, missing
+  records, summary wording, invalid JSON handling, `now` resolution, chunking,
+  duplicate suppression, default request parameter safety, 429 retry handling,
+  exhausted retry failure, and inter-chunk request delay. This changed
+  scripts/docs/tests only and added no frontend app code, dashboard UI,
+  database schema, migrations, auth, Azure, weather/maps, fake data,
+  customer-specific savings, control, dispatch, activation, or asset
+  integration.
 - Added `scripts/staging_smoke.py`, a script-only local/staging backend smoke
   check for MVP readiness. Usage:
   `BACKEND_BASE_URL=http://127.0.0.1:8000 python scripts/staging_smoke.py`.
