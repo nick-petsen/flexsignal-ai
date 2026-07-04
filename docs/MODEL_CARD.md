@@ -112,6 +112,34 @@ revenue, profit, tariff, tax, fee, load, asset behavior, dispatch, activation,
 or control. Customer-specific results require customer load, asset, tariff, and
 operational data outside this v0.1 public backtest.
 
+## Public Surplus-Risk Backtest Snapshot v1
+
+The first observed public DK1/DK2 surplus-risk proof-of-work result was run as
+a dry-run/read-only backtest for `2026-01-01` to `now` using Energi Data
+Service `DayAheadPrices` and `ProductionConsumptionSettlement`. The dry run
+wrote no files and performed no database writes.
+
+The system identified historical public DK1/DK2 surplus-risk windows using
+market price, consumption, and renewable production context.
+
+| Area | Joined hours | Skipped rows | Medium-risk hours | High-risk hours | Risk windows | Highest risk score | Negative price hours | Low price hours | Avg renewable share | Max renewable share |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| DK1 | 4,208 | 233 | 1,663 | 174 | 129 | 100 | 132 | 479 | 0.688094 | 1.922448 |
+| DK2 | 4,208 | 233 | 288 | 2 | 72 | 85 | 78 | 491 | 0.38228 | 1.085669 |
+
+What this means: the deterministic v1 backtest can turn public Danish market,
+consumption, and renewable production data into historical surplus-risk
+windows for manual review.
+
+What this does not prove: it is not customer-specific savings, site revenue,
+or site profit; it uses no customer load, asset, tariff, or operational data;
+and it does not add automatic control, dispatch, activation, or asset
+integration.
+
+Next customer pilot step: connect customer load, asset, tariff, and
+operational data; run a read-only pilot; and compare the public signal against
+customer-specific operational reality.
+
 The frontend spot price and power balance trend charts are not part of
 `rule-engine-v0` and do not change scoring, forecasting, backtest pairing,
 thresholds, input composition, or predictive-performance claims. They are

@@ -201,6 +201,42 @@ no production/consumption/renewables backtest yet, and no automatic control.
 Next step: a customer pilot requires customer load, asset, tariff, and
 operational data.
 
+## Public Surplus-Risk Backtest Snapshot v1
+
+Snapshot v1 documents the first observed public DK1/DK2 surplus-risk
+proof-of-work result in a compact format for Oliver, investor, and customer
+conversations. The system identified historical public DK1/DK2 surplus-risk
+windows using market price, consumption, and renewable production context.
+
+Observed dry-run configuration:
+
+- Period: `2026-01-01` to `now`
+- Source: Energi Data Service `DayAheadPrices` and
+  `ProductionConsumptionSettlement`
+- `dry_run`: `true`
+- `file_written`: `false`
+- `database_write_performed`: `false`
+
+Observed dry-run results:
+
+| Area | Joined hours | Skipped rows | Medium-risk hours | High-risk hours | Risk windows | Highest risk score | Negative price hours | Low price hours | Avg renewable share | Max renewable share |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| DK1 | 4,208 | 233 | 1,663 | 174 | 129 | 100 | 132 | 479 | 0.688094 | 1.922448 |
+| DK2 | 4,208 | 233 | 288 | 2 | 72 | 85 | 78 | 491 | 0.38228 | 1.085669 |
+
+What this means: the public v1 backtest can combine Danish day-ahead prices,
+consumption, and renewable production context into deterministic historical
+surplus-risk windows for DK1 and DK2. It is useful evidence that the read-only
+signal can find periods worth discussing in a customer pilot.
+
+What this does not prove: it is not customer-specific savings, site revenue, or
+site profit. It uses no customer load, asset, tariff, or operational data. It
+does not add automatic control, dispatch, activation, or asset integration.
+
+Next customer pilot step: connect customer load, asset, tariff, and
+operational data; run a read-only pilot; and compare the public signal against
+customer-specific operational reality.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or
