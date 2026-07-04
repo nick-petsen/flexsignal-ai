@@ -2,6 +2,30 @@
 
 ## v0.1.0 - TODO
 
+- Added public surplus-risk data source mapping v0 in `docs/DATA_SOURCES.md`
+  and linked it from `README.md` and root `DATA_SOURCES.md`. The mapping
+  documents candidate Energi Data Service sources beyond `DayAheadPrices` for a
+  future public surplus-risk backtest: `ProductionConsumptionSettlement`,
+  `ElectricityProdex5MinRealtime`, optional `ElectricityBalanceNonv`, optional
+  exchange/import/export fields, and later out-of-scope DMI/weather. It lists
+  purpose, expected fields, DK1/DK2 support, timestamp and area fields,
+  required/optional/near-live status, and validation gaps without claiming a
+  full surplus-production backtest or customer-specific savings. The required
+  historical surplus-risk v1 sources are `DayAheadPrices` and
+  `ProductionConsumptionSettlement`; `ElectricityProdex5MinRealtime` is
+  classified as `near_live_later`, and `ElectricityBalanceNonv` is classified
+  as `optional_later`. Added
+  `scripts/public_surplus_data_source_check.py`, a dry-run/read-only EDS-only
+  checker that validates candidate dataset availability and sample fields with
+  small sequential `GET` requests, uses
+  `SURPLUS_SOURCE_CHECK_REQUEST_DELAY_SECONDS` as the optional delay override
+  with a `1.0` second default, treats optional/near-live HTTP 429 responses as
+  warnings rather than overall failures, writes no files, writes no database
+  records, calls no non-EDS APIs, and prints no raw environment values or
+  secrets. This changed docs/scripts only and added no frontend app code,
+  dashboard UI, backend API behavior, database schema, migrations, auth, Azure,
+  weather/maps, fake data, customer-specific savings, control, dispatch,
+  activation, or asset integration.
 - Added a docs-only public market backtest snapshot v0 to `README.md` and
   `docs/BACKTEST_RESULTS.md`. The snapshot records observed dry-run
   Energi Data Service `DayAheadPrices` results for `2026-01-01` to `now`:

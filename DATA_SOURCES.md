@@ -23,6 +23,15 @@ Update frequency: TODO, depends on selected datasets.
 
 Candidate endpoints can be manually validated with `scripts/validate_data_sources.py` before ingestion code is implemented.
 
+Public surplus-risk source mapping v0 is documented in
+[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). It maps candidate Energi Data
+Service datasets and fields for the next public surplus-risk backtest step,
+without implementing forecasting, database writes, customer-specific savings,
+control, dispatch, activation, or asset integration. The required historical
+surplus-risk v1 sources are `DayAheadPrices` and
+`ProductionConsumptionSettlement`; `ElectricityProdex5MinRealtime` is
+near-live later, and `ElectricityBalanceNonv` is optional later.
+
 Manual validation results are documented in [docs/DATA_SOURCE_VALIDATION.md](docs/DATA_SOURCE_VALIDATION.md).
 
 Validated source-to-schema field mappings are documented in [docs/DATA_FIELD_MAPPING.md](docs/DATA_FIELD_MAPPING.md).

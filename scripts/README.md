@@ -6,6 +6,31 @@ The script performs one read-only HTTP `GET` request per run. It does not store 
 
 Verified datasets and endpoints must be documented before ingestion is implemented. Any future polling frequency must respect the source update frequency and avoid unnecessary requests.
 
+## Public Surplus-Risk Source Check
+
+`public_surplus_data_source_check.py` is a dry-run/read-only Energi Data Service
+checker for the public surplus-risk data source mapping in
+`docs/DATA_SOURCES.md`.
+
+It performs small sequential EDS `GET` requests for candidate datasets and
+prints availability plus sample-field summaries. It writes no files, writes no
+database records, calls no non-EDS APIs, does not read or print environment
+variables, does not calculate customer-specific savings, and does not add
+control, dispatch, activation, or asset integration.
+
+The required historical surplus-risk v1 datasets are `DayAheadPrices` and
+`ProductionConsumptionSettlement`. `ElectricityProdex5MinRealtime` is
+`near_live_later`, and `ElectricityBalanceNonv` is `optional_later`. HTTP 429 or
+other validation gaps on optional/near-live datasets are reported as warnings
+and do not fail the overall check when required datasets pass.
+
+The delay between EDS calls defaults to
+`SURPLUS_SOURCE_CHECK_REQUEST_DELAY_SECONDS` when set, otherwise `1.0` second.
+
+```bash
+python3 scripts/public_surplus_data_source_check.py
+```
+
 ## Examples
 
 ```bash
