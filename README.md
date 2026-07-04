@@ -102,6 +102,37 @@ operational data. Full surplus-risk backtesting requires adding production,
 consumption, renewables, and other relevant data sources later; v0 uses
 spot/day-ahead prices only, not full surplus-production data.
 
+## Public Market Backtest Snapshot
+
+Snapshot v0 documents the first observed public DK1/DK2 market
+price-opportunity backtest result as shareable proof of work. It uses public
+DK1/DK2 market/system-level data only and is not customer-specific savings.
+v0 uses Energi Data Service `DayAheadPrices` only, not full
+surplus-production data.
+
+Observed dry-run configuration:
+
+- Period: `2026-01-01` to `now`
+- Source: Energi Data Service `DayAheadPrices`
+- `dry_run`: `true`
+
+Observed dry-run results:
+
+| Area | Records | Negative price records | Low price records | Opportunity signal |
+| --- | ---: | ---: | ---: | ---: |
+| DK1 | 17,756 | 601 | 2,205 | 94.32 EUR/MWh |
+| DK2 | 17,756 | 325 | 2,234 | 93.28 EUR/MWh |
+
+Commercial interpretation: The system identified historical
+price-opportunity windows that could be relevant for flexible consumption,
+production planning, or flexibility screening.
+
+Limitations: no customer load data, no asset behavior, no tariffs/taxes/fees,
+no production/consumption/renewables backtest yet, and no automatic control.
+
+Next step: a customer pilot requires customer load, asset, tariff, and
+operational data.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or

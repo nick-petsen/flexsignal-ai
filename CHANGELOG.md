@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added a docs-only public market backtest snapshot v0 to `README.md` and
+  `docs/BACKTEST_RESULTS.md`. The snapshot records observed dry-run
+  Energi Data Service `DayAheadPrices` results for `2026-01-01` to `now`:
+  DK1 `17,756` records, `601` negative-price records, `2,205` low-price
+  records, and `94.32 EUR/MWh` opportunity signal; DK2 `17,756` records,
+  `325` negative-price records, `2,234` low-price records, and
+  `93.28 EUR/MWh` opportunity signal. The documentation states this is
+  public DK1/DK2 market/system-level data only, not customer-specific
+  savings, and that v0 uses DayAheadPrices only, not full surplus-production
+  data. It also documents the commercial interpretation, limitations, and
+  the next step that a customer pilot requires customer load, asset, tariff,
+  and operational data. This changed documentation only and added no
+  frontend app code, dashboard UI, backend API behavior, tests, database
+  schema, migrations, auth, Azure, weather/maps, fake data, customer-specific
+  savings, control, dispatch, activation, or asset integration.
 - Added `scripts/public_market_backtest.py`, a backend/script-only dry-run
   public DK1/DK2 market price-opportunity backtest using only Energi Data
   Service `DayAheadPrices`. Usage:
