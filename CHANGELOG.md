@@ -2,6 +2,31 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/customer_pilot_signal_match.py`, a scripts/tests/docs-only
+  local read-only signal match preview for comparing validated customer pilot
+  CSV rows with the canonical public surplus-risk snapshot at
+  `frontend/src/data/public-surplus-risk-backtest-snapshot.json`. It reads
+  `CUSTOMER_PILOT_INPUT_PATH`,
+  `PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`,
+  `CUSTOMER_PILOT_PRICE_AREA`, `CUSTOMER_PILOT_MIN_MATCH_ROWS`, and
+  `CUSTOMER_PILOT_DRY_RUN`, accepts CSV only for v0, writes no files, writes
+  no database records, calls no external APIs, and prints a redacted JSON
+  summary with matched DK1/DK2 public risk windows, customer row counts, data
+  availability flags, optional availability and operational-note counts,
+  warnings, and the read-only safety boundary. Added mocked local-only tests
+  in `backend/tests/test_customer_pilot_signal_match.py` for DK1 overlap, DK2
+  overlap, no overlap, missing required customer columns, invalid snapshot
+  path, DK1/DK2 mismatch behavior, availability counts, limited customer data
+  warnings, no file/db/external write behavior, and safety boundary text.
+  Updated README and pilot docs with usage and the pilot flow: validate the
+  customer intake CSV, match customer data to public risk windows, run human
+  review, and only later estimate customer-specific potential if validated
+  data supports it. This changed scripts/tests/docs only and added no
+  frontend app code, backend API behavior, database schema, migrations, auth,
+  Azure, weather/maps, fake customer data beyond tiny test fixtures,
+  customer-specific savings calculation, profit/revenue calculation,
+  financial advice, control, dispatch, activation, live control signals, or
+  asset integration.
 - Added `scripts/customer_pilot_intake_validate.py`, a scripts/tests/docs-only
   local CSV validator for customer pilot intake files before pilot/backtest
   analysis. It reads `CUSTOMER_PILOT_INPUT_PATH`,

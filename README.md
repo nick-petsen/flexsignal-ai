@@ -87,6 +87,28 @@ secret-like column names. This is validation only, not customer-specific
 savings, revenue, or profit calculation. Customer data and pilot files must
 not be committed to git.
 
+Customer pilot signal match preview:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_signal_match.py
+```
+
+The signal match preview is a local read-only comparison between a validated
+customer pilot CSV and the canonical public surplus-risk snapshot at
+`frontend/src/data/public-surplus-risk-backtest-snapshot.json`. It reads
+`CUSTOMER_PILOT_INPUT_PATH`, optional
+`PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`, optional
+`CUSTOMER_PILOT_PRICE_AREA`, optional `CUSTOMER_PILOT_MIN_MATCH_ROWS`
+(default `1`), and optional `CUSTOMER_PILOT_DRY_RUN` (default `true`).
+
+For v0 it accepts CSV only, writes no files, writes no database records, calls
+no external APIs, and prints a redacted JSON summary with matched public risk
+windows, row counts, customer data availability flags, warnings, and the
+read-only safety boundary. This is signal matching only, not
+customer-specific savings, profit, revenue, or financial advice. It adds no
+control, dispatch, activation, live control signals, or asset integration.
+Customer data and pilot CSV files must not be committed to git.
+
 Manual public market backtest input preview:
 
 ```bash
