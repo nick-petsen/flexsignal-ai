@@ -437,6 +437,8 @@ const publicRiskReasonLabels: Record<string, string> = {
 
 const PUBLIC_PROOF_OF_WORK_REPORT_FILENAME =
   "public-surplus-risk-proof-of-work.md";
+const PUBLIC_PROOF_OF_WORK_PRINTABLE_REPORT_FILENAME =
+  "public-surplus-risk-proof-of-work.html";
 
 function EnergyCard<Row extends { source_record_id: string }>({
   title,
@@ -2064,9 +2066,16 @@ function PublicBacktestSnapshot() {
         >
           Download proof-of-work report
         </button>
+        <button
+          className="load-button"
+          type="button"
+          onClick={openPublicProofOfWorkPrintableReport}
+        >
+          Open printable report
+        </button>
         <p>
-          Downloads a static verified public backtest report. No backend call
-          is made.
+          Opens or downloads a static verified public backtest report. No
+          backend call is made.
         </p>
       </div>
 
@@ -2180,6 +2189,562 @@ function downloadPublicProofOfWorkReport() {
   });
 
   downloadBrowserBlob(blob, PUBLIC_PROOF_OF_WORK_REPORT_FILENAME);
+}
+
+function buildPublicProofOfWorkPrintableReportHtml(): string {
+  const summaryRows = publicBacktestSnapshotAreas
+    .map(
+      (snapshot) => `
+        <tr>
+          <td><strong>${escapeHtml(snapshot.area)}</strong></td>
+          <td>${escapeHtml(formatNumber(snapshot.joinedHours))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.skippedRows))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.mediumRiskHours))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.highRiskHours))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.riskWindows))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.highestRiskScore))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.negativePriceHours))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.lowPriceHours))}</td>
+          <td>${escapeHtml(snapshot.averageRenewableShare)}</td>
+          <td>${escapeHtml(snapshot.maxRenewableShare)}</td>
+        </tr>`
+    )
+    .join("");
+  const windowRows = publicRiskWindowSnapshots
+    .map((snapshot) => {
+      const reasons = snapshot.reasons
+        .map((reason) => publicRiskReasonLabels[reason] ?? reason)
+        .join(", ");
+
+      return `
+        <tr>
+          <td><strong>${escapeHtml(snapshot.area)}</strong></td>
+          <td>${escapeHtml(formatRiskWindowTimestamp(snapshot.start))}</td>
+          <td>${escapeHtml(formatRiskWindowTimestamp(snapshot.end))}</td>
+          <td>${escapeHtml(`${snapshot.durationHours}h`)}</td>
+          <td>${escapeHtml(formatNumber(snapshot.score))}</td>
+          <td>${escapeHtml(formatRiskLabel(snapshot.level))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.lowPriceHours))}</td>
+          <td>${escapeHtml(formatNumber(snapshot.negativePriceHours))}</td>
+          <td>${escapeHtml(snapshot.averageRenewableShare)}</td>
+          <td>${escapeHtml(snapshot.maxRenewableShare)}</td>
+          <td>${escapeHtml(reasons)}</td>
+        </tr>`;
+    })
+    .join("");
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Public DK1/DK2 surplus-risk proof-of-work</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #102018;
+        --muted: #526259;
+        --line: #d9e2dc;
+        --panel: #f7faf8;
+        --accent: #4f8e28;
+        --accent-deep: #275018;
+        --warn: #8a5c00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #eef4f0;
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.42;
+      }
+
+      .toolbar {
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .toolbar button {
+        min-height: 34px;
+        padding: 0 12px;
+        border: 1px solid var(--accent-deep);
+        border-radius: 6px;
+        background: var(--accent);
+        color: #fff;
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .page {
+        width: min(960px, calc(100% - 32px));
+        margin: 16px auto;
+        padding: 30px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 14px 34px rgba(16, 32, 24, 0.1);
+      }
+
+      header {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .brand {
+        color: var(--accent-deep);
+        font-size: 0.86rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: 2rem;
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0;
+      }
+
+      .meta div,
+      .metric {
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+      }
+
+      dt {
+        margin-bottom: 3px;
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      dd {
+        margin: 0;
+        font-weight: 700;
+      }
+
+      .section {
+        margin-top: 18px;
+        break-inside: avoid;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+        line-height: 1.25;
+      }
+
+      p {
+        margin: 0 0 7px;
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .metric strong {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 1.25rem;
+      }
+
+      .metric dl {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px 12px;
+        margin: 0;
+      }
+
+      table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        border: 1px solid var(--line);
+        font-size: 0.72rem;
+      }
+
+      th,
+      td {
+        padding: 5px 6px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+      }
+
+      th {
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+      }
+
+      .summary-table th:first-child,
+      .summary-table td:first-child,
+      .risk-window-table th:first-child,
+      .risk-window-table td:first-child,
+      .risk-window-table th:nth-child(4),
+      .risk-window-table td:nth-child(4),
+      .risk-window-table th:nth-child(5),
+      .risk-window-table td:nth-child(5),
+      .risk-window-table th:nth-child(6),
+      .risk-window-table td:nth-child(6) {
+        width: 7%;
+      }
+
+      .summary-table th:nth-child(2),
+      .summary-table td:nth-child(2),
+      .summary-table th:nth-child(3),
+      .summary-table td:nth-child(3),
+      .summary-table th:nth-child(4),
+      .summary-table td:nth-child(4),
+      .summary-table th:nth-child(5),
+      .summary-table td:nth-child(5),
+      .summary-table th:nth-child(6),
+      .summary-table td:nth-child(6),
+      .summary-table th:nth-child(7),
+      .summary-table td:nth-child(7),
+      .summary-table th:nth-child(8),
+      .summary-table td:nth-child(8),
+      .summary-table th:nth-child(9),
+      .summary-table td:nth-child(9) {
+        width: 8%;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      .callout {
+        padding: 10px 12px;
+        border: 1px solid #d8c38c;
+        border-radius: 6px;
+        background: #fff9e9;
+        color: var(--warn);
+        font-weight: 700;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      li + li {
+        margin-top: 3px;
+      }
+
+      footer {
+        margin-top: 20px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      @page {
+        size: A4;
+        margin: 12mm;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+          font-size: 8.8pt;
+          line-height: 1.32;
+        }
+
+        .toolbar {
+          display: none;
+        }
+
+        .page {
+          width: 100%;
+          max-width: 186mm;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+        }
+
+        header {
+          break-inside: avoid;
+        }
+
+        .section {
+          break-inside: avoid;
+        }
+
+        .table-wrap {
+          overflow: visible;
+        }
+
+        table {
+          font-size: 6.2pt;
+        }
+
+        th,
+        td {
+          padding: 2.8pt 3pt;
+        }
+
+        h1 {
+          font-size: 18pt;
+        }
+
+        h2 {
+          font-size: 10.5pt;
+          margin-bottom: 5pt;
+        }
+
+        header {
+          gap: 8pt;
+          margin-bottom: 12pt;
+          padding-bottom: 10pt;
+        }
+
+        .section {
+          margin-top: 11pt;
+        }
+
+        .metric strong {
+          font-size: 11pt;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          width: calc(100% - 20px);
+          margin: 10px auto;
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 1.65rem;
+        }
+
+        .meta,
+        .summary-grid,
+        .metric dl {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button type="button" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+    <main class="page">
+      <header>
+        <div class="brand">N&amp;O Predict</div>
+        <h1>Public DK1/DK2 surplus-risk proof-of-work</h1>
+        <dl class="meta" aria-label="Report metadata">
+          <div>
+            <dt>Period</dt>
+            <dd>2026-01-01 to now</dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd>Energi Data Service DayAheadPrices + ProductionConsumptionSettlement</dd>
+          </div>
+        </dl>
+        <div class="callout">
+          Public market/system-level only. Not customer-specific savings. Read-only decision support.
+        </div>
+      </header>
+
+      <section class="section">
+        <h2>DK1/DK2 summary metrics</h2>
+        <div class="summary-grid">
+          ${publicBacktestSnapshotAreas
+            .map(
+              (snapshot) => `
+              <article class="metric">
+                <strong>${escapeHtml(snapshot.area)}: ${escapeHtml(
+                  formatNumber(snapshot.riskWindows)
+                )} risk windows</strong>
+                <dl>
+                  <div><dt>Joined hours</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.joinedHours)
+                  )}</dd></div>
+                  <div><dt>Skipped rows</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.skippedRows)
+                  )}</dd></div>
+                  <div><dt>Medium-risk hours</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.mediumRiskHours)
+                  )}</dd></div>
+                  <div><dt>High-risk hours</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.highRiskHours)
+                  )}</dd></div>
+                  <div><dt>Highest score</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.highestRiskScore)
+                  )}</dd></div>
+                  <div><dt>Negative price hours</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.negativePriceHours)
+                  )}</dd></div>
+                  <div><dt>Low price hours</dt><dd>${escapeHtml(
+                    formatNumber(snapshot.lowPriceHours)
+                  )}</dd></div>
+                  <div><dt>Avg / max renewable share</dt><dd>${escapeHtml(
+                    snapshot.averageRenewableShare
+                  )} / ${escapeHtml(snapshot.maxRenewableShare)}</dd></div>
+                </dl>
+              </article>`
+            )
+            .join("")}
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Summary metrics table</h2>
+        <div class="table-wrap">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Joined hours</th>
+                <th>Skipped rows</th>
+                <th>Medium-risk hours</th>
+                <th>High-risk hours</th>
+                <th>Risk windows</th>
+                <th>Highest score</th>
+                <th>Negative price hours</th>
+                <th>Low price hours</th>
+                <th>Average renewable share</th>
+                <th>Max renewable share</th>
+              </tr>
+            </thead>
+            <tbody>${summaryRows}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Verified top risk windows</h2>
+        <div class="table-wrap">
+          <table class="risk-window-table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Score</th>
+                <th>Level</th>
+                <th>Low price hours</th>
+                <th>Negative price hours</th>
+                <th>Average renewable share</th>
+                <th>Max renewable share</th>
+                <th>Main reasons</th>
+              </tr>
+            </thead>
+            <tbody>${windowRows}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>What this shows</h2>
+        <p>
+          This public proof-of-work shows that N&amp;O Predict can identify historical DK1/DK2 surplus-risk windows
+          using public market price, consumption, and renewable production data. The signal highlights when a human
+          reviewer should investigate flexible demand, production planning, or other operational options.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>How to use this in a pilot</h2>
+        <p>
+          A customer pilot should compare these public risk windows with the customer's own load, assets, tariffs,
+          operating schedule, and operational constraints. The goal is to measure whether the public signal matches
+          real operational opportunities before making any commercial or operational decisions.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Important boundaries</h2>
+        <ul>
+          <li>Public market/system-level evidence only.</li>
+          <li>Not customer-specific savings.</li>
+          <li>No customer load, asset, tariff, operating schedule, or site constraint data is included.</li>
+          <li>Read-only decision support only.</li>
+          <li>No automatic control, dispatch, activation, live control signals, or asset integration.</li>
+          <li>Does not establish production readiness.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Generated fully client-side from the verified values shown in the Reports view. No backend call, polling, or autoload is used for this printable report.
+      </footer>
+    </main>
+  </body>
+</html>`;
+}
+
+function openPublicProofOfWorkPrintableReport() {
+  const html = buildPublicProofOfWorkPrintableReportHtml();
+  const blob = new Blob([html], {
+    type: "text/html;charset=utf-8"
+  });
+  const objectUrl = URL.createObjectURL(blob);
+  const reportWindow = window.open(objectUrl, "_blank", "noopener,noreferrer");
+
+  if (!reportWindow) {
+    URL.revokeObjectURL(objectUrl);
+    downloadBrowserBlob(blob, PUBLIC_PROOF_OF_WORK_PRINTABLE_REPORT_FILENAME);
+    return;
+  }
+
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&#39;";
+      default:
+        return character;
+    }
+  });
 }
 
 function PublicBacktestSnapshotCard({
