@@ -19,6 +19,13 @@ validated potential value for that specific customer.
 The pilot remains read-only decision support. It prepares analysis and
 recommendations for human review only.
 
+The customer-facing intake template is available in
+[PILOT_INTAKE_TEMPLATE.md](PILOT_INTAKE_TEMPLATE.md). A structured request
+sheet is available at
+[templates/customer_pilot_data_request.csv](templates/customer_pilot_data_request.csv).
+Use these materials after the public proof-of-work report when requesting
+customer data for a read-only pilot.
+
 ## Pilot Scope
 
 - Read-only analysis.
