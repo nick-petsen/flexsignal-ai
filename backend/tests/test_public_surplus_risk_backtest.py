@@ -133,9 +133,35 @@ def config(**overrides: object):
         "low_price_threshold_eur_per_mwh": 25.0,
         "renewable_share_medium_threshold": 0.65,
         "renewable_share_high_threshold": 0.80,
+        "top_risk_windows": 10,
+        "window_snapshot_only": False,
     }
     values.update(overrides)
     return public_surplus_risk_backtest.PublicSurplusRiskBacktestConfig(**values)
+
+
+def summary_with_windows(
+    *,
+    joined_rows: tuple = (),
+    risk_windows: tuple = (),
+    price_areas: tuple[str, ...] = ("DK1",),
+):
+    return public_surplus_risk_backtest.PublicSurplusRiskBacktestSummary(
+        period="2026-01-01 to 2026-01-02",
+        price_areas=price_areas,
+        source="Energi Data Service",
+        datasets=("DayAheadPrices", "ProductionConsumptionSettlement"),
+        low_price_threshold_eur_per_mwh=25.0,
+        renewable_share_medium_threshold=0.65,
+        renewable_share_high_threshold=0.80,
+        dry_run=True,
+        joined_rows=joined_rows,
+        risk_windows=risk_windows,
+        area_summaries=(),
+        notes=public_surplus_risk_backtest.NOTES,
+        file_written=False,
+        database_write_performed=False,
+    )
 
 
 def test_default_config_uses_requested_defaults() -> None:
@@ -152,8 +178,23 @@ def test_default_config_uses_requested_defaults() -> None:
     assert loaded.low_price_threshold_eur_per_mwh == 25.0
     assert loaded.renewable_share_medium_threshold == 0.65
     assert loaded.renewable_share_high_threshold == 0.80
+    assert loaded.top_risk_windows == 10
+    assert loaded.window_snapshot_only is False
     assert loaded.eds_request_delay_seconds == 1.0
     assert loaded.eds_max_retries == 3
+
+
+def test_window_snapshot_env_config_can_be_enabled() -> None:
+    loaded = public_surplus_risk_backtest.load_config(
+        {
+            "BACKTEST_TOP_RISK_WINDOWS": "3",
+            "BACKTEST_WINDOW_SNAPSHOT_ONLY": "true",
+        },
+        now_fn=lambda: datetime(2026, 7, 4, 12, 30, tzinfo=timezone.utc),
+    )
+
+    assert loaded.top_risk_windows == 3
+    assert loaded.window_snapshot_only is True
 
 
 def test_hourly_price_aggregation_averages_subhourly_rows() -> None:
@@ -354,6 +395,179 @@ def test_run_uses_mocked_rows_and_dry_run_does_not_write_files_or_database(
     assert summary.area_summaries[0].high_risk_hour_count == 1
     assert summary.area_summaries[0].medium_risk_hour_count == 1
     assert summary.area_summaries[0].risk_window_count == 1
+
+
+def test_top_window_snapshots_are_sorted_per_area() -> None:
+    windows = (
+        public_surplus_risk_backtest.RiskWindow(
+            "DK1",
+            "2026-01-01T03:00:00",
+            "2026-01-01T03:00:00",
+            1,
+            90,
+            "high",
+            ("low_price",),
+        ),
+        public_surplus_risk_backtest.RiskWindow(
+            "DK1",
+            "2026-01-01T05:00:00",
+            "2026-01-01T06:00:00",
+            2,
+            90,
+            "high",
+            ("low_price",),
+        ),
+        public_surplus_risk_backtest.RiskWindow(
+            "DK1",
+            "2026-01-01T04:00:00",
+            "2026-01-01T05:00:00",
+            2,
+            90,
+            "high",
+            ("negative_price",),
+        ),
+        public_surplus_risk_backtest.RiskWindow(
+            "DK1",
+            "2026-01-01T02:00:00",
+            "2026-01-01T04:00:00",
+            3,
+            70,
+            "high",
+            ("medium_renewable_share",),
+        ),
+        public_surplus_risk_backtest.RiskWindow(
+            "DK2",
+            "2026-01-01T01:00:00",
+            "2026-01-01T01:00:00",
+            1,
+            100,
+            "high",
+            ("negative_price",),
+        ),
+    )
+    summary = summary_with_windows(risk_windows=windows, price_areas=("DK1", "DK2"))
+
+    snapshots = public_surplus_risk_backtest.build_risk_window_snapshots(
+        summary,
+        top_per_price_area=3,
+    )
+
+    assert [
+        snapshot.start_timestamp_utc
+        for snapshot in snapshots
+        if snapshot.price_area == "DK1"
+    ] == [
+        "2026-01-01T04:00:00",
+        "2026-01-01T05:00:00",
+        "2026-01-01T03:00:00",
+    ]
+    assert [snapshot.price_area for snapshot in snapshots] == [
+        "DK1",
+        "DK1",
+        "DK1",
+        "DK2",
+    ]
+
+
+def test_compact_window_output_includes_timestamps_and_scores(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    summary = public_surplus_risk_backtest.run_public_surplus_risk_backtest(
+        config(),
+        fetch=payload_for_url,
+        sleep_fn=lambda seconds: None,
+    )
+
+    public_surplus_risk_backtest.print_window_snapshot(
+        summary,
+        top_per_price_area=10,
+    )
+    output = capsys.readouterr().out
+
+    assert "Public surplus-risk window snapshot v1" in output
+    assert "start_timestamp_utc: 2026-01-01T00:00:00" in output
+    assert "end_timestamp_utc: 2026-01-01T01:00:00" in output
+    assert "duration_hours: 2" in output
+    assert "highest_risk_score: 95" in output
+    assert "average_risk_score: 70" in output
+    assert "risk_level: high" in output
+    assert "recommended_human_action: Human review:" in output
+
+
+def test_missing_optional_window_metrics_are_not_invented(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    window = public_surplus_risk_backtest.RiskWindow(
+        "DK1",
+        "2026-01-01T00:00:00",
+        "2026-01-01T01:00:00",
+        2,
+        85,
+        "high",
+        ("negative_price",),
+    )
+    summary = summary_with_windows(risk_windows=(window,))
+
+    snapshots = public_surplus_risk_backtest.build_risk_window_snapshots(
+        summary,
+        top_per_price_area=10,
+    )
+    public_surplus_risk_backtest.print_window_snapshot(
+        summary,
+        top_per_price_area=10,
+    )
+    output = capsys.readouterr().out
+
+    assert snapshots[0].average_risk_score is None
+    assert snapshots[0].negative_price_hour_count is None
+    assert snapshots[0].low_price_hour_count is None
+    assert snapshots[0].average_renewable_share is None
+    assert snapshots[0].max_renewable_share is None
+    assert snapshots[0].top_reason_codes is None
+    assert "average_risk_score: not_calculated" in output
+    assert "negative_price_hour_count: not_calculated" in output
+    assert "top_reason_codes: not_calculated" in output
+
+
+def test_window_snapshot_dry_run_does_not_write_files_or_database(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    summary = public_surplus_risk_backtest.run_public_surplus_risk_backtest(
+        config(window_snapshot_only=True),
+        fetch=payload_for_url,
+        sleep_fn=lambda seconds: None,
+    )
+
+    public_surplus_risk_backtest.print_window_snapshot(
+        summary,
+        top_per_price_area=10,
+    )
+
+    assert list(tmp_path.iterdir()) == []
+    assert summary.file_written is False
+    assert summary.database_write_performed is False
+
+
+def test_recommended_human_action_avoids_control_dispatch_activation_terms() -> None:
+    summary = public_surplus_risk_backtest.run_public_surplus_risk_backtest(
+        config(),
+        fetch=payload_for_url,
+        sleep_fn=lambda seconds: None,
+    )
+
+    snapshots = public_surplus_risk_backtest.build_risk_window_snapshots(
+        summary,
+        top_per_price_area=10,
+    )
+    action_text = " ".join(
+        snapshot.recommended_human_action.lower() for snapshot in snapshots
+    )
+
+    assert "control" not in action_text
+    assert "dispatch" not in action_text
+    assert "activation" not in action_text
 
 
 def test_no_customer_specific_savings_are_calculated(

@@ -147,6 +147,12 @@ Manual public surplus-risk backtest v1:
 BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_surplus_risk_backtest.py
 ```
 
+Manual public surplus-risk window snapshot v1:
+
+```bash
+BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true BACKTEST_WINDOW_SNAPSHOT_ONLY=true python scripts/public_surplus_risk_backtest.py
+```
+
 The script runs a backend/script-only public DK1/DK2 surplus-risk backtest v1
 using only Energi Data Service `DayAheadPrices` and
 `ProductionConsumptionSettlement` from `2026-01-01` to `now` by default. It
@@ -162,6 +168,16 @@ renewable share at or above
 `BACKTEST_RENEWABLE_SHARE_HIGH_THRESHOLD` (default `0.80`), and renewable
 generation above gross consumption. Consecutive medium/high hourly rows are
 grouped into risk windows per price area.
+
+The optional compact snapshot mode is enabled with
+`BACKTEST_WINDOW_SNAPSHOT_ONLY=true`. It prints the top public risk windows per
+price area, sorted by highest risk score descending, duration descending, and
+start timestamp ascending. `BACKTEST_TOP_RISK_WINDOWS` controls the number of
+windows per price area and defaults to `10`. The compact section includes
+timestamps, duration, highest and average risk scores when calculable, risk
+level, available negative/low-price hour counts, available renewable-share
+metrics, top reason codes, and a human-review recommendation. Missing optional
+metrics are shown as `not_calculated`; the script does not invent values.
 
 The script is dry-run/read-only by default, writes no files, writes no database
 records, calls no non-EDS APIs, uses no ML or LLM, and prints a readable

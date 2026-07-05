@@ -187,6 +187,8 @@ Public DK1/DK2 surplus-risk backtest engine v1:
   default.
 - Manual usage:
   `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true python scripts/public_surplus_risk_backtest.py`.
+- Compact risk-window snapshot usage:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true BACKTEST_WINDOW_SNAPSHOT_ONLY=true python scripts/public_surplus_risk_backtest.py`.
 - The script reuses the public surplus-risk input foundation, remains
   dry-run/read-only by default, writes no files, writes no database records,
   calls no non-EDS APIs, and does not modify frontend code, backend API
@@ -210,6 +212,18 @@ Public DK1/DK2 surplus-risk backtest engine v1:
   area. Per-area summaries include joined hours, skipped rows, medium/high
   hours, risk-window count, highest and average risk score, negative/low-price
   hours, average and max renewable share, and top reason codes.
+- `BACKTEST_WINDOW_SNAPSHOT_ONLY` defaults to `false`. When set to `true`, the
+  script prints a compact top risk-window snapshot instead of the full summary.
+  `BACKTEST_TOP_RISK_WINDOWS` defaults to `10` and limits the number of windows
+  per price area. Windows are sorted within each price area by highest risk
+  score descending, duration descending, then start timestamp ascending.
+- Each compact window includes `price_area`, `start_timestamp_utc`,
+  `end_timestamp_utc`, `duration_hours`, `highest_risk_score`,
+  `average_risk_score` when available, `risk_level`, available
+  `negative_price_hour_count`, available `low_price_hour_count`, available
+  average/max renewable share, `top_reason_codes`, and
+  `recommended_human_action`. Missing optional metrics are shown as
+  `not_calculated`; values are not invented.
 - This is public market/system-level backtesting only. It is not
   customer-specific savings, revenue, profit, site-specific value, tariff,
   tax, fee, customer load, MW, asset behavior, trading advice, dispatch,

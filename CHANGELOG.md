@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added a scripts/tests/docs-only compact public surplus-risk window snapshot
+  mode to `scripts/public_surplus_risk_backtest.py`. The script now reads
+  `BACKTEST_TOP_RISK_WINDOWS` (default `10`) and
+  `BACKTEST_WINDOW_SNAPSHOT_ONLY` (default `false`). When snapshot-only mode is
+  enabled, it prints the top public DK1/DK2 risk windows per price area sorted
+  by highest risk score, duration, and start timestamp, including timestamps,
+  duration, highest and average risk scores when available, risk level,
+  available negative/low-price hour counts, available renewable-share metrics,
+  top reason codes, and a human-review recommendation. Missing optional metrics
+  are shown as `not_calculated` and no values are invented. Added mocked tests
+  for sorting, compact output, missing optional metrics, safety notes, dry-run
+  no-write behavior, and recommended human-action wording. Updated README and
+  backtest docs with the manual command:
+  `BACKTEST_START_DATE=2026-01-01 BACKTEST_DRY_RUN=true BACKTEST_WINDOW_SNAPSHOT_ONLY=true python scripts/public_surplus_risk_backtest.py`.
+  This is public market/system-level read-only decision support only, not
+  customer-specific savings, and adds no frontend app code, dashboard UI,
+  backend API behavior, database schema, migrations, auth, Azure, weather/maps,
+  fake data, customer-specific savings, control, dispatch, activation, or asset
+  integration.
 - Added a docs-only public surplus-risk backtest snapshot v1 to `README.md`,
   `docs/BACKTEST_RESULTS.md`, and `docs/MODEL_CARD.md`. The snapshot records
   observed dry-run Energi Data Service `DayAheadPrices` and
