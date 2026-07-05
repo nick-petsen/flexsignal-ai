@@ -26,6 +26,8 @@ import public_surplus_risk_backtest_input as input_foundation  # noqa: E402
 DEFAULT_LOW_PRICE_THRESHOLD_EUR_PER_MWH = "25"
 DEFAULT_RENEWABLE_SHARE_MEDIUM_THRESHOLD = "0.65"
 DEFAULT_RENEWABLE_SHARE_HIGH_THRESHOLD = "0.80"
+DEFAULT_TOP_RISK_WINDOWS = "10"
+DEFAULT_WINDOW_SNAPSHOT_ONLY = "false"
 
 NEGATIVE_PRICE_REASON = "negative_price"
 LOW_PRICE_REASON = "low_price"
@@ -65,6 +67,8 @@ class PublicSurplusRiskBacktestConfig:
     low_price_threshold_eur_per_mwh: float
     renewable_share_medium_threshold: float
     renewable_share_high_threshold: float
+    top_risk_windows: int
+    window_snapshot_only: bool
 
 
 @dataclass(frozen=True)
@@ -89,6 +93,23 @@ class RiskWindow:
     highest_risk_score: int
     highest_risk_level: str
     reason_codes: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class RiskWindowSnapshot:
+    price_area: str
+    start_timestamp_utc: str
+    end_timestamp_utc: str
+    duration_hours: int
+    highest_risk_score: int
+    average_risk_score: float | None
+    risk_level: str
+    negative_price_hour_count: int | None
+    low_price_hour_count: int | None
+    average_renewable_share: float | None
+    max_renewable_share: float | None
+    top_reason_codes: Mapping[str, int] | None
+    recommended_human_action: str
 
 
 @dataclass(frozen=True)
@@ -159,6 +180,17 @@ def load_config(
             "BACKTEST_RENEWABLE_SHARE_MEDIUM_THRESHOLD must be less than or "
             "equal to BACKTEST_RENEWABLE_SHARE_HIGH_THRESHOLD"
         )
+    top_risk_windows = _parse_nonnegative_int(
+        safe_env.get("BACKTEST_TOP_RISK_WINDOWS", DEFAULT_TOP_RISK_WINDOWS),
+        "BACKTEST_TOP_RISK_WINDOWS",
+    )
+    window_snapshot_only = _parse_bool(
+        safe_env.get(
+            "BACKTEST_WINDOW_SNAPSHOT_ONLY",
+            DEFAULT_WINDOW_SNAPSHOT_ONLY,
+        ),
+        "BACKTEST_WINDOW_SNAPSHOT_ONLY",
+    )
 
     return PublicSurplusRiskBacktestConfig(
         start_date=input_config.start_date,
@@ -171,6 +203,8 @@ def load_config(
         low_price_threshold_eur_per_mwh=low_price_threshold,
         renewable_share_medium_threshold=medium_threshold,
         renewable_share_high_threshold=high_threshold,
+        top_risk_windows=top_risk_windows,
+        window_snapshot_only=window_snapshot_only,
     )
 
 
@@ -607,6 +641,111 @@ def print_summary(summary: PublicSurplusRiskBacktestSummary) -> None:
         print(f"  - {note}")
 
 
+def build_risk_window_snapshots(
+    summary: PublicSurplusRiskBacktestSummary,
+    *,
+    top_per_price_area: int,
+) -> tuple[RiskWindowSnapshot, ...]:
+    snapshots: list[RiskWindowSnapshot] = []
+    for price_area in summary.price_areas:
+        sorted_windows = sorted(
+            (
+                window
+                for window in summary.risk_windows
+                if window.price_area == price_area
+            ),
+            key=lambda window: (
+                -window.highest_risk_score,
+                -window.hour_count,
+                window.start_timestamp_utc,
+            ),
+        )
+        for window in sorted_windows[:top_per_price_area]:
+            snapshots.append(_build_window_snapshot(summary, window))
+
+    return tuple(snapshots)
+
+
+def print_window_snapshot(
+    summary: PublicSurplusRiskBacktestSummary,
+    *,
+    top_per_price_area: int,
+) -> None:
+    snapshots = build_risk_window_snapshots(
+        summary,
+        top_per_price_area=top_per_price_area,
+    )
+    print("Public surplus-risk window snapshot v1")
+    print(f"period: {summary.period}")
+    print(f"price_areas: {','.join(summary.price_areas)}")
+    print(f"datasets: {','.join(summary.datasets)}")
+    print(f"source: {summary.source}")
+    print(f"dry_run: {str(summary.dry_run).lower()}")
+    print(f"file_written: {str(summary.file_written).lower()}")
+    print(
+        "database_write_performed: "
+        f"{str(summary.database_write_performed).lower()}"
+    )
+    print(f"top_risk_windows_per_price_area: {top_per_price_area}")
+    print("top_risk_windows:")
+    if not snapshots:
+        print("  - none")
+    for price_area in summary.price_areas:
+        area_snapshots = [
+            snapshot
+            for snapshot in snapshots
+            if snapshot.price_area == price_area
+        ]
+        if not area_snapshots:
+            print(f"  {price_area}: none")
+            continue
+        print(f"  {price_area}:")
+        for snapshot in area_snapshots:
+            print(f"    - price_area: {snapshot.price_area}")
+            print(
+                "      start_timestamp_utc: "
+                f"{snapshot.start_timestamp_utc}"
+            )
+            print(f"      end_timestamp_utc: {snapshot.end_timestamp_utc}")
+            print(f"      duration_hours: {snapshot.duration_hours}")
+            print(
+                "      highest_risk_score: "
+                f"{snapshot.highest_risk_score}"
+            )
+            print(
+                "      average_risk_score: "
+                f"{_format_optional_float(snapshot.average_risk_score)}"
+            )
+            print(f"      risk_level: {snapshot.risk_level}")
+            print(
+                "      negative_price_hour_count: "
+                f"{_format_optional_int(snapshot.negative_price_hour_count)}"
+            )
+            print(
+                "      low_price_hour_count: "
+                f"{_format_optional_int(snapshot.low_price_hour_count)}"
+            )
+            print(
+                "      average_renewable_share: "
+                f"{_format_optional_float(snapshot.average_renewable_share)}"
+            )
+            print(
+                "      max_renewable_share: "
+                f"{_format_optional_float(snapshot.max_renewable_share)}"
+            )
+            print(
+                "      top_reason_codes: "
+                f"{_format_reason_codes(snapshot.top_reason_codes)}"
+            )
+            print(
+                "      recommended_human_action: "
+                f"{snapshot.recommended_human_action}"
+            )
+    print("notes:")
+    for note in summary.notes:
+        print(f"  - {note}")
+
+
 def main() -> int:
     try:
         config = load_config()
@@ -657,8 +796,94 @@ def main() -> int:
         print(f"Public surplus-risk backtest failed: {exc}", file=sys.stderr)
         return 1
 
-    print_summary(summary)
+    if config.window_snapshot_only:
+        print_window_snapshot(
+            summary,
+            top_per_price_area=config.top_risk_windows,
+        )
+    else:
+        print_summary(summary)
     return 0
+
+
+def _build_window_snapshot(
+    summary: PublicSurplusRiskBacktestSummary,
+    window: RiskWindow,
+) -> RiskWindowSnapshot:
+    rows = _joined_rows_for_window(summary.joined_rows, window)
+    average_risk_score: float | None = None
+    negative_price_hour_count: int | None = None
+    low_price_hour_count: int | None = None
+    average_renewable_share: float | None = None
+    max_renewable_share: float | None = None
+    top_reason_codes: Mapping[str, int] | None = None
+
+    if rows:
+        average_risk_score = sum(row.risk_score for row in rows) / len(rows)
+        negative_price_hour_count = sum(
+            1 for row in rows if row.price_eur_per_mwh < 0
+        )
+        low_price_hour_count = sum(
+            1
+            for row in rows
+            if LOW_PRICE_REASON in row.reason_codes
+        )
+        average_renewable_share = (
+            sum(row.renewable_share for row in rows) / len(rows)
+        )
+        max_renewable_share = max(row.renewable_share for row in rows)
+        reason_counter = Counter(
+            reason_code for row in rows for reason_code in row.reason_codes
+        )
+        top_reason_codes = dict(
+            sorted(reason_counter.items(), key=lambda item: (-item[1], item[0]))[
+                :5
+            ]
+        )
+
+    return RiskWindowSnapshot(
+        price_area=window.price_area,
+        start_timestamp_utc=window.start_timestamp_utc,
+        end_timestamp_utc=window.end_timestamp_utc,
+        duration_hours=window.hour_count,
+        highest_risk_score=window.highest_risk_score,
+        average_risk_score=average_risk_score,
+        risk_level=window.highest_risk_level,
+        negative_price_hour_count=negative_price_hour_count,
+        low_price_hour_count=low_price_hour_count,
+        average_renewable_share=average_renewable_share,
+        max_renewable_share=max_renewable_share,
+        top_reason_codes=top_reason_codes,
+        recommended_human_action=_recommended_human_action(
+            window.highest_risk_level
+        ),
+    )
+
+
+def _joined_rows_for_window(
+    joined_rows: Sequence[JoinedHourlyRiskRow],
+    window: RiskWindow,
+) -> tuple[JoinedHourlyRiskRow, ...]:
+    start = _parse_utc_hour(window.start_timestamp_utc)
+    end = _parse_utc_hour(window.end_timestamp_utc)
+    return tuple(
+        row
+        for row in joined_rows
+        if row.price_area == window.price_area
+        and start <= _parse_utc_hour(row.timestamp_utc) <= end
+    )
+
+
+def _recommended_human_action(risk_level: str) -> str:
+    if risk_level == "high":
+        return (
+            "Human review: prioritize this public system window for comparison "
+            "with operations and constraints before any manual decision."
+        )
+    return (
+        "Human review: compare this public system window with operations and "
+        "constraints before any manual decision."
+    )
 
 
 def _build_window(price_area: str, rows: Sequence[JoinedHourlyRiskRow]) -> RiskWindow:
@@ -737,8 +962,53 @@ def _parse_float(raw_value: str | None, env_name: str) -> float:
     return parsed
 
 
+def _parse_nonnegative_int(raw_value: str | None, env_name: str) -> int:
+    try:
+        parsed = int((raw_value or "").strip())
+    except ValueError as exc:
+        raise PublicSurplusRiskBacktestError(
+            f"{env_name} must be a non-negative integer"
+        ) from exc
+    if parsed < 0:
+        raise PublicSurplusRiskBacktestError(
+            f"{env_name} must be a non-negative integer"
+        )
+    return parsed
+
+
+def _parse_bool(raw_value: str | None, env_name: str) -> bool:
+    normalized = (raw_value or "").strip().lower()
+    if normalized in {"1", "true", "yes", "y"}:
+        return True
+    if normalized in {"0", "false", "no", "n"}:
+        return False
+    raise PublicSurplusRiskBacktestError(f"{env_name} must be true or false")
+
+
 def _format_float(value: float) -> str:
     return f"{value:.6f}".rstrip("0").rstrip(".")
+
+
+def _format_optional_float(value: float | None) -> str:
+    if value is None:
+        return "not_calculated"
+    return _format_float(value)
+
+
+def _format_optional_int(value: int | None) -> str:
+    if value is None:
+        return "not_calculated"
+    return str(value)
+
+
+def _format_reason_codes(reason_codes: Mapping[str, int] | None) -> str:
+    if reason_codes is None:
+        return "not_calculated"
+    if not reason_codes:
+        return "none"
+    return ", ".join(
+        f"{reason_code}:{count}" for reason_code, count in reason_codes.items()
+    )
 
 
 if __name__ == "__main__":
