@@ -435,6 +435,9 @@ const publicRiskReasonLabels: Record<string, string> = {
     "Renewable generation above consumption"
 };
 
+const PUBLIC_PROOF_OF_WORK_REPORT_FILENAME =
+  "public-surplus-risk-proof-of-work.md";
+
 function EnergyCard<Row extends { source_record_id: string }>({
   title,
   description,
@@ -2053,6 +2056,20 @@ function PublicBacktestSnapshot() {
         ))}
       </div>
 
+      <div className="public-backtest__download">
+        <button
+          className="load-button load-button--secondary"
+          type="button"
+          onClick={downloadPublicProofOfWorkReport}
+        >
+          Download proof-of-work report
+        </button>
+        <p>
+          Downloads a static verified public backtest report. No backend call
+          is made.
+        </p>
+      </div>
+
       <div className="public-backtest__explanation">
         <section>
           <h3>Interpretation</h3>
@@ -2075,6 +2092,94 @@ function PublicBacktestSnapshot() {
       </div>
     </section>
   );
+}
+
+function buildPublicProofOfWorkMarkdownReport(): string {
+  const summaryRows = publicBacktestSnapshotAreas
+    .map(
+      (snapshot) =>
+        `| ${snapshot.area} | ${formatNumber(
+          snapshot.joinedHours
+        )} | ${formatNumber(snapshot.skippedRows)} | ${formatNumber(
+          snapshot.mediumRiskHours
+        )} | ${formatNumber(snapshot.highRiskHours)} | ${formatNumber(
+          snapshot.riskWindows
+        )} | ${formatNumber(snapshot.highestRiskScore)} | ${formatNumber(
+          snapshot.negativePriceHours
+        )} | ${formatNumber(snapshot.lowPriceHours)} | ${
+          snapshot.averageRenewableShare
+        } | ${snapshot.maxRenewableShare} |`
+    )
+    .join("\n");
+  const windowRows = publicRiskWindowSnapshots
+    .map(
+      (snapshot) =>
+        `| ${snapshot.area} | ${snapshot.start} | ${snapshot.end} | ${
+          snapshot.durationHours
+        }h | ${formatNumber(snapshot.score)} | ${snapshot.level} | ${formatNumber(
+          snapshot.lowPriceHours
+        )} | ${formatNumber(snapshot.negativePriceHours)} | ${
+          snapshot.averageRenewableShare
+        } | ${snapshot.maxRenewableShare} | ${snapshot.reasons
+          .map((reason) => publicRiskReasonLabels[reason] ?? reason)
+          .join(", ")} |`
+    )
+    .join("\n");
+
+  return [
+    "# Public DK1/DK2 surplus-risk proof-of-work",
+    "",
+    "title: Public DK1/DK2 surplus-risk proof-of-work",
+    "period: 2026-01-01 to now",
+    "source: Energi Data Service DayAheadPrices + ProductionConsumptionSettlement",
+    "",
+    "## DK1/DK2 summary metrics",
+    "",
+    "| Area | Joined hours | Skipped rows | Medium-risk hours | High-risk hours | Risk windows | Highest score | Negative price hours | Low price hours | Average renewable share | Max renewable share |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    summaryRows,
+    "",
+    "## Verified top risk windows",
+    "",
+    "| Area | Start | End | Duration | Score | Level | Low price hours | Negative price hours | Average renewable share | Max renewable share | Main reasons |",
+    "| --- | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | --- |",
+    windowRows,
+    "",
+    "## Commercial interpretation",
+    "",
+    "The verified public backtest shows that DK1/DK2 surplus-risk windows can be identified from public market, consumption, and renewable production data. This is public market/system-level evidence for human review. It is not customer-specific savings and does not say customers saved money.",
+    "",
+    "## Limitations",
+    "",
+    "- Public market/system-level only.",
+    "- Not customer-specific savings.",
+    "- No customer load, asset, tariff, operating schedule, or site constraint data.",
+    "- Read-only decision support only.",
+    "- Does not establish production readiness.",
+    "",
+    "## Next customer pilot step",
+    "",
+    "Review the public proof-of-work with a pilot customer, document the customer's relevant operational assumptions, and decide whether a separate customer-specific analysis is warranted. Keep any pilot review manual and read-only unless a later scoped phase explicitly changes the boundary.",
+    "",
+    "## Safety boundary",
+    "",
+    "- Public market/system-level only.",
+    "- Not customer-specific savings.",
+    "- Read-only decision support.",
+    "- No automatic control, dispatch, activation.",
+    "- No live control signals.",
+    "- No asset integration.",
+    ""
+  ].join("\n");
+}
+
+function downloadPublicProofOfWorkReport() {
+  const markdown = buildPublicProofOfWorkMarkdownReport();
+  const blob = new Blob([markdown], {
+    type: "text/markdown;charset=utf-8"
+  });
+
+  downloadBrowserBlob(blob, PUBLIC_PROOF_OF_WORK_REPORT_FILENAME);
 }
 
 function PublicBacktestSnapshotCard({
@@ -3726,7 +3831,7 @@ function parseContentDispositionFilename(
   return filenameMatch?.[1] ?? filenameMatch?.[2]?.trim() ?? null;
 }
 
-function downloadReportPdfBlob(blob: Blob, filename: string) {
+function downloadBrowserBlob(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
@@ -3739,6 +3844,10 @@ function downloadReportPdfBlob(blob: Blob, filename: string) {
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
   }
+}
+
+function downloadReportPdfBlob(blob: Blob, filename: string) {
+  downloadBrowserBlob(blob, filename);
 }
 
 function errorMessage(error: unknown): string {
