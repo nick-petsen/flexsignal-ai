@@ -48,6 +48,30 @@ no database records, calls no external APIs, calculates no customer-specific
 savings, revenue, or profit, and adds no control, dispatch, activation, live
 control signals, or asset integration.
 
+After validation, preview whether the customer rows overlap the canonical
+public surplus-risk windows:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_signal_match.py
+```
+
+The v0 signal match preview accepts CSV only and compares DK1/DK2 customer
+timestamps with the public surplus-risk snapshot. It reports matched public
+risk windows, customer row counts, whether load/generation/flexibility data is
+present, optional availability counts, optional operational note counts,
+warnings, and the read-only safety boundary. It writes no files, writes no
+database records, calls no external APIs, calculates no customer-specific
+savings, profit, or revenue, and adds no control, dispatch, activation, live
+control signals, or asset integration.
+
+The pilot flow is:
+
+1. Validate customer intake CSV.
+2. Match customer data to public risk windows.
+3. Human review.
+4. Only later estimate customer-specific potential if the validated data
+   supports it.
+
 ## Pilot Scope
 
 - Read-only analysis.

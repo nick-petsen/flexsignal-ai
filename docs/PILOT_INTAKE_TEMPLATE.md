@@ -151,6 +151,21 @@ calculation. It writes no files, writes no database records, calls no external
 APIs, performs no automatic control, and sends no dispatch, activation, or live
 control signals.
 
+After the CSV validates, run the local read-only signal match preview:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_signal_match.py
+```
+
+The preview compares customer DK1/DK2 rows with the canonical public
+surplus-risk snapshot and reports which public risk windows overlap with the
+customer data and availability fields. It is signal matching only. It does not
+calculate customer-specific savings, profit, revenue, or financial advice. It
+writes no files, writes no database records, calls no external APIs, performs
+no automatic control, and sends no dispatch, activation, or live control
+signals. Customer data and customer pilot CSV files must not be committed to
+git.
+
 Preferred structure:
 
 - One row per timestamp.
