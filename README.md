@@ -305,10 +305,14 @@ customer-specific operational reality.
 ## Customer Pilot Readiness
 
 The customer pilot readiness pack is documented in
-[docs/PILOT_READINESS.md](docs/PILOT_READINESS.md). It defines the required
-customer data, minimum pilot dataset, measurable pilot success criteria,
-economic potential method, deliverables, security handling, human oversight,
-and out-of-scope boundaries.
+[docs/PILOT_READINESS.md](docs/PILOT_READINESS.md). The customer-facing intake
+template is available at
+[docs/PILOT_INTAKE_TEMPLATE.md](docs/PILOT_INTAKE_TEMPLATE.md), with a
+structured data request CSV at
+[docs/templates/customer_pilot_data_request.csv](docs/templates/customer_pilot_data_request.csv).
+Together, these define the required customer data, minimum pilot dataset,
+measurable pilot success criteria, economic potential method, deliverables,
+security handling, human oversight, and out-of-scope boundaries.
 
 The public DK1/DK2 backtest shows that the signal can identify historical
 public system and market risk windows. A customer pilot tests whether those

@@ -1,0 +1,51 @@
+section,customer_type,data_category,field_name,example_value,required_or_optional,preferred_format,notes
+Common,All pilot customers,Site identity,site_id,site_dk1_anonymous_001,Required,Text,Use an anonymized id if preferred.
+Common,All pilot customers,Location and market context,price_area,DK1,Required,DK1 or DK2,Confirm the relevant Danish electricity price area.
+Common,All pilot customers,Time series,timestamp,2026-01-01T00:00:00+01:00,Required,ISO timestamp,Provide one row per timestamp where possible.
+Common,All pilot customers,Time metadata,timezone,Europe/Copenhagen,Required,IANA timezone,State timezone explicitly even if timestamps include offsets.
+Common,All pilot customers,Consumption time series,load_mwh,1.25,Required if relevant,Numeric MWh or kWh,Historical hourly or sub-hourly load/consumption.
+Common,All pilot customers,Production time series,generation_mwh,0.80,Required if relevant,Numeric MWh or kWh,Historical hourly or sub-hourly production or generation.
+Common,All pilot customers,Units,unit,MWh,Required,Text,Use explicit unit columns for energy and power values.
+Common,All pilot customers,Flexible capacity,flexible_capacity_mw,2.0,Required,Numeric MW or kW,Rough flexible power capacity estimate.
+Common,All pilot customers,Flexible energy,flexible_energy_mwh,4.0,Required,Numeric MWh or kWh,Rough flexible energy estimate for candidate windows.
+Common,All pilot customers,Operating constraints,operating_constraint,Minimum 2-hour runtime,Required,Text or structured table,Known process/comfort/runtime/ramp constraints.
+Common,All pilot customers,Availability,availability_window,Weekdays 08:00-18:00,Required,Text or timestamp range,Operating schedule or availability windows.
+Common,All pilot customers,Commercial context,tariff_context,Spot exposed with grid tariff,Optional,Text or structured table,Provide tariff or price agreement context if available.
+Common,All pilot customers,Operational history,operational_note,Manual curtailment during negative prices,Optional,Text,Historical decisions/events or interpretation notes if available.
+Common,All pilot customers,Operational contact,contact_role,Energy manager,Required,Text,Contact person or role for operational interpretation.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Asset metadata,asset_type,wind,Required,Enum text,Use wind solar battery PtX or hybrid.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Asset capacity,installed_capacity_mw,50,Required,Numeric MW,Installed generation or asset capacity.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Flexible capacity,available_flexible_capacity_mw,5,Optional,Numeric MW,Available flexible power capacity for human review.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Flexible energy,available_flexible_energy_mwh,20,Optional,Numeric MWh,Available flexible energy volume for human review.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Generation time series,generation_mwh,12.4,Required,Numeric MWh or kWh,Timestamped asset generation.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Curtailment history,curtailment_event,2026-01-04T02:00Z curtailment 5 MWh,Optional,Text or event table,Include curtailment logs if available.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Price handling,negative_price_rule,Curtail below -5 EUR/MWh,Optional,Text,Rules or policies for negative-price periods.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Commercial exposure,ppa_or_merchant_context,Merchant exposure for 40 percent,Optional,Text,PPA/merchant exposure context without confidential details unless approved.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Forecast time series,forecast_generation_mwh,10.8,Optional,Numeric MWh or kWh,Forecast generation if available.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Actual time series,actual_generation_mwh,11.1,Optional,Numeric MWh or kWh,Actual generation for forecast-vs-actual comparison.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Grid constraints,grid_export_limit_mw,45,Optional,Numeric MW,Grid connection/export constraint if shareable.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Outage context,maintenance_or_outage_period,2026-02-10T00:00Z to 2026-02-12T00:00Z,Optional,Timestamp range,Maintenance or outage periods that affect availability.
+Producer / asset-owner,Wind/solar/hybrid/battery/PtX/energy park,Operational context,operational_note,Negative prices reviewed manually,Optional,Text,Operational notes for interpreting candidate windows.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Consumption time series,load_mwh,3.6,Required,Numeric MWh or kWh,Timestamped load or consumption.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Flexible load,flexible_load_mw,1.5,Required,Numeric MW or kW,Power that can realistically increase reduce or shift.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Shiftable energy,shiftable_energy_mwh,6.0,Required,Numeric MWh or kWh,Energy volume that can shift within constraints.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Runtime constraint,minimum_runtime,2 hours,Optional,Duration,Minimum runtime constraint.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Runtime constraint,maximum_runtime,8 hours,Optional,Duration,Maximum runtime constraint.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Ramp constraint,ramp_limit,0.5 MW per 15 minutes,Optional,Text or numeric,Power ramp-up/ramp-down constraint.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Planning constraint,lead_time_minutes,60,Optional,Integer minutes,Lead time required before operational adjustment.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Process constraint,process_constraint,Temperature must stay below threshold,Optional,Text,Comfort/process/product quality constraints.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Storage,storage_capacity_mwh,12,Optional,Numeric MWh or kWh,Storage capacity if relevant.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Demand context,heat_or_process_demand_mwh,9.5,Optional,Numeric MWh or kWh,Heat or process demand if relevant.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Operational history,historical_flexibility_activation,Load reduced manually during price event,Optional,Text or event table,Historical flexibility activations if available.
+Flexible consumption,Industrial/data center/cold storage/electrolyzer/PtX/heat/electric boiler/district heating/campus,Cost context,operating_cost_assumption,Restart cost estimate available,Optional,Text or numeric table,Operating cost assumptions if available.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Area identity,grid_area_id,area_anonymous_001,Required,Text,Use anonymized local grid area id if preferred.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Area identity,transformer_area_id,tx_anonymous_001,Optional,Text,Use anonymized transformer area id if relevant.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Aggregated load,aggregated_load_mwh,24.5,Required,Numeric MWh or kWh,Aggregated timestamped area load.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Aggregated generation,aggregated_generation_mwh,18.2,Required if relevant,Numeric MWh or kWh,Aggregated timestamped area generation.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Capacity context,grid_capacity_mw,30,Optional,Numeric MW,Transformer or grid-area capacity if shareable.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Operational history,congestion_event,Local bottleneck 2026-01-15 17:00,Optional,Text or event table,Known congestion or bottleneck events.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Area balance,local_balance_mwh,-3.0,Optional,Numeric MWh or kWh,Local generation/load balance where available.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Flexible customers,flexible_customer_category,District heating,Optional,Text,Relevant flexible customer categories in the area.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Outage or constraints,outage_or_constraint_note,Planned transformer maintenance,Optional,Text,Planned outages constraints or operational notes if relevant.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Operational context,historical_operational_note,Manual planning note for area event,Optional,Text,Historical operational notes for interpreting local conditions.
+Grid / DSO,DSO/grid area/transformer area/local planning team,Renewable context,local_renewable_generation_context,High local solar share,Optional,Text,Local renewable generation context if available.

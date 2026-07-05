@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added a docs-only customer pilot intake template in
+  `docs/PILOT_INTAKE_TEMPLATE.md` plus a structured CSV request sheet at
+  `docs/templates/customer_pilot_data_request.csv`. The template explains
+  that the public DK1/DK2 backtest proves system/market-level signal behavior,
+  while a customer pilot tests whether the signal matches customer operational
+  reality. It covers common minimum data, producer/asset-owner/developer
+  add-ons, flexible consumption/industrial load add-ons, grid/DSO add-ons,
+  data format requirements, security/data-handling notes, expected pilot
+  outputs, later-stage customer types, and out-of-scope boundaries. Updated
+  `README.md` and `docs/PILOT_READINESS.md` to link the intake materials.
+  This changed documentation/templates only and added no frontend app code,
+  backend API behavior, scripts, tests, database schema, migrations, auth,
+  Azure, weather/maps, fake data, customer-specific savings calculation,
+  control, dispatch, activation, live control signals, or asset integration.
 - Added a docs-only customer pilot readiness pack in
   `docs/PILOT_READINESS.md` and linked it from `README.md`,
   `docs/HUMAN_OVERSIGHT.md`, and `docs/SECURITY.md`. The pack documents the
