@@ -1215,6 +1215,110 @@ tr:last-child td {
   line-height: 1.55;
 }
 
+.public-risk-windows {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(15, 29, 23, 0.78);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+}
+
+.public-risk-windows__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.public-risk-windows__header .eyebrow {
+  margin-bottom: 6px;
+}
+
+.public-risk-windows__header h2 {
+  margin: 0 0 8px;
+  font-size: 1.18rem;
+  line-height: 1.2;
+}
+
+.public-risk-windows__header p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.risk-window-table {
+  min-width: 1120px;
+}
+
+.risk-window-table th,
+.risk-window-table td {
+  vertical-align: top;
+}
+
+.risk-window-table__window,
+.risk-window-table__renewables,
+.risk-window-table__reasons {
+  display: grid;
+  gap: 4px;
+}
+
+.risk-window-table__window span,
+.risk-window-table__renewables small {
+  color: var(--muted-soft);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.risk-window-table__reasons {
+  grid-template-columns: repeat(2, minmax(128px, 1fr));
+  white-space: normal;
+}
+
+.risk-window-table__reasons span {
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.risk-window-table__review {
+  max-width: 240px;
+  color: var(--muted);
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.public-risk-windows__limits {
+  display: grid;
+  gap: 8px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.public-risk-windows__limits p {
+  margin: 0;
+  color: var(--muted-soft);
+  font-size: 0.75rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.public-risk-windows__limits .plain-list {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px 18px;
+  padding-left: 16px;
+}
+
 .forecast-visual {
   margin-bottom: 16px;
   padding: 14px;
@@ -1476,6 +1580,10 @@ tr:last-child td {
   .public-backtest__explanation {
     grid-template-columns: 1fr;
   }
+
+  .public-risk-windows__limits .plain-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 780px) {
@@ -1522,13 +1630,19 @@ tr:last-child td {
   }
 
   .public-backtest__header,
+  .public-risk-windows__header,
   .public-backtest-card__header {
     display: grid;
   }
 
+  .public-risk-windows {
+    padding: 18px;
+  }
+
   .public-backtest__meta,
   .public-backtest__cards,
-  .public-backtest-card__metrics {
+  .public-backtest-card__metrics,
+  .public-risk-windows__limits .plain-list {
     grid-template-columns: 1fr;
   }
 

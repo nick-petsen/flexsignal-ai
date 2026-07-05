@@ -154,6 +154,20 @@ type PublicBacktestSnapshotArea = {
   maxRenewableShare: string;
 };
 
+type PublicRiskWindowSnapshot = {
+  area: PriceArea;
+  start: string;
+  end: string;
+  durationHours: number;
+  score: number;
+  level: "medium" | "high";
+  negativePriceHours: number;
+  lowPriceHours: number;
+  averageRenewableShare: string;
+  maxRenewableShare: string;
+  reasons: string[];
+};
+
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
 const forecastPreviewNumericFields: (keyof ForecastPreviewRow)[] = [
   "price_dkk_per_mwh",
@@ -246,6 +260,180 @@ const publicBacktestSnapshotAreas: PublicBacktestSnapshotArea[] = [
     maxRenewableShare: "108.6%"
   }
 ];
+
+const publicRiskWindowSnapshots: PublicRiskWindowSnapshot[] = [
+  {
+    area: "DK1",
+    start: "2026-04-04T21:00:00",
+    end: "2026-04-06T23:00:00",
+    durationHours: 51,
+    score: 100,
+    level: "high",
+    negativePriceHours: 20,
+    lowPriceHours: 39,
+    averageRenewableShare: "98.6%",
+    maxRenewableShare: "163.3%",
+    reasons: [
+      "low_price",
+      "high_renewable_share",
+      "renewable_generation_above_consumption",
+      "negative_price"
+    ]
+  },
+  {
+    area: "DK1",
+    start: "2026-04-24T06:00:00",
+    end: "2026-04-25T22:00:00",
+    durationHours: 41,
+    score: 100,
+    level: "high",
+    negativePriceHours: 8,
+    lowPriceHours: 18,
+    averageRenewableShare: "117.3%",
+    maxRenewableShare: "192.2%",
+    reasons: [
+      "high_renewable_share",
+      "renewable_generation_above_consumption",
+      "low_price",
+      "negative_price"
+    ]
+  },
+  {
+    area: "DK1",
+    start: "2026-05-29T06:00:00",
+    end: "2026-05-29T16:00:00",
+    durationHours: 11,
+    score: 100,
+    level: "high",
+    negativePriceHours: 1,
+    lowPriceHours: 6,
+    averageRenewableShare: "108.6%",
+    maxRenewableShare: "136.4%",
+    reasons: [
+      "high_renewable_share",
+      "renewable_generation_above_consumption",
+      "low_price",
+      "negative_price"
+    ]
+  },
+  {
+    area: "DK1",
+    start: "2026-06-13T02:00:00",
+    end: "2026-06-15T18:00:00",
+    durationHours: 65,
+    score: 95,
+    level: "high",
+    negativePriceHours: 14,
+    lowPriceHours: 33,
+    averageRenewableShare: "110.2%",
+    maxRenewableShare: "171.3%",
+    reasons: [
+      "high_renewable_share",
+      "renewable_generation_above_consumption",
+      "low_price",
+      "negative_price"
+    ]
+  },
+  {
+    area: "DK1",
+    start: "2026-05-26T10:00:00",
+    end: "2026-05-28T01:00:00",
+    durationHours: 40,
+    score: 95,
+    level: "high",
+    negativePriceHours: 10,
+    lowPriceHours: 12,
+    averageRenewableShare: "113.2%",
+    maxRenewableShare: "162.7%",
+    reasons: [
+      "high_renewable_share",
+      "renewable_generation_above_consumption",
+      "low_price",
+      "negative_price"
+    ]
+  },
+  {
+    area: "DK2",
+    start: "2026-04-24T21:00:00",
+    end: "2026-04-25T06:00:00",
+    durationHours: 10,
+    score: 85,
+    level: "high",
+    negativePriceHours: 0,
+    lowPriceHours: 3,
+    averageRenewableShare: "98.0%",
+    maxRenewableShare: "108.6%",
+    reasons: [
+      "high_renewable_share",
+      "renewable_generation_above_consumption",
+      "low_price"
+    ]
+  },
+  {
+    area: "DK2",
+    start: "2026-06-14T20:00:00",
+    end: "2026-06-15T04:00:00",
+    durationHours: 9,
+    score: 65,
+    level: "medium",
+    negativePriceHours: 0,
+    lowPriceHours: 0,
+    averageRenewableShare: "92.2%",
+    maxRenewableShare: "100.7%",
+    reasons: [
+      "high_renewable_share",
+      "renewable_generation_above_consumption"
+    ]
+  },
+  {
+    area: "DK2",
+    start: "2026-01-01T17:00:00",
+    end: "2026-01-02T05:00:00",
+    durationHours: 13,
+    score: 60,
+    level: "medium",
+    negativePriceHours: 0,
+    lowPriceHours: 13,
+    averageRenewableShare: "77.1%",
+    maxRenewableShare: "85.4%",
+    reasons: ["low_price", "medium_renewable_share", "high_renewable_share"]
+  },
+  {
+    area: "DK2",
+    start: "2026-04-03T21:00:00",
+    end: "2026-04-04T08:00:00",
+    durationHours: 12,
+    score: 60,
+    level: "medium",
+    negativePriceHours: 0,
+    lowPriceHours: 10,
+    averageRenewableShare: "90.2%",
+    maxRenewableShare: "97.3%",
+    reasons: ["high_renewable_share", "low_price"]
+  },
+  {
+    area: "DK2",
+    start: "2026-03-25T20:00:00",
+    end: "2026-03-26T05:00:00",
+    durationHours: 10,
+    score: 60,
+    level: "medium",
+    negativePriceHours: 0,
+    lowPriceHours: 8,
+    averageRenewableShare: "84.8%",
+    maxRenewableShare: "90.8%",
+    reasons: ["high_renewable_share", "low_price"]
+  }
+];
+
+const publicRiskReasonLabels: Record<string, string> = {
+  high_renewable_share: "High renewable share",
+  low_price: "Low price hours",
+  medium_renewable_share: "Medium renewable share",
+  negative_price: "Negative price hours",
+  renewable_generation_above_consumption:
+    "Renewable generation above consumption"
+};
 
 function EnergyCard<Row extends { source_record_id: string }>({
   title,
@@ -1943,6 +2131,120 @@ function PublicBacktestSnapshotCard({
   );
 }
 
+function VerifiedPublicRiskWindowSnapshot() {
+  return (
+    <section
+      className="public-risk-windows"
+      aria-labelledby="public-risk-windows-title"
+    >
+      <div className="public-risk-windows__header">
+        <div>
+          <p className="eyebrow">Public surplus-risk proof-of-work</p>
+          <h2 id="public-risk-windows-title">
+            Verified public risk-window snapshot
+          </h2>
+          <p>
+            Top public DK1/DK2 surplus-risk windows from the verified snapshot.
+            This is market and system-level evidence for human review, not a
+            customer savings calculation.
+          </p>
+        </div>
+        <span className="status">Read-only snapshot</span>
+      </div>
+
+      <div className="table-wrap">
+        <table className="risk-window-table">
+          <thead>
+            <tr>
+              <th scope="col">Area</th>
+              <th scope="col">Window</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Score</th>
+              <th scope="col">Level</th>
+              <th scope="col">Low price hours</th>
+              <th scope="col">Negative price hours</th>
+              <th scope="col">Avg renewable share</th>
+              <th scope="col">Main reasons</th>
+              <th scope="col">Human review action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {publicRiskWindowSnapshots.map((snapshot) => (
+              <tr
+                key={`${snapshot.area}-${snapshot.start}-${snapshot.end}`}
+              >
+                <td>
+                  <strong>{snapshot.area}</strong>
+                </td>
+                <td>
+                  <span className="risk-window-table__window">
+                    {formatRiskWindowTimestamp(snapshot.start)}
+                    <span>to</span>
+                    {formatRiskWindowTimestamp(snapshot.end)}
+                  </span>
+                </td>
+                <td>{snapshot.durationHours}h</td>
+                <td>{formatNumber(snapshot.score)}</td>
+                <td>
+                  <span
+                    className={`risk-score__level risk-score__level--${snapshot.level}`}
+                  >
+                    {formatRiskLabel(snapshot.level)}
+                  </span>
+                </td>
+                <td>{formatNumber(snapshot.lowPriceHours)}</td>
+                <td>{formatNumber(snapshot.negativePriceHours)}</td>
+                <td>
+                  <span className="risk-window-table__renewables">
+                    {snapshot.averageRenewableShare}
+                    <small>Max {snapshot.maxRenewableShare}</small>
+                  </span>
+                </td>
+                <td>
+                  <span className="risk-window-table__reasons">
+                    {snapshot.reasons.map((reason) => (
+                      <span key={reason}>
+                        {publicRiskReasonLabels[reason] ?? reason}
+                      </span>
+                    ))}
+                  </span>
+                </td>
+                <td className="risk-window-table__review">
+                  Review as public evidence and document any decision-support
+                  note manually.
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="public-risk-windows__limits">
+        <p>Limitations</p>
+        <ul className="plain-list">
+          <li>Public market/system-level only.</li>
+          <li>Not customer-specific savings.</li>
+          <li>No customer load/asset/tariff data.</li>
+          <li>Read-only decision support.</li>
+          <li>No automatic control, dispatch, or activation.</li>
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function formatRiskWindowTimestamp(timestamp: string): string {
+  const [date = "", time = ""] = timestamp.split("T");
+  const [year = "", month = "", day = ""] = date.split("-");
+  const hourMinute = time.slice(0, 5);
+
+  if (!year || !month || !day || !hourMinute) {
+    return timestamp;
+  }
+
+  return `${day}.${month}.${year} ${hourMinute}`;
+}
+
 function ReportSummaryPreviewCard({
   state,
   onLoad
@@ -2174,7 +2476,7 @@ function AuditedReportPdfExportCard({
         <li>Writes no server-side PDF file.</li>
         <li>Database write scope is audit_events only.</li>
         <li>Does not read/write energy data tables.</li>
-        <li>Does not call live EDS/DMI APIs.</li>
+        <li>Does not call EDS/DMI APIs.</li>
         <li>Does not control, dispatch, or activate anything.</li>
         <li>Human review remains required.</li>
       </ul>
@@ -2242,7 +2544,7 @@ function AuditPdfExportPersistCard({
         <li>Does not generate PDF.</li>
         <li>Does not write files.</li>
         <li>Does not read/write energy data tables.</li>
-        <li>Does not call live EDS/DMI APIs.</li>
+        <li>Does not call EDS/DMI APIs.</li>
         <li>Does not control, dispatch, or activate anything.</li>
         <li>Human review remains required.</li>
       </ul>
@@ -2881,7 +3183,7 @@ function AuditPdfExportPersistResult({
       <p className="preview-note">
         Manual audit DB write only. Persisted response is limited to
         audit_events. This does not generate a PDF, write files, read/write
-        energy data tables, call live EDS/DMI APIs, or control, dispatch, or
+        energy data tables, call EDS/DMI APIs, or control, dispatch, or
         activate anything. Human review remains required.
       </p>
       <dl className="risk-list">
@@ -3471,7 +3773,7 @@ function WeatherPlaceholder() {
       <span className="status">Placeholder</span>
       <h2 id="weather-title">Weather integration not implemented yet</h2>
       <p>
-        Future DMI/weather forecast module. This screen does not show fake live
+        Future DMI/weather forecast module. This screen does not show fake
         weather data, fake Denmark maps, or AI congestion claims.
       </p>
       <ul className="safety-copy safety-copy--compact">
@@ -3889,9 +4191,10 @@ export default function DashboardPage() {
             <SectionIntro
               eyebrow="Reports"
               title="Report previews and PDF export"
-              description="Manual report summary, Markdown, PDF dry-run, and unaudited PDF download flows. No files are written by the frontend and no live external data APIs are called."
+              description="Manual report summary, Markdown, PDF dry-run, and unaudited PDF download flows. No files are written by the frontend and no external data APIs are called."
             />
             <PublicBacktestSnapshot />
+            <VerifiedPublicRiskWindowSnapshot />
             <div className="summary summary--two">{reportCards}</div>
           </>
         );
