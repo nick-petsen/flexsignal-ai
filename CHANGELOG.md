@@ -2,6 +2,24 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/public_surplus_risk_report_export.py`, a scripts/tests/docs
+  only Markdown report exporter for the verified public DK1/DK2 surplus-risk
+  proof-of-work snapshot and current verified top risk-window table. It reads
+  `BACKTEST_REPORT_FORMAT` (default `markdown`),
+  `BACKTEST_REPORT_OUTPUT_PATH` (default empty), and
+  `BACKTEST_REPORT_DRY_RUN` (default `true`), prints the report to stdout when
+  no output path is set, and writes only the requested report file when an
+  output path is provided. Added mocked/no-network tests for DK1/DK2 metrics,
+  top risk windows, no customer-specific savings claim, safety boundary,
+  dry-run no-write behavior, output-path write scope, and no database writes.
+  Documented usage:
+  `BACKTEST_REPORT_FORMAT=markdown python scripts/public_surplus_risk_report_export.py`
+  and optional output:
+  `BACKTEST_REPORT_OUTPUT_PATH=artifacts/public-surplus-risk-report.md python scripts/public_surplus_risk_report_export.py`.
+  This changed scripts/tests/docs only and added no frontend app code,
+  dashboard UI, backend API behavior, database schema, migrations, auth, Azure,
+  weather/maps, fake data, customer-specific savings calculation, control,
+  dispatch, activation, or asset integration.
 - Added a scripts/tests/docs-only compact public surplus-risk window snapshot
   mode to `scripts/public_surplus_risk_backtest.py`. The script now reads
   `BACKTEST_TOP_RISK_WINDOWS` (default `10`) and
