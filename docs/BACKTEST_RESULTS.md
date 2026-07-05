@@ -142,6 +142,44 @@ readiness, and remains read-only decision support with no automatic control,
 dispatch, activation, live control signals, or asset integration. Customer
 specific value requires customer load, asset, tariff, and operational data.
 
+## Public Surplus-Risk Snapshot Artifact v1
+
+`scripts/public_surplus_risk_snapshot_export.py` generates the canonical JSON
+artifact for the verified public DK1/DK2 surplus-risk proof-of-work:
+
+```bash
+PUBLIC_SURPLUS_RISK_SNAPSHOT_WRITE=true /opt/homebrew/bin/python3.13 scripts/public_surplus_risk_snapshot_export.py
+```
+
+The artifact path defaults to
+`frontend/src/data/public-surplus-risk-backtest-snapshot.json`. The flow is:
+public surplus-risk backtest/export script -> canonical JSON artifact ->
+Reports UI snapshot cards, verified risk-window table, Markdown download, and
+printable report. `frontend/src/lib/publicBacktestSnapshot.ts` provides the
+typed frontend loader for that artifact, so these Reports surfaces share the
+same source of truth for report metadata, DK1/DK2 summary metrics, verified
+top risk windows, commercial interpretation, pilot next step, and important
+boundaries.
+
+The exporter reads:
+
+- `PUBLIC_SURPLUS_RISK_SNAPSHOT_OUTPUT_PATH` default
+  `frontend/src/data/public-surplus-risk-backtest-snapshot.json`
+- `PUBLIC_SURPLUS_RISK_SNAPSHOT_DRY_RUN` default `true`
+- `PUBLIC_SURPLUS_RISK_SNAPSHOT_PRINT` default `false`
+- `PUBLIC_SURPLUS_RISK_SNAPSHOT_WRITE` default `false`
+
+Dry-run mode prints the target path and validation summary and does not write
+unless `PUBLIC_SURPLUS_RISK_SNAPSHOT_WRITE=true` is set. Write mode writes
+only the configured JSON artifact and writes no database records.
+
+The artifact has schema version `public_surplus_risk_snapshot.v1`, covers
+`2026-01-01` to `now`, uses Energi Data Service `DayAheadPrices` plus
+`ProductionConsumptionSettlement`, and remains public market/system-level
+read-only decision support only. It is not customer-specific savings, does not
+calculate customer-specific savings, and adds no automatic control, dispatch,
+activation, live control signals, or asset integration.
+
 Public DK1/DK2 market backtest input foundation:
 
 - `scripts/public_market_backtest_input.py` prepares a backend/script-only

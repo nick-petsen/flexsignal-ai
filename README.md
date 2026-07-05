@@ -209,6 +209,32 @@ customer-specific savings. The report states that this is public
 market/system-level read-only decision support only, not production readiness,
 and no automatic control, dispatch, or activation is performed.
 
+Canonical public surplus-risk snapshot artifact v1:
+
+```bash
+PUBLIC_SURPLUS_RISK_SNAPSHOT_WRITE=true /opt/homebrew/bin/python3.13 scripts/public_surplus_risk_snapshot_export.py
+```
+
+`scripts/public_surplus_risk_snapshot_export.py` generates
+`frontend/src/data/public-surplus-risk-backtest-snapshot.json` as the canonical
+JSON artifact for the verified public DK1/DK2 surplus-risk proof-of-work. The
+flow is: public surplus-risk backtest/export script -> JSON artifact ->
+Reports UI snapshot cards, verified risk-window table, Markdown download, and
+printable report. The frontend imports the JSON artifact through
+`frontend/src/lib/publicBacktestSnapshot.ts`; it does not call the backend,
+fetch remote data, poll, or autoload for this proof-of-work report path.
+
+The exporter reads `PUBLIC_SURPLUS_RISK_SNAPSHOT_OUTPUT_PATH` (default
+`frontend/src/data/public-surplus-risk-backtest-snapshot.json`),
+`PUBLIC_SURPLUS_RISK_SNAPSHOT_DRY_RUN` (default `true`), and
+`PUBLIC_SURPLUS_RISK_SNAPSHOT_PRINT` (default `false`). It writes only when
+`PUBLIC_SURPLUS_RISK_SNAPSHOT_WRITE=true`; dry-run mode prints the target path
+and validation summary without writing unless that explicit write flag is set.
+The artifact is public market/system-level only and is not customer-specific
+savings. It records read-only decision support boundaries, no automatic
+control, no dispatch, no activation, no live control signals, no asset
+integration, no database write, and no customer-specific savings calculation.
+
 ## Public Market Backtest Snapshot
 
 Snapshot v0 documents the first observed public DK1/DK2 market
