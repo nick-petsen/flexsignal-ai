@@ -103,6 +103,45 @@ Connect customer load, asset, tariff, and operational data; run a read-only
 pilot; and compare the public signal against customer-specific operational
 reality.
 
+## Public Surplus-Risk Report Export v1
+
+`scripts/public_surplus_risk_report_export.py` creates a shareable Markdown
+report from the verified public DK1/DK2 surplus-risk snapshot and the current
+verified top risk-window table.
+
+Manual stdout usage:
+
+```bash
+BACKTEST_REPORT_FORMAT=markdown python scripts/public_surplus_risk_report_export.py
+```
+
+Optional Markdown file output:
+
+```bash
+BACKTEST_REPORT_OUTPUT_PATH=artifacts/public-surplus-risk-report.md python scripts/public_surplus_risk_report_export.py
+```
+
+Configuration:
+
+- `BACKTEST_REPORT_FORMAT` defaults to `markdown`.
+- `BACKTEST_REPORT_OUTPUT_PATH` defaults to empty. When empty, the report is
+  printed to stdout and no files are written.
+- `BACKTEST_REPORT_DRY_RUN` defaults to `true`.
+- When `BACKTEST_REPORT_OUTPUT_PATH` is set, only that report file is written.
+- No database records are written.
+
+The report includes the title `Public DK1/DK2 surplus-risk proof-of-work`,
+period `2026-01-01 to now`, source `Energi Data Service DayAheadPrices +
+ProductionConsumptionSettlement`, the verified DK1/DK2 summary table, top risk
+windows, commercial interpretation, limitations, next customer pilot step, and
+safety boundary.
+
+The report is public market/system-level only. It is not customer-specific
+savings, does not calculate customer-specific value, does not claim production
+readiness, and remains read-only decision support with no automatic control,
+dispatch, activation, live control signals, or asset integration. Customer
+specific value requires customer load, asset, tariff, and operational data.
+
 Public DK1/DK2 market backtest input foundation:
 
 - `scripts/public_market_backtest_input.py` prepares a backend/script-only

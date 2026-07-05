@@ -186,6 +186,29 @@ customer-specific savings. Customer-specific results require customer load,
 asset, tariff, and operational data. It remains read-only decision support with
 no automatic control, dispatch, or activation.
 
+Manual public surplus-risk report export v1:
+
+```bash
+BACKTEST_REPORT_FORMAT=markdown python scripts/public_surplus_risk_report_export.py
+```
+
+Optional Markdown output path:
+
+```bash
+BACKTEST_REPORT_OUTPUT_PATH=artifacts/public-surplus-risk-report.md python scripts/public_surplus_risk_report_export.py
+```
+
+The report exporter is scripts/tests/docs-only and uses the verified public
+DK1/DK2 surplus-risk snapshot plus the current verified top risk-window table.
+It defaults to Markdown, reads `BACKTEST_REPORT_FORMAT`,
+`BACKTEST_REPORT_OUTPUT_PATH`, and `BACKTEST_REPORT_DRY_RUN`, prints to stdout
+when no output path is set, and writes only the requested report file when an
+output path is provided. It does not fetch live data, write database records,
+modify backend API behavior, modify frontend code, add migrations, or calculate
+customer-specific savings. The report states that this is public
+market/system-level read-only decision support only, not production readiness,
+and no automatic control, dispatch, or activation is performed.
+
 ## Public Market Backtest Snapshot
 
 Snapshot v0 documents the first observed public DK1/DK2 market
