@@ -32,6 +32,25 @@ The label "System Status: LIVE" must not be used until staging health,
 authentication, monitoring, and data freshness checks exist. Until then, any
 status wording must keep the manual/read-only decision-support boundary clear.
 
+## Customer Pilot Review
+
+The customer pilot readiness pack is documented in
+[PILOT_READINESS.md](PILOT_READINESS.md). Customer pilot outputs remain
+read-only decision support and require human review before interpretation or
+planning.
+
+For a customer pilot, a named customer reviewer should confirm:
+
+- The site is mapped to the correct DK1/DK2 price area.
+- Customer load, flexible MWh, operating constraints, schedules, and price
+  context are understood well enough for analysis.
+- Candidate windows are operationally plausible.
+- False positives and missed opportunities are reviewed with operational
+  context.
+- Any customer-specific potential estimate is based on validated customer data.
+- No automatic control, dispatch, activation, live control signal, or asset
+  integration is added.
+
 ## Dashboard Decision Summary Preview
 
 `POST /api/dashboard/decision-summary/preview` provides the read-only decision

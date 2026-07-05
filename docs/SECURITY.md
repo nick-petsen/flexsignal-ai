@@ -53,6 +53,24 @@ call external APIs, add auth, add Azure resources, add weather/maps, add fake
 data, or introduce automatic control, dispatch, activation, live control
 signals, or asset integration.
 
+## Customer Pilot Data Handling
+
+The customer pilot readiness pack is documented in
+[PILOT_READINESS.md](PILOT_READINESS.md). Customer pilot data must be handled
+separately from public demo artifacts and with least-privilege access.
+
+Security requirements for customer pilot data:
+
+- Do not commit customer data to git.
+- Do not commit customer secrets, credentials, tokens, or contract terms to the
+  repository.
+- Collect only the data needed for the agreed pilot analysis.
+- Store customer data outside the public demo artifact path.
+- Limit access to people who need the data for the pilot.
+- Delete or anonymize customer data after the pilot unless the contract says
+  otherwise.
+- Keep all pilot outputs as read-only decision support for human review.
+
 ## Read-Only Boundary
 
 All MVP recommendations require human review before action. The platform may

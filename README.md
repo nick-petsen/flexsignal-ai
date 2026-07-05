@@ -302,6 +302,21 @@ Next customer pilot step: connect customer load, asset, tariff, and
 operational data; run a read-only pilot; and compare the public signal against
 customer-specific operational reality.
 
+## Customer Pilot Readiness
+
+The customer pilot readiness pack is documented in
+[docs/PILOT_READINESS.md](docs/PILOT_READINESS.md). It defines the required
+customer data, minimum pilot dataset, measurable pilot success criteria,
+economic potential method, deliverables, security handling, human oversight,
+and out-of-scope boundaries.
+
+The public DK1/DK2 backtest shows that the signal can identify historical
+public system and market risk windows. A customer pilot tests whether those
+windows are relevant for a specific customer after customer load, flexible
+MWh, operational constraints, price context, and human review are applied. The
+pilot remains read-only decision support and adds no automatic control,
+dispatch, activation, live control signals, or asset integration.
+
 Required staging configuration before external test users:
 
 - `DATABASE_URL` for the staging database, stored only in the staging secret or
