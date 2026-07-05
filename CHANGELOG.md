@@ -2,6 +2,22 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/customer_pilot_intake_validate.py`, a scripts/tests/docs-only
+  local CSV validator for customer pilot intake files before pilot/backtest
+  analysis. It reads `CUSTOMER_PILOT_INPUT_PATH`,
+  `CUSTOMER_PILOT_CUSTOMER_TYPE`, `CUSTOMER_PILOT_MIN_ROWS`, and
+  `CUSTOMER_PILOT_DRY_RUN`, accepts CSV only for v0, prints a redacted
+  validation summary, and exits non-zero for invalid input. Added mocked
+  local-only tests in `backend/tests/test_customer_pilot_intake_validate.py`
+  for valid common intake, missing required columns, invalid price areas, row
+  minimums, secret-like column warnings, producer/flexible-consumption/grid
+  warnings, no file/db/external write behavior, and safety boundary text.
+  Updated README and pilot docs with usage and customer-type examples. This
+  changed scripts/tests/docs only and added no frontend app code, backend API
+  behavior, database schema, migrations, auth, Azure, weather/maps, fake
+  customer data beyond tiny test fixtures, customer-specific savings
+  calculation, profit/revenue calculation, control, dispatch, activation, live
+  control signals, or asset integration.
 - Added a docs-only customer pilot intake template in
   `docs/PILOT_INTAKE_TEMPLATE.md` plus a structured CSV request sheet at
   `docs/templates/customer_pilot_data_request.csv`. The template explains

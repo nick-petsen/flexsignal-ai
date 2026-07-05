@@ -26,6 +26,28 @@ sheet is available at
 Use these materials after the public proof-of-work report when requesting
 customer data for a read-only pilot.
 
+Validate local CSV intake files before any pilot or backtest analysis:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_intake_validate.py
+```
+
+Optional customer-type examples:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=producer python scripts/customer_pilot_intake_validate.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=flexible_consumption python scripts/customer_pilot_intake_validate.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=grid_dso python scripts/customer_pilot_intake_validate.py
+```
+
+The v0 validator accepts CSV only and checks required common columns, DK1/DK2
+price areas, sampled timestamps, timezone presence, row minimums,
+energy/flexibility columns, customer-type recommended fields, and secret-like
+column names. It is local read-only validation only. It writes no files, writes
+no database records, calls no external APIs, calculates no customer-specific
+savings, revenue, or profit, and adds no control, dispatch, activation, live
+control signals, or asset integration.
+
 ## Pilot Scope
 
 - Read-only analysis.
@@ -109,6 +131,7 @@ customer before being used for planning.
 - Use least-privilege access for all customer data.
 - Do not commit secrets to the repository.
 - Do not commit customer data to git.
+- Do not commit customer pilot CSV files to git.
 - Minimize collected data to what the pilot needs.
 - Delete or anonymize customer data after the pilot unless the contract says
   otherwise.

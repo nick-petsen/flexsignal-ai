@@ -56,6 +56,37 @@ asset integration. It exits non-zero if the backend is unreachable, the
 readiness endpoint is missing, required read-only safety flags are not true,
 or either dashboard summary does not return safe JSON.
 
+Customer pilot intake validation:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_intake_validate.py
+```
+
+The validator is a local read-only pre-check for customer pilot CSV intake
+files before any pilot or backtest analysis is attempted. It reads
+`CUSTOMER_PILOT_INPUT_PATH`, optional `CUSTOMER_PILOT_CUSTOMER_TYPE`, optional
+`CUSTOMER_PILOT_MIN_ROWS` (default `24`), and optional
+`CUSTOMER_PILOT_DRY_RUN` (default `true`). Accepted customer types are
+`common`, `producer`, `flexible_consumption`, and `grid_dso`.
+
+Examples:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=producer python scripts/customer_pilot_intake_validate.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=flexible_consumption python scripts/customer_pilot_intake_validate.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=grid_dso python scripts/customer_pilot_intake_validate.py
+```
+
+For v0 the validator accepts CSV only, writes no files, writes no database
+records, calls no external APIs, and prints a redacted validation summary with
+status, row count, detected columns, missing required columns, warnings, and
+the read-only safety boundary. It checks common pilot columns, DK1/DK2 price
+areas, parseable sampled timestamps, timezone presence, minimum row count,
+energy/flexibility columns, customer-type-specific recommended columns, and
+secret-like column names. This is validation only, not customer-specific
+savings, revenue, or profit calculation. Customer data and pilot files must
+not be committed to git.
+
 Manual public market backtest input preview:
 
 ```bash
