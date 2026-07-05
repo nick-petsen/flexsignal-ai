@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added a docs-only customer pilot readiness pack in
+  `docs/PILOT_READINESS.md` and linked it from `README.md`,
+  `docs/HUMAN_OVERSIGHT.md`, and `docs/SECURITY.md`. The pack documents the
+  purpose of a read-only customer pilot, pilot scope, required and optional
+  customer data, minimum dataset, measurable success criteria, economic
+  potential method, deliverables, data handling, human oversight, and
+  out-of-scope boundaries. It states that public DK1/DK2 backtests demonstrate
+  historical public system/market signal behavior, while customer-specific
+  potential requires validated customer load, flexible MWh, constraints,
+  tariff/price context, and human review. This changed documentation only and
+  added no frontend app code, backend API behavior, scripts, tests, database
+  schema, migrations, auth, Azure, weather/maps, fake data,
+  customer-specific savings calculation, control, dispatch, activation, live
+  control signals, or asset integration.
 - Added `scripts/public_surplus_risk_snapshot_export.py`,
   `backend/tests/test_public_surplus_risk_snapshot_export.py`,
   `frontend/src/data/public-surplus-risk-backtest-snapshot.json`, and
