@@ -131,6 +131,26 @@ Preferred file formats:
 - Excel.
 - Parquet.
 
+The v0 local intake validator accepts CSV only:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_intake_validate.py
+```
+
+Customer-type examples:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=producer python scripts/customer_pilot_intake_validate.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=flexible_consumption python scripts/customer_pilot_intake_validate.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_CUSTOMER_TYPE=grid_dso python scripts/customer_pilot_intake_validate.py
+```
+
+The validator checks structure before any pilot/backtest analysis is attempted.
+It is validation only, not customer-specific savings, revenue, or profit
+calculation. It writes no files, writes no database records, calls no external
+APIs, performs no automatic control, and sends no dispatch, activation, or live
+control signals.
+
 Preferred structure:
 
 - One row per timestamp.
@@ -156,6 +176,7 @@ Example time series columns:
 ## Security And Data-Handling Notes
 
 - Do not commit customer data to git.
+- Do not commit customer pilot CSV files to git.
 - Use least-privilege access.
 - Minimize collected data to what the pilot needs.
 - Keep customer data separate from public demo artifacts.
