@@ -38,6 +38,14 @@ import {
   type SafetyBoundary,
   type SpotPriceRow
 } from "../lib/api";
+import {
+  publicBacktestPeriod,
+  publicBacktestSnapshot,
+  publicBacktestSnapshotAreas,
+  publicRiskReasonLabels,
+  publicRiskWindowSnapshots,
+  type PublicBacktestSnapshotArea
+} from "../lib/publicBacktestSnapshot";
 
 type EnergyRequestState<Row> =
   | { status: "idle" }
@@ -140,34 +148,6 @@ type CockpitKpi = {
   tone?: "neutral" | "good" | "warning" | "danger";
 };
 
-type PublicBacktestSnapshotArea = {
-  area: PriceArea;
-  joinedHours: number;
-  skippedRows: number;
-  mediumRiskHours: number;
-  highRiskHours: number;
-  riskWindows: number;
-  highestRiskScore: number;
-  negativePriceHours: number;
-  lowPriceHours: number;
-  averageRenewableShare: string;
-  maxRenewableShare: string;
-};
-
-type PublicRiskWindowSnapshot = {
-  area: PriceArea;
-  start: string;
-  end: string;
-  durationHours: number;
-  score: number;
-  level: "medium" | "high";
-  negativePriceHours: number;
-  lowPriceHours: number;
-  averageRenewableShare: string;
-  maxRenewableShare: string;
-  reasons: string[];
-};
-
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
 const forecastPreviewNumericFields: (keyof ForecastPreviewRow)[] = [
   "price_dkk_per_mwh",
@@ -231,209 +211,6 @@ const powerBalanceColumns: Column<PowerBalanceRow>[] = [
   { key: "wind_offshore_mw", label: "Wind offshore MW" },
   { key: "solar_mw", label: "Solar MW" }
 ];
-
-const publicBacktestSnapshotAreas: PublicBacktestSnapshotArea[] = [
-  {
-    area: "DK1",
-    joinedHours: 4208,
-    skippedRows: 233,
-    mediumRiskHours: 1663,
-    highRiskHours: 174,
-    riskWindows: 129,
-    highestRiskScore: 100,
-    negativePriceHours: 132,
-    lowPriceHours: 479,
-    averageRenewableShare: "68.8%",
-    maxRenewableShare: "192.2%"
-  },
-  {
-    area: "DK2",
-    joinedHours: 4208,
-    skippedRows: 233,
-    mediumRiskHours: 288,
-    highRiskHours: 2,
-    riskWindows: 72,
-    highestRiskScore: 85,
-    negativePriceHours: 78,
-    lowPriceHours: 491,
-    averageRenewableShare: "38.2%",
-    maxRenewableShare: "108.6%"
-  }
-];
-
-const publicRiskWindowSnapshots: PublicRiskWindowSnapshot[] = [
-  {
-    area: "DK1",
-    start: "2026-04-04T21:00:00",
-    end: "2026-04-06T23:00:00",
-    durationHours: 51,
-    score: 100,
-    level: "high",
-    negativePriceHours: 20,
-    lowPriceHours: 39,
-    averageRenewableShare: "98.6%",
-    maxRenewableShare: "163.3%",
-    reasons: [
-      "low_price",
-      "high_renewable_share",
-      "renewable_generation_above_consumption",
-      "negative_price"
-    ]
-  },
-  {
-    area: "DK1",
-    start: "2026-04-24T06:00:00",
-    end: "2026-04-25T22:00:00",
-    durationHours: 41,
-    score: 100,
-    level: "high",
-    negativePriceHours: 8,
-    lowPriceHours: 18,
-    averageRenewableShare: "117.3%",
-    maxRenewableShare: "192.2%",
-    reasons: [
-      "high_renewable_share",
-      "renewable_generation_above_consumption",
-      "low_price",
-      "negative_price"
-    ]
-  },
-  {
-    area: "DK1",
-    start: "2026-05-29T06:00:00",
-    end: "2026-05-29T16:00:00",
-    durationHours: 11,
-    score: 100,
-    level: "high",
-    negativePriceHours: 1,
-    lowPriceHours: 6,
-    averageRenewableShare: "108.6%",
-    maxRenewableShare: "136.4%",
-    reasons: [
-      "high_renewable_share",
-      "renewable_generation_above_consumption",
-      "low_price",
-      "negative_price"
-    ]
-  },
-  {
-    area: "DK1",
-    start: "2026-06-13T02:00:00",
-    end: "2026-06-15T18:00:00",
-    durationHours: 65,
-    score: 95,
-    level: "high",
-    negativePriceHours: 14,
-    lowPriceHours: 33,
-    averageRenewableShare: "110.2%",
-    maxRenewableShare: "171.3%",
-    reasons: [
-      "high_renewable_share",
-      "renewable_generation_above_consumption",
-      "low_price",
-      "negative_price"
-    ]
-  },
-  {
-    area: "DK1",
-    start: "2026-05-26T10:00:00",
-    end: "2026-05-28T01:00:00",
-    durationHours: 40,
-    score: 95,
-    level: "high",
-    negativePriceHours: 10,
-    lowPriceHours: 12,
-    averageRenewableShare: "113.2%",
-    maxRenewableShare: "162.7%",
-    reasons: [
-      "high_renewable_share",
-      "renewable_generation_above_consumption",
-      "low_price",
-      "negative_price"
-    ]
-  },
-  {
-    area: "DK2",
-    start: "2026-04-24T21:00:00",
-    end: "2026-04-25T06:00:00",
-    durationHours: 10,
-    score: 85,
-    level: "high",
-    negativePriceHours: 0,
-    lowPriceHours: 3,
-    averageRenewableShare: "98.0%",
-    maxRenewableShare: "108.6%",
-    reasons: [
-      "high_renewable_share",
-      "renewable_generation_above_consumption",
-      "low_price"
-    ]
-  },
-  {
-    area: "DK2",
-    start: "2026-06-14T20:00:00",
-    end: "2026-06-15T04:00:00",
-    durationHours: 9,
-    score: 65,
-    level: "medium",
-    negativePriceHours: 0,
-    lowPriceHours: 0,
-    averageRenewableShare: "92.2%",
-    maxRenewableShare: "100.7%",
-    reasons: [
-      "high_renewable_share",
-      "renewable_generation_above_consumption"
-    ]
-  },
-  {
-    area: "DK2",
-    start: "2026-01-01T17:00:00",
-    end: "2026-01-02T05:00:00",
-    durationHours: 13,
-    score: 60,
-    level: "medium",
-    negativePriceHours: 0,
-    lowPriceHours: 13,
-    averageRenewableShare: "77.1%",
-    maxRenewableShare: "85.4%",
-    reasons: ["low_price", "medium_renewable_share", "high_renewable_share"]
-  },
-  {
-    area: "DK2",
-    start: "2026-04-03T21:00:00",
-    end: "2026-04-04T08:00:00",
-    durationHours: 12,
-    score: 60,
-    level: "medium",
-    negativePriceHours: 0,
-    lowPriceHours: 10,
-    averageRenewableShare: "90.2%",
-    maxRenewableShare: "97.3%",
-    reasons: ["high_renewable_share", "low_price"]
-  },
-  {
-    area: "DK2",
-    start: "2026-03-25T20:00:00",
-    end: "2026-03-26T05:00:00",
-    durationHours: 10,
-    score: 60,
-    level: "medium",
-    negativePriceHours: 0,
-    lowPriceHours: 8,
-    averageRenewableShare: "84.8%",
-    maxRenewableShare: "90.8%",
-    reasons: ["high_renewable_share", "low_price"]
-  }
-];
-
-const publicRiskReasonLabels: Record<string, string> = {
-  high_renewable_share: "High renewable share",
-  low_price: "Low price hours",
-  medium_renewable_share: "Medium renewable share",
-  negative_price: "Negative price hours",
-  renewable_generation_above_consumption:
-    "Renewable generation above consumption"
-};
 
 const PUBLIC_PROOF_OF_WORK_REPORT_FILENAME =
   "public-surplus-risk-proof-of-work.md";
@@ -2015,9 +1792,9 @@ function PublicBacktestSnapshot() {
             Identified historical DK1/DK2 risk windows
           </h2>
           <p>
-            Documented verified public backtest snapshot from Energi Data
-            Service DayAheadPrices and ProductionConsumptionSettlement data.
-            Not customer-specific savings.
+            Documented verified public backtest snapshot from{" "}
+            {publicBacktestSnapshot.source}.{" "}
+            {publicBacktestSnapshot.important_boundaries[1]}
           </p>
         </div>
         <span className="status">Read-only snapshot</span>
@@ -2026,26 +1803,23 @@ function PublicBacktestSnapshot() {
       <dl className="public-backtest__meta" aria-label="Snapshot metadata">
         <div>
           <dt>Period</dt>
-          <dd>2026-01-01 to now</dd>
+          <dd>{publicBacktestPeriod}</dd>
         </div>
         <div>
           <dt>Source</dt>
-          <dd>
-            Energi Data Service DayAheadPrices +
-            ProductionConsumptionSettlement
-          </dd>
+          <dd>{publicBacktestSnapshot.source}</dd>
         </div>
         <div>
           <dt>dry_run</dt>
-          <dd>true</dd>
+          <dd>{String(publicBacktestSnapshot.dry_run)}</dd>
         </div>
         <div>
           <dt>file_written</dt>
-          <dd>false</dd>
+          <dd>{String(publicBacktestSnapshot.file_written)}</dd>
         </div>
         <div>
           <dt>database_write_performed</dt>
-          <dd>false</dd>
+          <dd>{String(publicBacktestSnapshot.database_write_performed)}</dd>
         </div>
       </dl>
 
@@ -2082,20 +1856,14 @@ function PublicBacktestSnapshot() {
       <div className="public-backtest__explanation">
         <section>
           <h3>Interpretation</h3>
-          <p>
-            The result shows that the system can identify historical
-            surplus-risk windows using public market, consumption, and
-            renewable production data.
-          </p>
+          <p>{publicBacktestSnapshot.commercial_interpretation}</p>
         </section>
         <section>
           <h3>Limitations</h3>
           <ul className="plain-list">
-            <li>Public market/system-level only.</li>
-            <li>Not customer-specific savings.</li>
-            <li>No customer load/asset/tariff data.</li>
-            <li>Read-only decision support.</li>
-            <li>No automatic control, dispatch, or activation.</li>
+            {publicBacktestSnapshot.important_boundaries.map((boundary) => (
+              <li key={boundary}>{boundary}</li>
+            ))}
           </ul>
         </section>
       </div>
@@ -2136,11 +1904,13 @@ function buildPublicProofOfWorkMarkdownReport(): string {
     .join("\n");
 
   return [
-    "# Public DK1/DK2 surplus-risk proof-of-work",
+    `# ${publicBacktestSnapshot.title}`,
     "",
-    "title: Public DK1/DK2 surplus-risk proof-of-work",
-    "period: 2026-01-01 to now",
-    "source: Energi Data Service DayAheadPrices + ProductionConsumptionSettlement",
+    `title: ${publicBacktestSnapshot.title}`,
+    `period: ${publicBacktestPeriod}`,
+    `source: ${publicBacktestSnapshot.source}`,
+    `scope: ${publicBacktestSnapshot.scope}`,
+    `decision_boundary: ${publicBacktestSnapshot.decision_boundary}`,
     "",
     "## DK1/DK2 summary metrics",
     "",
@@ -2156,28 +1926,23 @@ function buildPublicProofOfWorkMarkdownReport(): string {
     "",
     "## Commercial interpretation",
     "",
-    "The verified public backtest shows that DK1/DK2 surplus-risk windows can be identified from public market, consumption, and renewable production data. This is public market/system-level evidence for human review. It is not customer-specific savings and does not say customers saved money.",
+    publicBacktestSnapshot.commercial_interpretation,
     "",
     "## Limitations",
     "",
-    "- Public market/system-level only.",
-    "- Not customer-specific savings.",
-    "- No customer load, asset, tariff, operating schedule, or site constraint data.",
-    "- Read-only decision support only.",
-    "- Does not establish production readiness.",
+    ...publicBacktestSnapshot.important_boundaries.map(
+      (boundary) => `- ${boundary}`
+    ),
     "",
     "## Next customer pilot step",
     "",
-    "Review the public proof-of-work with a pilot customer, document the customer's relevant operational assumptions, and decide whether a separate customer-specific analysis is warranted. Keep any pilot review manual and read-only unless a later scoped phase explicitly changes the boundary.",
+    publicBacktestSnapshot.pilot_next_step,
     "",
     "## Safety boundary",
     "",
-    "- Public market/system-level only.",
-    "- Not customer-specific savings.",
-    "- Read-only decision support.",
-    "- No automatic control, dispatch, activation.",
-    "- No live control signals.",
-    "- No asset integration.",
+    ...publicBacktestSnapshot.important_boundaries.map(
+      (boundary) => `- ${boundary}`
+    ),
     ""
   ].join("\n");
 }
@@ -2192,6 +1957,9 @@ function downloadPublicProofOfWorkReport() {
 }
 
 function buildPublicProofOfWorkPrintableReportHtml(): string {
+  const boundaryItems = publicBacktestSnapshot.important_boundaries
+    .map((boundary) => `<li>${escapeHtml(boundary)}</li>`)
+    .join("");
   const summaryRows = publicBacktestSnapshotAreas
     .map(
       (snapshot) => `
@@ -2238,7 +2006,7 @@ function buildPublicProofOfWorkPrintableReportHtml(): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Public DK1/DK2 surplus-risk proof-of-work</title>
+    <title>${escapeHtml(publicBacktestSnapshot.title)}</title>
     <style>
       :root {
         color-scheme: light;
@@ -2567,19 +2335,19 @@ function buildPublicProofOfWorkPrintableReportHtml(): string {
     <main class="page">
       <header>
         <div class="brand">N&amp;O Predict</div>
-        <h1>Public DK1/DK2 surplus-risk proof-of-work</h1>
+        <h1>${escapeHtml(publicBacktestSnapshot.title)}</h1>
         <dl class="meta" aria-label="Report metadata">
           <div>
             <dt>Period</dt>
-            <dd>2026-01-01 to now</dd>
+            <dd>${escapeHtml(publicBacktestPeriod)}</dd>
           </div>
           <div>
             <dt>Source</dt>
-            <dd>Energi Data Service DayAheadPrices + ProductionConsumptionSettlement</dd>
+            <dd>${escapeHtml(publicBacktestSnapshot.source)}</dd>
           </div>
         </dl>
         <div class="callout">
-          Public market/system-level only. Not customer-specific savings. Read-only decision support.
+          ${escapeHtml(publicBacktestSnapshot.scope)}. ${escapeHtml(publicBacktestSnapshot.important_boundaries[1])} ${escapeHtml(publicBacktestSnapshot.decision_boundary)}.
         </div>
       </header>
 
@@ -2675,32 +2443,17 @@ function buildPublicProofOfWorkPrintableReportHtml(): string {
 
       <section class="section">
         <h2>What this shows</h2>
-        <p>
-          This public proof-of-work shows that N&amp;O Predict can identify historical DK1/DK2 surplus-risk windows
-          using public market price, consumption, and renewable production data. The signal highlights when a human
-          reviewer should investigate flexible demand, production planning, or other operational options.
-        </p>
+        <p>${escapeHtml(publicBacktestSnapshot.commercial_interpretation)}</p>
       </section>
 
       <section class="section">
         <h2>How to use this in a pilot</h2>
-        <p>
-          A customer pilot should compare these public risk windows with the customer's own load, assets, tariffs,
-          operating schedule, and operational constraints. The goal is to measure whether the public signal matches
-          real operational opportunities before making any commercial or operational decisions.
-        </p>
+        <p>${escapeHtml(publicBacktestSnapshot.pilot_next_step)}</p>
       </section>
 
       <section class="section">
         <h2>Important boundaries</h2>
-        <ul>
-          <li>Public market/system-level evidence only.</li>
-          <li>Not customer-specific savings.</li>
-          <li>No customer load, asset, tariff, operating schedule, or site constraint data is included.</li>
-          <li>Read-only decision support only.</li>
-          <li>No automatic control, dispatch, activation, live control signals, or asset integration.</li>
-          <li>Does not establish production readiness.</li>
-        </ul>
+        <ul>${boundaryItems}</ul>
       </section>
 
       <footer>
@@ -2880,8 +2633,7 @@ function VerifiedPublicRiskWindowSnapshot() {
                   </span>
                 </td>
                 <td className="risk-window-table__review">
-                  Review as public evidence and document any decision-support
-                  note manually.
+                  {publicBacktestSnapshot.human_review_action}
                 </td>
               </tr>
             ))}
@@ -2892,11 +2644,9 @@ function VerifiedPublicRiskWindowSnapshot() {
       <div className="public-risk-windows__limits">
         <p>Limitations</p>
         <ul className="plain-list">
-          <li>Public market/system-level only.</li>
-          <li>Not customer-specific savings.</li>
-          <li>No customer load/asset/tariff data.</li>
-          <li>Read-only decision support.</li>
-          <li>No automatic control, dispatch, or activation.</li>
+          {publicBacktestSnapshot.important_boundaries.map((boundary) => (
+            <li key={boundary}>{boundary}</li>
+          ))}
         </ul>
       </div>
     </section>

@@ -1,0 +1,233 @@
+{
+  "commercial_interpretation": "The verified public backtest shows that DK1/DK2 surplus-risk windows can be identified from public market, consumption, and renewable production data. This is public market/system-level evidence for human review. It is not customer-specific savings and does not say customers saved money.",
+  "customer_specific_savings_calculated": false,
+  "database_write_performed": false,
+  "decision_boundary": "read-only decision support",
+  "dry_run": true,
+  "file_written": false,
+  "human_review_action": "Review as public evidence and document any decision-support note manually.",
+  "important_boundaries": [
+    "Public market/system-level only.",
+    "Not customer-specific savings.",
+    "No customer load, asset, tariff, operating schedule, or site constraint data.",
+    "Read-only decision support.",
+    "No automatic control, dispatch, or activation.",
+    "No live control signals.",
+    "No asset integration.",
+    "Does not establish production readiness."
+  ],
+  "no_activation": true,
+  "no_asset_integration": true,
+  "no_automatic_control": true,
+  "no_dispatch": true,
+  "no_live_control_signals": true,
+  "not_customer_specific_savings": true,
+  "period_end_label": "now",
+  "period_start": "2026-01-01",
+  "pilot_next_step": "Review the public proof-of-work with a pilot customer, document the customer's relevant operational assumptions, and decide whether a separate customer-specific analysis is warranted. Keep any pilot review manual and read-only unless a later scoped phase explicitly changes the boundary.",
+  "reason_labels": {
+    "high_renewable_share": "High renewable share",
+    "low_price": "Low price hours",
+    "medium_renewable_share": "Medium renewable share",
+    "negative_price": "Negative price hours",
+    "renewable_generation_above_consumption": "Renewable generation above consumption"
+  },
+  "schema_version": "public_surplus_risk_snapshot.v1",
+  "scope": "public market/system-level only",
+  "source": "Energi Data Service DayAheadPrices + ProductionConsumptionSettlement",
+  "summary_metrics": {
+    "DK1": {
+      "average_renewable_share_percent": 68.8,
+      "high_risk_hours": 174,
+      "highest_risk_score": 100,
+      "joined_hours": 4208,
+      "low_price_hours": 479,
+      "max_renewable_share_percent": 192.2,
+      "medium_risk_hours": 1663,
+      "negative_price_hours": 132,
+      "risk_windows": 129,
+      "skipped_rows": 233
+    },
+    "DK2": {
+      "average_renewable_share_percent": 38.2,
+      "high_risk_hours": 2,
+      "highest_risk_score": 85,
+      "joined_hours": 4208,
+      "low_price_hours": 491,
+      "max_renewable_share_percent": 108.6,
+      "medium_risk_hours": 288,
+      "negative_price_hours": 78,
+      "risk_windows": 72,
+      "skipped_rows": 233
+    }
+  },
+  "title": "Public DK1/DK2 surplus-risk proof-of-work",
+  "top_risk_windows": {
+    "DK1": [
+      {
+        "average_renewable_share_percent": 98.6,
+        "duration_hours": 51,
+        "end": "2026-04-06T23:00:00",
+        "level": "high",
+        "low_price_hours": 39,
+        "max_renewable_share_percent": 163.3,
+        "negative_price_hours": 20,
+        "reasons": [
+          "low_price",
+          "high_renewable_share",
+          "renewable_generation_above_consumption",
+          "negative_price"
+        ],
+        "score": 100,
+        "start": "2026-04-04T21:00:00"
+      },
+      {
+        "average_renewable_share_percent": 117.3,
+        "duration_hours": 41,
+        "end": "2026-04-25T22:00:00",
+        "level": "high",
+        "low_price_hours": 18,
+        "max_renewable_share_percent": 192.2,
+        "negative_price_hours": 8,
+        "reasons": [
+          "high_renewable_share",
+          "renewable_generation_above_consumption",
+          "low_price",
+          "negative_price"
+        ],
+        "score": 100,
+        "start": "2026-04-24T06:00:00"
+      },
+      {
+        "average_renewable_share_percent": 108.6,
+        "duration_hours": 11,
+        "end": "2026-05-29T16:00:00",
+        "level": "high",
+        "low_price_hours": 6,
+        "max_renewable_share_percent": 136.4,
+        "negative_price_hours": 1,
+        "reasons": [
+          "high_renewable_share",
+          "renewable_generation_above_consumption",
+          "low_price",
+          "negative_price"
+        ],
+        "score": 100,
+        "start": "2026-05-29T06:00:00"
+      },
+      {
+        "average_renewable_share_percent": 110.2,
+        "duration_hours": 65,
+        "end": "2026-06-15T18:00:00",
+        "level": "high",
+        "low_price_hours": 33,
+        "max_renewable_share_percent": 171.3,
+        "negative_price_hours": 14,
+        "reasons": [
+          "high_renewable_share",
+          "renewable_generation_above_consumption",
+          "low_price",
+          "negative_price"
+        ],
+        "score": 95,
+        "start": "2026-06-13T02:00:00"
+      },
+      {
+        "average_renewable_share_percent": 113.2,
+        "duration_hours": 40,
+        "end": "2026-05-28T01:00:00",
+        "level": "high",
+        "low_price_hours": 12,
+        "max_renewable_share_percent": 162.7,
+        "negative_price_hours": 10,
+        "reasons": [
+          "high_renewable_share",
+          "renewable_generation_above_consumption",
+          "low_price",
+          "negative_price"
+        ],
+        "score": 95,
+        "start": "2026-05-26T10:00:00"
+      }
+    ],
+    "DK2": [
+      {
+        "average_renewable_share_percent": 98.0,
+        "duration_hours": 10,
+        "end": "2026-04-25T06:00:00",
+        "level": "high",
+        "low_price_hours": 3,
+        "max_renewable_share_percent": 108.6,
+        "negative_price_hours": 0,
+        "reasons": [
+          "high_renewable_share",
+          "renewable_generation_above_consumption",
+          "low_price"
+        ],
+        "score": 85,
+        "start": "2026-04-24T21:00:00"
+      },
+      {
+        "average_renewable_share_percent": 92.2,
+        "duration_hours": 9,
+        "end": "2026-06-15T04:00:00",
+        "level": "medium",
+        "low_price_hours": 0,
+        "max_renewable_share_percent": 100.7,
+        "negative_price_hours": 0,
+        "reasons": [
+          "high_renewable_share",
+          "renewable_generation_above_consumption"
+        ],
+        "score": 65,
+        "start": "2026-06-14T20:00:00"
+      },
+      {
+        "average_renewable_share_percent": 77.1,
+        "duration_hours": 13,
+        "end": "2026-01-02T05:00:00",
+        "level": "medium",
+        "low_price_hours": 13,
+        "max_renewable_share_percent": 85.4,
+        "negative_price_hours": 0,
+        "reasons": [
+          "low_price",
+          "medium_renewable_share",
+          "high_renewable_share"
+        ],
+        "score": 60,
+        "start": "2026-01-01T17:00:00"
+      },
+      {
+        "average_renewable_share_percent": 90.2,
+        "duration_hours": 12,
+        "end": "2026-04-04T08:00:00",
+        "level": "medium",
+        "low_price_hours": 10,
+        "max_renewable_share_percent": 97.3,
+        "negative_price_hours": 0,
+        "reasons": [
+          "high_renewable_share",
+          "low_price"
+        ],
+        "score": 60,
+        "start": "2026-04-03T21:00:00"
+      },
+      {
+        "average_renewable_share_percent": 84.8,
+        "duration_hours": 10,
+        "end": "2026-03-26T05:00:00",
+        "level": "medium",
+        "low_price_hours": 8,
+        "max_renewable_share_percent": 90.8,
+        "negative_price_hours": 0,
+        "reasons": [
+          "high_renewable_share",
+          "low_price"
+        ],
+        "score": 60,
+        "start": "2026-03-25T20:00:00"
+      }
+    ]
+  }
+}

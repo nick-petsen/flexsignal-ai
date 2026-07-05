@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/public_surplus_risk_snapshot_export.py`,
+  `backend/tests/test_public_surplus_risk_snapshot_export.py`,
+  `frontend/src/data/public-surplus-risk-backtest-snapshot.json`, and
+  `frontend/src/lib/publicBacktestSnapshot.ts` to make the verified public
+  DK1/DK2 surplus-risk proof-of-work reproducible as canonical JSON artifact
+  v1. The artifact carries schema version
+  `public_surplus_risk_snapshot.v1`, report metadata, DK1/DK2 summary metrics,
+  verified top risk windows, commercial interpretation, pilot next step, and
+  safety boundaries. Reports snapshot cards, the verified risk-window table,
+  Markdown download, and printable report now consume the same JSON artifact
+  through the typed frontend loader. Documented regeneration with
+  `PUBLIC_SURPLUS_RISK_SNAPSHOT_WRITE=true /opt/homebrew/bin/python3.13 scripts/public_surplus_risk_snapshot_export.py`.
+  The exporter is dry-run by default, writes only the configured JSON artifact
+  when explicitly allowed, writes no database records, performs no network
+  calls in tests, and does not calculate customer-specific savings. This adds
+  no backend API behavior, database schema, migrations, backend endpoints,
+  frontend backend calls, polling, autoload, auth, Azure, weather/maps, fake
+  data, control, dispatch, activation, live control signals, or asset
+  integration.
 - Added `scripts/public_surplus_risk_report_export.py`, a scripts/tests/docs
   only Markdown report exporter for the verified public DK1/DK2 surplus-risk
   proof-of-work snapshot and current verified top risk-window table. It reads
