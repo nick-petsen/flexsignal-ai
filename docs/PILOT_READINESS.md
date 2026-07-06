@@ -157,6 +157,30 @@ not be committed to git unless anonymized and explicitly approved.
 If `reportlab` is missing at runtime, install the backend dependencies from
 `backend/pyproject.toml` before rerunning.
 
+To create a complete local read-only pilot artifact pack:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_artifact_pack.py
+```
+
+To write the artifact pack explicitly:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_ARTIFACT_WRITE=true CUSTOMER_PILOT_ARTIFACT_RUN_ID=pilot-demo-001 python scripts/customer_pilot_artifact_pack.py
+```
+
+The artifact pack accepts CSV only for v0 and reuses the workflow preview,
+Markdown report export, and PDF report export. In default dry-run mode it
+prints a summary and writes no files. In write mode it creates exactly one
+sanitized run folder under `CUSTOMER_PILOT_ARTIFACT_DIR` (default
+`artifacts/customer-pilots`) with `workflow-summary.json`,
+`customer-pilot-preview.md`, `customer-pilot-preview.pdf`, and `README.txt`.
+Generated artifacts are ignored by git. Raw customer data must never be
+committed. The artifact pack uses public price signal only and presents an
+indicative gross opportunity signal only. It is not financial advice and not
+customer-specific savings. Customer-specific assessment requires tariff,
+constraints, operating costs, and human validation.
+
 ## Artifact Safety
 
 Customer pilot inputs and generated customer reports are local artifacts. They
@@ -194,8 +218,9 @@ The pilot flow is:
 3. Estimate indicative gross opportunity signal.
 4. Export a local Markdown workflow preview report if needed.
 5. Export a local PDF workflow preview report if explicitly needed.
-6. Human review.
-7. Only later produce customer-specific assessment if data and contract
+6. Create a local artifact pack if explicitly needed.
+7. Human review.
+8. Only later produce customer-specific assessment if data and contract
    support it.
 
 ## Pilot Scope
