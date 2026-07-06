@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import importlib.util
 import io
 import json
@@ -76,6 +77,10 @@ def write_snapshot(
         },
     }
     path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def valid_rows(
@@ -156,6 +161,7 @@ def test_dry_run_creates_no_files(tmp_path: Path) -> None:
     assert output["would_create_files"] == list(
         customer_pilot_artifact_pack.ARTIFACT_FILENAMES
     )
+    assert "MANIFEST.json" in output["would_create_files"]
 
 
 def test_dry_run_does_not_render_pdf(
@@ -209,6 +215,7 @@ def test_write_mode_creates_exactly_one_run_folder_with_exact_files(
     assert sorted(
         path.relative_to(tmp_path) for path in tmp_path.rglob("*") if path.is_file()
     ) == [
+        Path("artifacts/pilot-demo-001/MANIFEST.json"),
         Path("artifacts/pilot-demo-001/README.txt"),
         Path("artifacts/pilot-demo-001/customer-pilot-preview.md"),
         Path("artifacts/pilot-demo-001/customer-pilot-preview.pdf"),
@@ -219,6 +226,92 @@ def test_write_mode_creates_exactly_one_run_folder_with_exact_files(
     assert result["file_written"] is True
     assert result["database_write_performed"] is False
     assert result["external_api_calls_performed"] is False
+    assert result["files"] == list(customer_pilot_artifact_pack.ARTIFACT_FILENAMES)
+
+
+def test_manifest_contains_audit_metadata_without_raw_customer_data(
+    tmp_path: Path,
+) -> None:
+    input_path = tmp_path / "customer.csv"
+    snapshot_path = tmp_path / "snapshot.json"
+    artifact_dir = tmp_path / "artifacts"
+    write_csv(input_path, valid_rows())
+    write_snapshot(snapshot_path)
+
+    customer_pilot_artifact_pack.create_customer_pilot_artifact_pack(
+        config_for(input_path, snapshot_path, artifact_dir, artifact_write=True),
+        stdout=io.StringIO(),
+    )
+
+    manifest_path = artifact_dir / "pilot-demo-001" / "MANIFEST.json"
+    manifest_text = manifest_path.read_text(encoding="utf-8")
+    manifest = json.loads(manifest_text)
+
+    assert manifest["manifest_schema_version"] == (
+        "customer_pilot_artifact_manifest.v1"
+    )
+    assert manifest["run_id"] == "pilot-demo-001"
+    assert manifest["artifact_type"] == "customer_pilot_preview_pack"
+    assert manifest["decision_boundary"] == "read-only decision support"
+    assert manifest["human_review_required"] is True
+    assert manifest["public_price_signal_only"] is True
+    assert manifest["indicative_gross_opportunity_signal_only"] is True
+    assert manifest["not_customer_value_claim"] is True
+    assert manifest["database_write_performed"] is False
+    assert manifest["external_api_calls_performed"] is False
+    assert manifest["no_automatic_control"] is True
+    assert manifest["no_dispatch"] is True
+    assert manifest["no_activation"] is True
+    assert manifest["no_live_control_signals"] is True
+    assert manifest["no_asset_integration"] is True
+    assert manifest["input_file_sha256"] == file_sha256(input_path)
+    assert manifest["input_file_size_bytes"] == input_path.stat().st_size
+    assert manifest["public_snapshot_schema_version"] == (
+        "public_surplus_risk_snapshot.v1"
+    )
+    assert manifest["workflow_status"] == "ready_for_human_review"
+    assert manifest["validation_status"] == "valid"
+    assert manifest["signal_match_status"] == "matched"
+    assert manifest["opportunity_estimate_status"] == "estimate_available"
+
+    assert str(input_path) not in manifest_text
+    assert input_path.name not in manifest_text
+    for customer_row_content in (
+        "site-a",
+        "review locally",
+        "2026-04-04T22:00:00+00:00",
+    ):
+        assert customer_row_content not in manifest_text
+
+
+def test_manifest_generated_files_include_hashes_and_sizes(
+    tmp_path: Path,
+) -> None:
+    input_path = tmp_path / "customer.csv"
+    snapshot_path = tmp_path / "snapshot.json"
+    artifact_dir = tmp_path / "artifacts"
+    write_csv(input_path, valid_rows())
+    write_snapshot(snapshot_path)
+
+    customer_pilot_artifact_pack.create_customer_pilot_artifact_pack(
+        config_for(input_path, snapshot_path, artifact_dir, artifact_write=True),
+        stdout=io.StringIO(),
+    )
+
+    run_dir = artifact_dir / "pilot-demo-001"
+    manifest = json.loads((run_dir / "MANIFEST.json").read_text(encoding="utf-8"))
+    generated_files = {
+        item["filename"]: item for item in manifest["generated_files"]
+    }
+
+    assert set(generated_files) == set(
+        customer_pilot_artifact_pack.GENERATED_ARTIFACT_FILENAMES
+    )
+    assert "MANIFEST.json" not in generated_files
+    for filename in customer_pilot_artifact_pack.GENERATED_ARTIFACT_FILENAMES:
+        artifact_path = run_dir / filename
+        assert generated_files[filename]["sha256"] == file_sha256(artifact_path)
+        assert generated_files[filename]["size_bytes"] == artifact_path.stat().st_size
 
 
 def test_pdf_bytes_start_with_pdf_header(tmp_path: Path) -> None:

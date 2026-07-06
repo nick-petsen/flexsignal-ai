@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `MANIFEST.json` to local customer pilot artifact packs. Write mode now
+  creates exactly `workflow-summary.json`, `customer-pilot-preview.md`,
+  `customer-pilot-preview.pdf`, `README.txt`, and `MANIFEST.json`.
+  `MANIFEST.json` records audit and reproducibility metadata including the
+  input file hash and size, workflow statuses, public snapshot schema version
+  when available, and generated artifact hashes and sizes without storing the
+  raw input path, raw customer data rows, secrets, or raw environment values.
+  Updated mocked local-only tests for the five-file write scope, manifest
+  schema version, generated file hashes, dry-run no-write behavior, PDF header
+  bytes, formatted report values, forbidden claim wording, and no database,
+  external API, control, dispatch, activation, live-control, or asset
+  integration behavior. Updated README and pilot docs to describe the manifest,
+  ignored generated artifacts, and required human review before external PDF
+  sharing. This changed scripts/tests/docs only and added no frontend app code,
+  backend API behavior, database schema, migrations, backend endpoints, auth,
+  Azure, weather/maps, fake customer data beyond tiny test fixtures, customer
+  monetary benefit calculation or claim, commercial outcome claim, financial
+  advice, control, dispatch, activation, live control signals, or asset
+  integration.
 - Added docs-only customer pilot operator runbook and acceptance checklist in
   `docs/PILOT_OPERATOR_RUNBOOK.md` and
   `docs/PILOT_ACCEPTANCE_CHECKLIST.md`. The runbook documents the manual local

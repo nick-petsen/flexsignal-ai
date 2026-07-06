@@ -246,12 +246,16 @@ By default it prints a dry-run summary and writes no files. When
 `CUSTOMER_PILOT_ARTIFACT_WRITE=true`, it creates exactly one sanitized run
 folder under `CUSTOMER_PILOT_ARTIFACT_DIR` (default
 `artifacts/customer-pilots`) containing `workflow-summary.json`,
-`customer-pilot-preview.md`, `customer-pilot-preview.pdf`, and `README.txt`.
-Generated artifacts are ignored by git. Raw customer data must never be
-committed. The pack uses public price signal only and reports an indicative
-gross opportunity signal only. It is not financial advice and not
-customer-specific savings. Customer-specific assessment requires tariff,
-constraints, operating costs, and human validation.
+`customer-pilot-preview.md`, `customer-pilot-preview.pdf`, `README.txt`, and
+`MANIFEST.json`. `MANIFEST.json` is for audit and reproducibility: it records
+the input file hash, input file size, workflow statuses, and generated file
+hashes without storing the raw input path or raw customer data. Generated
+artifacts are ignored by git. Raw customer data must never be committed. The
+pack uses public price signal only and reports an indicative gross opportunity
+signal only. It is not financial advice and not customer-specific savings.
+Customer-specific assessment requires tariff, constraints, operating costs,
+and human validation. Human review is required before sharing any generated
+PDF externally.
 
 Operator docs:
 
