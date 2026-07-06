@@ -185,11 +185,15 @@ stdout. It writes a Markdown file only when
 `CUSTOMER_PILOT_REPORT_WRITE=true` and
 `CUSTOMER_PILOT_REPORT_OUTPUT_PATH` is set. It writes no other files, writes
 no database records, calls no external APIs, and remains report export only.
-This is public price signal only, not financial advice, not customer-specific
-savings, and not profit or revenue calculation. Customer-specific assessment
-requires tariff, constraints, operating costs, and human validation. Customer
-data and generated customer reports should not be committed to git unless
-explicitly anonymized and approved.
+Human-facing Markdown reports round matched flexible energy, public
+opportunity signal, and indicative gross opportunity signal values to 2
+decimals for readability. This is formatting only; the underlying workflow
+numeric values are unchanged. The report remains an indicative gross
+opportunity signal, not financial advice, not a customer-specific monetary
+benefit claim, and not a commercial outcome calculation. Customer-specific
+assessment requires tariff, constraints, operating costs, and human
+validation. Customer data and generated customer reports should not be
+committed to git unless explicitly anonymized and approved.
 
 Manual public market backtest input preview:
 

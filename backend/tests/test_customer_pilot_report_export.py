@@ -42,6 +42,14 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def write_snapshot(path: Path) -> None:
+    write_snapshot_with_signal(path, opportunity_signal_eur_per_mwh=8.0)
+
+
+def write_snapshot_with_signal(
+    path: Path,
+    *,
+    opportunity_signal_eur_per_mwh: float,
+) -> None:
     payload = {
         "schema_version": "public_surplus_risk_snapshot.v1",
         "top_risk_windows": {
@@ -53,7 +61,9 @@ def write_snapshot(path: Path) -> None:
                     "score": 100,
                     "level": "high",
                     "price_context_status": "available",
-                    "opportunity_signal_eur_per_mwh": 8.0,
+                    "opportunity_signal_eur_per_mwh": (
+                        opportunity_signal_eur_per_mwh
+                    ),
                 }
             ],
             "DK2": [
@@ -144,12 +154,38 @@ def test_stdout_markdown_report_for_valid_dk1_workflow(tmp_path: Path) -> None:
     assert "Validation status: `valid`" in report
     assert "Signal match status: `matched`" in report
     assert "Opportunity estimate status: `estimate_available`" in report
-    assert "| DK1 | 2026-04-04T21:00:00Z | 2026-04-04T23:00:00Z | 100 | high | 1 | 2 | 8 | 16 |" in report
+    assert (
+        "| DK1 | 2026-04-04T21:00:00Z | 2026-04-04T23:00:00Z | "
+        "100 | high | 1 | 2.00 MWh | 8.00 EUR/MWh | 16.00 EUR |"
+    ) in report
     assert (
         "matched flexible MWh x public opportunity signal EUR/MWh"
         in report
     )
     assert result["file_written"] is False
+
+
+def test_markdown_report_formats_human_numeric_values(tmp_path: Path) -> None:
+    input_path = tmp_path / "customer.csv"
+    snapshot_path = tmp_path / "snapshot.json"
+    write_csv(input_path, valid_rows(flexible_energy_mwh="48.0"))
+    write_snapshot_with_signal(
+        snapshot_path,
+        opportunity_signal_eur_per_mwh=8.343775,
+    )
+    stdout = io.StringIO()
+
+    customer_pilot_report_export.export_report(
+        config_for(input_path, snapshot_path),
+        stdout=stdout,
+    )
+    report = stdout.getvalue()
+
+    assert "48.00 MWh" in report
+    assert "8.34 EUR/MWh" in report
+    assert "400.50 EUR" in report
+    assert "400.5012" not in report
+    assert "8.343775" not in report
 
 
 def test_output_path_writes_only_when_report_write_true(tmp_path: Path) -> None:
@@ -293,8 +329,8 @@ def test_safety_boundary_text(tmp_path: Path) -> None:
     report = stdout.getvalue()
 
     assert "read-only report export only" in report
-    assert "no customer-specific savings calculated" in report
-    assert "no profit/revenue calculated" in report
+    assert "no customer-specific monetary benefit calculated" in report
+    assert "no commercial outcome calculated" in report
     assert "no automatic control" in report
     assert "no dispatch" in report
     assert "no activation" in report
@@ -319,7 +355,6 @@ def test_non_boundary_report_content_avoids_forbidden_claim_wording(
         stdout=stdout,
     )
     report = stdout.getvalue().lower()
-    non_boundary = report.split("## safety boundary", 1)[0]
 
     for forbidden in (
         "saved",
@@ -327,6 +362,6 @@ def test_non_boundary_report_content_avoids_forbidden_claim_wording(
         "profit",
         "revenue",
         "earnings",
-        "guaranteed value",
+        "guaranteed",
     ):
-        assert forbidden not in non_boundary
+        assert forbidden not in report
