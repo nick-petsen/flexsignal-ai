@@ -166,6 +166,27 @@ no automatic control, and sends no dispatch, activation, or live control
 signals. Customer data and customer pilot CSV files must not be committed to
 git.
 
+After validation and signal matching, run the local read-only indicative gross
+opportunity signal preview:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_opportunity_estimate.py
+```
+
+The preview uses the bounded formula:
+
+```text
+matched_flexible_energy_mwh x public_opportunity_signal_eur_per_mwh
+```
+
+It uses public price signal only. It is not customer savings, not profit, not
+revenue, and not financial advice. Customer-specific value requires tariff,
+constraints, operating costs, and human validation. It writes no files, writes
+no database records, calls no external APIs, remains read-only decision
+support, requires human review, performs no automatic control, and sends no
+dispatch, activation, or live control signals. Customer data and customer
+pilot CSV files must not be committed to git.
+
 Preferred structure:
 
 - One row per timestamp.
@@ -203,6 +224,8 @@ Example time series columns:
 
 - Public-vs-customer signal comparison.
 - Candidate opportunity windows.
+- Indicative gross opportunity signal preview where validated inputs support
+  it.
 - False positive and missed opportunity review.
 - Operational interpretation notes.
 - Customer-specific potential estimate only if the data supports it.
