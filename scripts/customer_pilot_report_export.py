@@ -32,8 +32,8 @@ DEFAULT_REPORT_OUTPUT_PATH = ""
 TITLE = "Customer pilot workflow preview report"
 REPORT_SAFETY_BOUNDARY = (
     "read-only report export only",
-    "no customer-specific savings calculated",
-    "no profit/revenue calculated",
+    "no customer-specific monetary benefit calculated",
+    "no commercial outcome calculated",
     "no automatic control",
     "no dispatch",
     "no activation",
@@ -111,8 +111,8 @@ def render_markdown_report(summary: CustomerPilotWorkflowPreviewSummary) -> str:
                 (
                     "| Price area | Public window start | Public window end | "
                     "Public risk score | Public risk level | Matched customer "
-                    "rows | Matched flexible energy MWh | Public opportunity "
-                    "signal EUR/MWh | Indicative gross opportunity signal EUR |"
+                    "rows | Matched flexible energy | Public opportunity "
+                    "signal | Indicative gross opportunity signal |"
                 ),
                 (
                     "| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: |"
@@ -120,17 +120,29 @@ def render_markdown_report(summary: CustomerPilotWorkflowPreviewSummary) -> str:
             ]
         )
         for window in summary.top_candidate_windows:
+            matched_flexible_energy = _format_decimal_cell(
+                window.get("matched_flexible_energy_mwh"),
+                "MWh",
+            )
+            public_opportunity_signal = _format_decimal_cell(
+                window.get("public_opportunity_signal_eur_per_mwh"),
+                "EUR/MWh",
+            )
+            indicative_gross_opportunity_signal = _format_decimal_cell(
+                window.get("indicative_gross_opportunity_signal_eur"),
+                "EUR",
+            )
             lines.append(
                 "| "
                 f"{_cell(window.get('price_area'))} | "
                 f"{_cell(window.get('public_window_start'))} | "
                 f"{_cell(window.get('public_window_end'))} | "
-                f"{_cell(window.get('public_risk_score'))} | "
+                f"{_format_int_cell(window.get('public_risk_score'))} | "
                 f"{_cell(window.get('public_risk_level'))} | "
-                f"{_cell(window.get('customer_rows_in_window'))} | "
-                f"{_cell(window.get('matched_flexible_energy_mwh'))} | "
-                f"{_cell(window.get('public_opportunity_signal_eur_per_mwh'))} | "
-                f"{_cell(window.get('indicative_gross_opportunity_signal_eur'))} |"
+                f"{_format_int_cell(window.get('customer_rows_in_window'))} | "
+                f"{matched_flexible_energy} | "
+                f"{public_opportunity_signal} | "
+                f"{indicative_gross_opportunity_signal} |"
             )
     else:
         lines.append("No candidate windows are available for this preview.")
@@ -270,13 +282,29 @@ def _bullet_lines(values: Sequence[str]) -> list[str]:
 def _cell(value: Any) -> str:
     if value is None or value == "":
         return "not_available"
-    if isinstance(value, float):
-        return f"{value:.6f}".rstrip("0").rstrip(".")
     return str(value).replace("|", "\\|")
 
 
 def _format_int(value: int) -> str:
     return f"{value:,}"
+
+
+def _format_int_cell(value: Any) -> str:
+    if value is None or value == "":
+        return "not_available"
+    try:
+        return _format_int(int(value))
+    except (TypeError, ValueError):
+        return _cell(value)
+
+
+def _format_decimal_cell(value: Any, unit: str) -> str:
+    if value is None or value == "":
+        return "not_available"
+    try:
+        return f"{float(value):.2f} {unit}"
+    except (TypeError, ValueError):
+        return _cell(value)
 
 
 def _parse_bool(raw_value: str | None, env_name: str) -> bool:

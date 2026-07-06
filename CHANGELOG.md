@@ -13,14 +13,17 @@
   local-only tests in `backend/tests/test_customer_pilot_report_export.py` for
   DK1 stdout output, explicit write behavior, dry-run/no-write behavior,
   invalid workflow safe output, write scope, safety boundary text, and
-  forbidden claim-wording guardrails outside the required safety boundary.
+  forbidden claim-wording guardrails across the Markdown report. The Markdown
+  report now formats human-facing matched flexible energy, public opportunity
+  signal, and indicative gross opportunity signal values to 2 decimals while
+  leaving the underlying workflow numeric values unchanged.
   Updated README and pilot docs with usage, report handling, human review,
   and customer-data handling. This changed scripts/tests/docs only and added
   no frontend app code, backend API behavior, database schema, migrations,
   auth, Azure, weather/maps, fake customer data beyond tiny test fixtures,
-  customer-specific savings calculation, profit/revenue calculation,
-  financial advice, control, dispatch, activation, live control signals, or
-  asset integration.
+  customer-specific monetary benefit calculation, commercial outcome
+  calculation, financial advice, control, dispatch, activation, live control
+  signals, or asset integration.
 - Added `scripts/customer_pilot_workflow_preview.py`, a scripts/tests/docs-only
   local read-only customer pilot workflow preview that composes the existing
   CSV validator, public risk-window matcher, and indicative gross opportunity

@@ -118,8 +118,12 @@ The v0 report exporter accepts CSV only, reuses the workflow preview, prints
 Markdown to stdout when no output path is set, and writes only the configured
 Markdown file when report writing is explicitly enabled. It writes no other
 files, writes no database records, calls no external APIs, and remains
-read-only report export for human review. It is not financial advice, not a
-customer value claim, and not customer-specific savings, profit, or revenue
+read-only report export for human review. Human-facing Markdown reports round
+matched flexible energy, public opportunity signal, and indicative gross
+opportunity signal values to 2 decimals for readability. This is formatting
+only; the underlying workflow numeric values are unchanged. The output remains
+an indicative gross opportunity signal, not financial advice, not a
+customer-specific monetary benefit claim, and not a commercial outcome
 calculation. Customer-specific assessment requires tariff, constraints,
 operating costs, and human validation. Customer data and generated customer
 reports should not be committed to git unless explicitly anonymized and
