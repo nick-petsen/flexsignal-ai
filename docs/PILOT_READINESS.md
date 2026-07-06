@@ -111,7 +111,7 @@ CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_rep
 To write the report explicitly:
 
 ```bash
-CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilots/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
 ```
 
 The v0 report exporter accepts CSV only, reuses the workflow preview, prints
@@ -128,6 +128,34 @@ calculation. Customer-specific assessment requires tariff, constraints,
 operating costs, and human validation. Customer data and generated customer
 reports should not be committed to git unless explicitly anonymized and
 approved.
+
+## Artifact Safety
+
+Customer pilot inputs and generated customer reports are local artifacts. They
+must stay outside git unless the artifact has been explicitly anonymized and
+approved for commit.
+
+Recommended local paths:
+
+- Use `/tmp` for smoke-test customer pilot inputs and throwaway report output.
+- Use local untracked `artifacts/customer-pilots/` for temporary generated
+  Markdown reports that need to remain in the workspace briefly.
+- Use local untracked `customer-data/` or `pilot-data/` only for temporary
+  customer input files that cannot live in `/tmp`.
+
+Never commit raw customer files, customer pilot input files, or generated
+customer reports. Local gitignore patterns cover customer pilot artifact
+folders, `*.customer.csv`, `*.customer.xlsx`, `*.customer.parquet`,
+`*customer-pilot-preview*.md`, and `*customer-pilot-report*.md`. These ignores
+do not apply to the committed public request template at
+`docs/templates/customer_pilot_data_request.csv` or the committed public demo
+snapshot at `frontend/src/data/public-surplus-risk-backtest-snapshot.json`.
+
+Artifact handling does not change the pilot boundary. Customer pilot reports
+remain read-only pilot analysis for human review. They must not include
+customer-specific savings claims, profit claims, revenue claims, financial
+advice, automatic control, dispatch, activation, live control signals, or asset
+integration.
 
 The pilot flow is:
 
@@ -232,6 +260,10 @@ CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_wor
 ## Security And Data Handling
 
 - Use least-privilege access for all customer data.
+- Keep customer data and generated customer reports outside git unless
+  explicitly anonymized and approved.
+- Use `/tmp` for smoke tests and untracked `artifacts/customer-pilots/` for
+  temporary generated reports.
 - Do not commit secrets to the repository.
 - Do not commit customer data to git.
 - Do not commit customer pilot CSV files to git.

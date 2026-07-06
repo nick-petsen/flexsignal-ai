@@ -176,7 +176,7 @@ CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_rep
 Optional explicit report write:
 
 ```bash
-CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilots/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
 ```
 
 The report exporter reuses the local workflow preview and renders a Markdown
@@ -194,6 +194,24 @@ benefit claim, and not a commercial outcome calculation. Customer-specific
 assessment requires tariff, constraints, operating costs, and human
 validation. Customer data and generated customer reports should not be
 committed to git unless explicitly anonymized and approved.
+
+Customer pilot artifact safety:
+
+- Keep raw customer files outside git. Use `/tmp` for smoke-test inputs when
+  possible, or local untracked folders such as `customer-data/` and
+  `pilot-data/` when a file must remain in the workspace temporarily.
+- Use local untracked `artifacts/customer-pilots/` for temporary generated
+  pilot reports.
+- Never commit raw customer files, customer pilot input files, or generated
+  customer reports unless the artifact has been explicitly anonymized and
+  approved for commit.
+- Customer pilot output remains read-only pilot analysis for human review. It
+  must not be presented as a customer-specific savings claim, profit claim, or
+  revenue claim.
+- These local artifact ignores do not apply to the committed public intake
+  template at `docs/templates/customer_pilot_data_request.csv` or the committed
+  public demo snapshot at
+  `frontend/src/data/public-surplus-risk-backtest-snapshot.json`.
 
 Manual public market backtest input preview:
 
@@ -459,6 +477,13 @@ windows are relevant for a specific customer after customer load, flexible
 MWh, operational constraints, price context, and human review are applied. The
 pilot remains read-only decision support and adds no automatic control,
 dispatch, activation, live control signals, or asset integration.
+
+Customer data and generated customer reports must stay outside git unless
+explicitly anonymized and approved. Recommended local paths are `/tmp` for
+smoke tests and untracked `artifacts/customer-pilots/` for temporary report
+outputs. Never commit raw customer files. Customer pilot reports are read-only
+pilot analysis for human review and must not make customer-specific savings,
+profit, or revenue claims.
 
 Required staging configuration before external test users:
 

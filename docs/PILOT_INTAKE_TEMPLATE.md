@@ -209,7 +209,7 @@ CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_rep
 To write the Markdown report explicitly:
 
 ```bash
-CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilots/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
 ```
 
 The report exporter accepts CSV only for v0, prints Markdown to stdout by
@@ -220,6 +220,26 @@ or revenue calculation. Customer-specific assessment requires tariff,
 constraints, operating costs, and human validation. Customer data and generated
 customer reports should not be committed to git unless explicitly anonymized
 and approved.
+
+Local artifact handling:
+
+- Use `/tmp` for smoke-test customer pilot inputs and throwaway generated
+  reports.
+- Use local untracked `artifacts/customer-pilots/` for temporary Markdown
+  reports that need to remain in the workspace briefly.
+- Keep raw customer files outside git. If a temporary workspace-local path is
+  unavoidable, use untracked `customer-data/` or `pilot-data/`.
+- Never commit raw customer files, customer pilot input files, or generated
+  customer reports unless explicitly anonymized and approved.
+- The committed public request template
+  `docs/templates/customer_pilot_data_request.csv` and committed public demo
+  snapshot `frontend/src/data/public-surplus-risk-backtest-snapshot.json` are
+  public artifacts and should remain trackable.
+
+Generated reports are read-only pilot analysis for human review. They must not
+make customer-specific savings claims, profit claims, revenue claims, financial
+advice, or imply automatic control, dispatch, activation, live control signals,
+or asset integration.
 
 Preferred structure:
 
@@ -245,6 +265,10 @@ Example time series columns:
 
 ## Security And Data-Handling Notes
 
+- Keep customer data and generated customer reports outside git unless
+  explicitly anonymized and approved.
+- Use `/tmp` for smoke tests and untracked `artifacts/customer-pilots/` for
+  temporary generated reports.
 - Do not commit customer data to git.
 - Do not commit customer pilot CSV files to git.
 - Do not commit generated customer reports to git unless explicitly
