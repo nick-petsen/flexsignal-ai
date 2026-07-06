@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added customer pilot artifact safety v0 as a repo hygiene/docs-only update.
+  `.gitignore` now excludes local customer pilot input/output folders and
+  common customer pilot file/report patterns while keeping the committed
+  public intake template and public demo snapshot trackable. Updated README
+  and pilot docs to state that customer data and generated customer reports
+  must stay outside git unless explicitly anonymized and approved, recommend
+  `/tmp` for smoke tests and untracked `artifacts/customer-pilots/` for
+  temporary reports, and reaffirm read-only pilot analysis, no
+  customer-specific savings claim, no profit/revenue claim, and human review
+  requirements. This changed repo hygiene/docs only and added no frontend app
+  code, backend API behavior, scripts, tests, database schema, migrations,
+  auth, Azure, weather/maps, fake customer data, customer-specific savings
+  calculation, profit/revenue claim, control, dispatch, activation, live
+  control signals, or asset integration.
 - Added `scripts/customer_pilot_report_export.py`, a scripts/tests/docs-only
   local read-only Markdown report exporter for customer pilot workflow
   previews. It reuses `scripts/customer_pilot_workflow_preview.py`, reads

@@ -13,3 +13,17 @@ backend/.venv/
 frontend/node_modules/
 frontend/.next/
 frontend/.turbo/
+
+# Local customer pilot artifacts
+artifacts/customer-pilots/
+customer-data/
+pilot-data/
+*.customer.csv
+*.customer.xlsx
+*.customer.parquet
+*customer-pilot-preview*.md
+*customer-pilot-report*.md
+
+# Keep committed public templates and demo artifacts trackable.
+!docs/templates/customer_pilot_data_request.csv
+!frontend/src/data/public-surplus-risk-backtest-snapshot.json
