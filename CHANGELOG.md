@@ -2,6 +2,29 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/customer_pilot_artifact_pack.py`, a scripts/tests/docs-only
+  local read-only customer pilot artifact pack command. It reuses the existing
+  workflow preview, Markdown report exporter, and PDF exporter, reads
+  `CUSTOMER_PILOT_INPUT_PATH`, `PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`,
+  `CUSTOMER_PILOT_ARTIFACT_DIR`, `CUSTOMER_PILOT_ARTIFACT_RUN_ID`,
+  `CUSTOMER_PILOT_ARTIFACT_WRITE`, and `CUSTOMER_PILOT_DRY_RUN`, accepts CSV
+  only for v0, prints a no-write dry-run summary by default, and writes
+  exactly one sanitized run folder containing `workflow-summary.json`,
+  `customer-pilot-preview.md`, `customer-pilot-preview.pdf`, and `README.txt`
+  only when `CUSTOMER_PILOT_ARTIFACT_WRITE=true`. Added mocked local-only
+  tests in `backend/tests/test_customer_pilot_artifact_pack.py` for dry-run
+  behavior, exact write scope, PDF header bytes, human-facing numeric
+  formatting, forbidden claim-wording guardrails, run-id sanitization, safety
+  flags, no database writes, no external API calls, and no control, dispatch,
+  activation, live-control, or asset-integration behavior. Updated README and
+  pilot docs with dry-run/write commands, generated artifact handling, raw
+  customer data handling, and read-only pilot boundaries. This changed
+  scripts/tests/docs only and added no frontend app code, backend API
+  behavior, database schema, migrations, backend endpoints, auth, Azure,
+  weather/maps, fake customer data beyond tiny test fixtures, customer
+  monetary benefit calculation or claim, commercial outcome claim, financial
+  advice, control, dispatch, activation, live control signals, or asset
+  integration.
 - Added `scripts/customer_pilot_pdf_export.py`, a scripts/tests/docs-only
   local read-only PDF exporter for customer pilot workflow preview reports.
   It reuses the existing customer pilot workflow and report formatting logic,

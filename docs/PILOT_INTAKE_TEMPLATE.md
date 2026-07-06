@@ -249,6 +249,28 @@ not be committed to git unless anonymized and explicitly approved.
 If `reportlab` is missing at runtime, install the backend dependencies from
 `backend/pyproject.toml` before rerunning.
 
+To create a complete local read-only pilot artifact pack:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_artifact_pack.py
+```
+
+To write the artifact pack explicitly:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_ARTIFACT_WRITE=true CUSTOMER_PILOT_ARTIFACT_RUN_ID=pilot-demo-001 python scripts/customer_pilot_artifact_pack.py
+```
+
+The artifact pack accepts CSV only for v0, prints a dry-run summary by
+default, and writes files only when `CUSTOMER_PILOT_ARTIFACT_WRITE=true`. In
+write mode it creates one sanitized run folder under
+`artifacts/customer-pilots` by default with the workflow summary, Markdown
+preview, PDF preview, and README. Generated artifacts are ignored by git. Raw
+customer data must never be committed. The pack is public price signal only,
+an indicative gross opportunity signal only, not financial advice, and not
+customer-specific savings. Customer-specific assessment requires tariff,
+constraints, operating costs, and human validation.
+
 Local artifact handling:
 
 - Use `/tmp` for smoke-test customer pilot inputs and throwaway generated
