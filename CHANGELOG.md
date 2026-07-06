@@ -2,6 +2,32 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/customer_pilot_pdf_export.py`, a scripts/tests/docs-only
+  local read-only PDF exporter for customer pilot workflow preview reports.
+  It reuses the existing customer pilot workflow and report formatting logic,
+  reads `CUSTOMER_PILOT_INPUT_PATH`,
+  `PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`, `CUSTOMER_PILOT_PDF_OUTPUT_PATH`,
+  `CUSTOMER_PILOT_PDF_WRITE`, and `CUSTOMER_PILOT_DRY_RUN`, accepts CSV only
+  for v0 through the existing workflow, prints a safe no-write summary by
+  default, and writes only the requested PDF when
+  `CUSTOMER_PILOT_PDF_WRITE=true` and an output path is set. Added mocked
+  local-only tests in `backend/tests/test_customer_pilot_pdf_export.py` for
+  no-write behavior, exact requested PDF write behavior, PDF header bytes,
+  no other file writes, safety boundary text, forbidden claim-wording
+  guardrails, and human-facing numeric formatting. Updated `.gitignore`,
+  README, and pilot docs for generated customer PDF handling and backend
+  dependency runtime guidance. The exporter now fails with a clear
+  human-readable message if the `reportlab` backend dependency is missing at
+  runtime. The PDF source now uses a more professional human-review structure
+  with a cover/header, executive summary, at-a-glance metrics, candidate
+  window details, interpretation, recommended review steps, method,
+  limitations, and compact safety boundary while keeping the underlying
+  workflow calculations unchanged. This changed scripts/tests/docs/repo
+  hygiene only and added no frontend app code, backend API behavior, database
+  schema, migrations, backend endpoints, auth, Azure, weather/maps, fake
+  customer data beyond tiny test fixtures, customer-specific savings
+  calculation, profit/revenue calculation, financial advice, control,
+  dispatch, activation, live control signals, or asset integration.
 - Added customer pilot artifact safety v0 as a repo hygiene/docs-only update.
   `.gitignore` now excludes local customer pilot input/output folders and
   common customer pilot file/report patterns while keeping the committed

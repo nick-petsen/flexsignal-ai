@@ -23,6 +23,8 @@ pilot-data/
 *.customer.parquet
 *customer-pilot-preview*.md
 *customer-pilot-report*.md
+*customer-pilot-preview*.pdf
+*customer-pilot-report*.pdf
 
 # Keep committed public templates and demo artifacts trackable.
 !docs/templates/customer_pilot_data_request.csv
