@@ -137,6 +137,36 @@ read-only decision support, requires human review, and adds no automatic
 control, dispatch, activation, live control signals, or asset integration.
 Customer data and pilot CSV files must not be committed to git.
 
+Customer pilot workflow preview:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_workflow_preview.py
+```
+
+The workflow preview runs the local pilot analysis chain end-to-end:
+
+1. Validate customer intake CSV.
+2. Match customer data to public risk windows.
+3. Estimate indicative gross opportunity signal.
+4. Prepare the result for human review.
+
+It reads `CUSTOMER_PILOT_INPUT_PATH`, optional
+`PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`, optional
+`CUSTOMER_PILOT_CUSTOMER_TYPE`, optional `CUSTOMER_PILOT_PRICE_AREA`, and
+optional `CUSTOMER_PILOT_DRY_RUN` (default `true`). For v0 it accepts CSV
+only, writes no files, writes no database records, calls no external APIs, and
+prints a consolidated JSON summary with workflow status, validation status,
+signal match status, opportunity estimate status, matched customer rows,
+matched flexible MWh, total indicative gross opportunity signal, candidate
+windows, warnings, next human review steps, and the read-only safety boundary.
+
+This is public price signal only. It is not customer savings, not profit, not
+revenue, and not financial advice. Customer-specific value requires tariff,
+constraints, operating costs, and human validation. The workflow remains
+read-only decision support, requires human review, and adds no automatic
+control, dispatch, activation, live control signals, or asset integration.
+Customer data and pilot CSV files must not be committed to git.
+
 Manual public market backtest input preview:
 
 ```bash
