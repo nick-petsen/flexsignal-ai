@@ -187,6 +187,19 @@ support, requires human review, performs no automatic control, and sends no
 dispatch, activation, or live control signals. Customer data and customer
 pilot CSV files must not be committed to git.
 
+To run validation, signal matching, indicative gross opportunity signal
+estimation, and human-review preparation in one local CLI step:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_workflow_preview.py
+```
+
+The workflow preview accepts CSV only for v0, writes no files, writes no
+database records, calls no external APIs, and prints a consolidated summary.
+It uses public price signal only. It is not customer savings, not profit, not
+revenue, and not financial advice. Customer-specific value requires tariff,
+constraints, operating costs, and human validation.
+
 Preferred structure:
 
 - One row per timestamp.
