@@ -101,13 +101,38 @@ public price signal only. It is not customer savings, not profit, not revenue,
 and not financial advice. Customer-specific value requires tariff,
 constraints, operating costs, and human validation.
 
+To export a local Markdown report for the same customer pilot workflow
+preview:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_report_export.py
+```
+
+To write the report explicitly:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
+```
+
+The v0 report exporter accepts CSV only, reuses the workflow preview, prints
+Markdown to stdout when no output path is set, and writes only the configured
+Markdown file when report writing is explicitly enabled. It writes no other
+files, writes no database records, calls no external APIs, and remains
+read-only report export for human review. It is not financial advice, not a
+customer value claim, and not customer-specific savings, profit, or revenue
+calculation. Customer-specific assessment requires tariff, constraints,
+operating costs, and human validation. Customer data and generated customer
+reports should not be committed to git unless explicitly anonymized and
+approved.
+
 The pilot flow is:
 
 1. Validate customer intake CSV.
 2. Match customer data to public risk windows.
 3. Estimate indicative gross opportunity signal.
-4. Human review.
-5. Only later produce customer-specific assessment if data and contract
+4. Export a local Markdown workflow preview report if needed.
+5. Human review.
+6. Only later produce customer-specific assessment if data and contract
    support it.
 
 ## Pilot Scope
@@ -206,6 +231,8 @@ CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_wor
 - Do not commit secrets to the repository.
 - Do not commit customer data to git.
 - Do not commit customer pilot CSV files to git.
+- Do not commit generated customer reports to git unless explicitly
+  anonymized and approved.
 - Minimize collected data to what the pilot needs.
 - Delete or anonymize customer data after the pilot unless the contract says
   otherwise.

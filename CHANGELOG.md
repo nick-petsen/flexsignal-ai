@@ -2,6 +2,25 @@
 
 ## v0.1.0 - TODO
 
+- Added `scripts/customer_pilot_report_export.py`, a scripts/tests/docs-only
+  local read-only Markdown report exporter for customer pilot workflow
+  previews. It reuses `scripts/customer_pilot_workflow_preview.py`, reads
+  `CUSTOMER_PILOT_INPUT_PATH`, `PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`,
+  `CUSTOMER_PILOT_REPORT_OUTPUT_PATH`, `CUSTOMER_PILOT_REPORT_WRITE`, and
+  `CUSTOMER_PILOT_DRY_RUN`, accepts CSV only for v0, prints Markdown to stdout
+  by default, and writes only the requested Markdown report when
+  `CUSTOMER_PILOT_REPORT_WRITE=true` and an output path is set. Added mocked
+  local-only tests in `backend/tests/test_customer_pilot_report_export.py` for
+  DK1 stdout output, explicit write behavior, dry-run/no-write behavior,
+  invalid workflow safe output, write scope, safety boundary text, and
+  forbidden claim-wording guardrails outside the required safety boundary.
+  Updated README and pilot docs with usage, report handling, human review,
+  and customer-data handling. This changed scripts/tests/docs only and added
+  no frontend app code, backend API behavior, database schema, migrations,
+  auth, Azure, weather/maps, fake customer data beyond tiny test fixtures,
+  customer-specific savings calculation, profit/revenue calculation,
+  financial advice, control, dispatch, activation, live control signals, or
+  asset integration.
 - Added `scripts/customer_pilot_workflow_preview.py`, a scripts/tests/docs-only
   local read-only customer pilot workflow preview that composes the existing
   CSV validator, public risk-window matcher, and indicative gross opportunity

@@ -200,6 +200,27 @@ It uses public price signal only. It is not customer savings, not profit, not
 revenue, and not financial advice. Customer-specific value requires tariff,
 constraints, operating costs, and human validation.
 
+To export the same workflow preview as a local Markdown report:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_report_export.py
+```
+
+To write the Markdown report explicitly:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
+```
+
+The report exporter accepts CSV only for v0, prints Markdown to stdout by
+default, and writes only the configured Markdown file when
+`CUSTOMER_PILOT_REPORT_WRITE=true`. It is report export only, not financial
+advice, not a customer value claim, and not customer-specific savings, profit,
+or revenue calculation. Customer-specific assessment requires tariff,
+constraints, operating costs, and human validation. Customer data and generated
+customer reports should not be committed to git unless explicitly anonymized
+and approved.
+
 Preferred structure:
 
 - One row per timestamp.
@@ -226,6 +247,8 @@ Example time series columns:
 
 - Do not commit customer data to git.
 - Do not commit customer pilot CSV files to git.
+- Do not commit generated customer reports to git unless explicitly
+  anonymized and approved.
 - Use least-privilege access.
 - Minimize collected data to what the pilot needs.
 - Keep customer data separate from public demo artifacts.

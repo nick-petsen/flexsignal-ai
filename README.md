@@ -167,6 +167,30 @@ read-only decision support, requires human review, and adds no automatic
 control, dispatch, activation, live control signals, or asset integration.
 Customer data and pilot CSV files must not be committed to git.
 
+Customer pilot Markdown report export:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_report_export.py
+```
+
+Optional explicit report write:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_REPORT_WRITE=true CUSTOMER_PILOT_REPORT_OUTPUT_PATH=artifacts/customer-pilot-preview.md python scripts/customer_pilot_report_export.py
+```
+
+The report exporter reuses the local workflow preview and renders a Markdown
+report for human review. If no output path is set, it prints the report to
+stdout. It writes a Markdown file only when
+`CUSTOMER_PILOT_REPORT_WRITE=true` and
+`CUSTOMER_PILOT_REPORT_OUTPUT_PATH` is set. It writes no other files, writes
+no database records, calls no external APIs, and remains report export only.
+This is public price signal only, not financial advice, not customer-specific
+savings, and not profit or revenue calculation. Customer-specific assessment
+requires tariff, constraints, operating costs, and human validation. Customer
+data and generated customer reports should not be committed to git unless
+explicitly anonymized and approved.
+
 Manual public market backtest input preview:
 
 ```bash
