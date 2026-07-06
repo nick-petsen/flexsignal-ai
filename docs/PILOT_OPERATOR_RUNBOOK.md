@@ -7,8 +7,9 @@ pilot CSV through the local read-only pilot workflow and artifact pack.
 
 The workflow produces a human-review artifact pack with validation output,
 signal-match output, an indicative gross opportunity signal, Markdown report,
-PDF report, and local run notes. It is read-only decision support. Human review
-is required before any interpretation is shared.
+PDF report, local run notes, and `MANIFEST.json` audit metadata. It is
+read-only decision support. Human review is required before any interpretation
+is shared.
 
 This is not a customer value claim. The workflow uses public price signal only.
 Customer-specific assessment requires tariff, constraints, operating costs, and
@@ -102,7 +103,13 @@ CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_ARTIFACT_WRITE=tru
 ```
 
 Use a safe run id that does not include customer confidential details. The
-default artifact directory is ignored `artifacts/customer-pilots/`.
+default artifact directory is ignored `artifacts/customer-pilots/`. The written
+pack contains `workflow-summary.json`, `customer-pilot-preview.md`,
+`customer-pilot-preview.pdf`, `README.txt`, and `MANIFEST.json`.
+`MANIFEST.json` supports audit and reproducibility by recording the input file
+hash, input file size, workflow statuses, and generated file hashes. It must
+not contain the raw input path, raw customer rows, or raw customer file
+contents.
 
 ## Manual Review Checklist
 
@@ -116,6 +123,7 @@ Before sharing any output, review:
 - Warnings.
 - Human review next steps.
 - Safety boundary text.
+- `MANIFEST.json` hash metadata.
 - Customer contact or reviewer notes.
 
 The review must confirm that the output remains public price signal only,
@@ -123,7 +131,7 @@ read-only decision support, and requires human validation.
 
 ## Sharing Rules
 
-- PDF may be shared only after human review.
+- PDF may be shared externally only after human review.
 - Markdown and JSON are internal unless explicitly approved.
 - Customer data must stay out of git.
 - Raw CSV must not be attached to commits, issues, or public artifacts.

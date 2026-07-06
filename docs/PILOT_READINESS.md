@@ -179,12 +179,16 @@ Markdown report export, and PDF report export. In default dry-run mode it
 prints a summary and writes no files. In write mode it creates exactly one
 sanitized run folder under `CUSTOMER_PILOT_ARTIFACT_DIR` (default
 `artifacts/customer-pilots`) with `workflow-summary.json`,
-`customer-pilot-preview.md`, `customer-pilot-preview.pdf`, and `README.txt`.
-Generated artifacts are ignored by git. Raw customer data must never be
-committed. The artifact pack uses public price signal only and presents an
-indicative gross opportunity signal only. It is not financial advice and not
-customer-specific savings. Customer-specific assessment requires tariff,
-constraints, operating costs, and human validation.
+`customer-pilot-preview.md`, `customer-pilot-preview.pdf`, `README.txt`, and
+`MANIFEST.json`. `MANIFEST.json` is for audit and reproducibility: it records
+the input file hash, input file size, workflow statuses, and generated file
+hashes without storing the raw input path or raw customer data. Generated
+artifacts are ignored by git. Raw customer data must never be committed. The
+artifact pack uses public price signal only and presents an indicative gross
+opportunity signal only. It is not financial advice and not customer-specific
+savings. Customer-specific assessment requires tariff, constraints, operating
+costs, and human validation. Human review is required before sharing any
+generated PDF externally.
 
 ## Artifact Safety
 
@@ -215,6 +219,10 @@ remain read-only pilot analysis for human review. They must not include
 customer-specific savings claims, profit claims, revenue claims, financial
 advice, automatic control, dispatch, activation, live control signals, or asset
 integration.
+
+`MANIFEST.json` supports audit and reproducibility for a local artifact pack.
+It records hashes and sizes for the input file and generated artifacts, not raw
+customer rows or raw customer file contents.
 
 The pilot flow is:
 

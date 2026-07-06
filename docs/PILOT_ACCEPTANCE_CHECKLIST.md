@@ -52,8 +52,10 @@ operating costs, and human validation.
 - [ ] Markdown report is generated if needed.
 - [ ] PDF report is generated if needed.
 - [ ] Artifact pack contains `workflow-summary.json`,
-      `customer-pilot-preview.md`, `customer-pilot-preview.pdf`, and
-      `README.txt` when write mode is used.
+      `customer-pilot-preview.md`, `customer-pilot-preview.pdf`, `README.txt`,
+      and `MANIFEST.json` when write mode is used.
+- [ ] `MANIFEST.json` records input file hash and generated file hashes, not
+      raw customer rows or raw customer file contents.
 - [ ] PDF opens locally.
 - [ ] Report warnings and next human review steps are visible.
 - [ ] Safety boundary text is present.
@@ -82,7 +84,7 @@ operating costs, and human validation.
 - [ ] Internal reviewer has reviewed indicative gross opportunity signal.
 - [ ] Internal reviewer has reviewed warnings.
 - [ ] Internal reviewer has approved next human review step.
-- [ ] Customer-facing PDF is approved before sharing.
+- [ ] Customer-facing PDF is approved before external sharing.
 
 ## Do Not Claim
 

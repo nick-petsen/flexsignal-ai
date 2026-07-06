@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -42,12 +43,15 @@ DEFAULT_DRY_RUN = "true"
 DEFAULT_PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH = (
     "frontend/src/data/public-surplus-risk-backtest-snapshot.json"
 )
-ARTIFACT_FILENAMES = (
+GENERATED_ARTIFACT_FILENAMES = (
     "workflow-summary.json",
     "customer-pilot-preview.md",
     "customer-pilot-preview.pdf",
     "README.txt",
 )
+MANIFEST_FILENAME = "MANIFEST.json"
+ARTIFACT_FILENAMES = GENERATED_ARTIFACT_FILENAMES + (MANIFEST_FILENAME,)
+MANIFEST_SCHEMA_VERSION = "customer_pilot_artifact_manifest.v1"
 ARTIFACT_SAFETY_BOUNDARY = (
     "local read-only pilot artifact pack",
     "public price signal only",
@@ -83,6 +87,8 @@ class CustomerPilotArtifactPackContents:
     markdown_report: str
     pdf_bytes: bytes
     readme_text: str
+    input_path: Path
+    snapshot_path: Path
 
 
 def load_config(
@@ -171,7 +177,13 @@ def create_customer_pilot_artifact_pack(
     run_dir = _safe_run_dir(config.artifact_dir, run_id)
     config.artifact_dir.mkdir(parents=True, exist_ok=True)
     run_dir.mkdir(parents=False, exist_ok=False)
-    _write_artifacts(run_dir, contents)
+    generated_at_utc = _utc_timestamp()
+    _write_artifacts(
+        run_dir,
+        contents,
+        run_id=run_id,
+        generated_at_utc=generated_at_utc,
+    )
 
     print("Customer pilot artifact pack written.", file=output_stream)
     return {
@@ -195,6 +207,8 @@ def build_artifact_pack_contents(
         markdown_report=render_markdown_report(summary),
         pdf_bytes=render_pdf_bytes(summary),
         readme_text=_readme_text(),
+        input_path=config.workflow_config.input_path,
+        snapshot_path=config.workflow_config.snapshot_path,
     )
 
 
@@ -222,17 +236,26 @@ def main() -> int:
 def _write_artifacts(
     run_dir: Path,
     contents: CustomerPilotArtifactPackContents,
+    *,
+    run_id: str,
+    generated_at_utc: str,
 ) -> None:
-    (run_dir / "workflow-summary.json").write_text(
-        json.dumps(contents.workflow_summary, indent=2, sort_keys=True) + "\n",
+    artifact_bytes = _artifact_bytes(contents)
+    for filename, payload in artifact_bytes.items():
+        (run_dir / filename).write_bytes(payload)
+
+    manifest = _manifest_payload(
+        contents.workflow_summary,
+        input_path=contents.input_path,
+        snapshot_path=contents.snapshot_path,
+        run_id=run_id,
+        generated_at_utc=generated_at_utc,
+        artifact_bytes=artifact_bytes,
+    )
+    (run_dir / MANIFEST_FILENAME).write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    (run_dir / "customer-pilot-preview.md").write_text(
-        contents.markdown_report,
-        encoding="utf-8",
-    )
-    (run_dir / "customer-pilot-preview.pdf").write_bytes(contents.pdf_bytes)
-    (run_dir / "README.txt").write_text(contents.readme_text, encoding="utf-8")
 
 
 def _workflow_summary_payload(summary: Any, *, file_written: bool) -> dict[str, Any]:
@@ -247,6 +270,96 @@ def _workflow_summary_payload(summary: Any, *, file_written: bool) -> dict[str, 
         }
     )
     return workflow_summary
+
+
+def _artifact_bytes(contents: CustomerPilotArtifactPackContents) -> dict[str, bytes]:
+    return {
+        "workflow-summary.json": (
+            json.dumps(contents.workflow_summary, indent=2, sort_keys=True)
+            + "\n"
+        ).encode("utf-8"),
+        "customer-pilot-preview.md": contents.markdown_report.encode("utf-8"),
+        "customer-pilot-preview.pdf": contents.pdf_bytes,
+        "README.txt": contents.readme_text.encode("utf-8"),
+    }
+
+
+def _manifest_payload(
+    workflow_summary: Mapping[str, Any],
+    *,
+    input_path: Path,
+    snapshot_path: Path,
+    run_id: str,
+    generated_at_utc: str,
+    artifact_bytes: Mapping[str, bytes],
+) -> dict[str, Any]:
+    manifest: dict[str, Any] = {
+        "manifest_schema_version": MANIFEST_SCHEMA_VERSION,
+        "run_id": run_id,
+        "generated_at_utc": generated_at_utc,
+        "artifact_type": "customer_pilot_preview_pack",
+        "decision_boundary": "read-only decision support",
+        "human_review_required": True,
+        "public_price_signal_only": True,
+        "indicative_gross_opportunity_signal_only": True,
+        "not_customer_value_claim": True,
+        "database_write_performed": False,
+        "external_api_calls_performed": False,
+        "no_automatic_control": True,
+        "no_dispatch": True,
+        "no_activation": True,
+        "no_live_control_signals": True,
+        "no_asset_integration": True,
+        "input_file_sha256": _file_sha256(input_path),
+        "input_file_size_bytes": input_path.stat().st_size,
+        "workflow_status": workflow_summary["workflow_status"],
+        "validation_status": workflow_summary["validation_status"],
+        "signal_match_status": workflow_summary["signal_match_status"],
+        "opportunity_estimate_status": workflow_summary[
+            "opportunity_estimate_status"
+        ],
+        "generated_files": [
+            {
+                "filename": filename,
+                "sha256": _bytes_sha256(payload),
+                "size_bytes": len(payload),
+            }
+            for filename, payload in artifact_bytes.items()
+        ],
+    }
+    public_snapshot_schema_version = _public_snapshot_schema_version(snapshot_path)
+    if public_snapshot_schema_version is not None:
+        manifest["public_snapshot_schema_version"] = public_snapshot_schema_version
+    return manifest
+
+
+def _public_snapshot_schema_version(snapshot_path: Path) -> str | None:
+    try:
+        payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    schema_version = payload.get("schema_version")
+    if isinstance(schema_version, str) and schema_version.strip():
+        return schema_version
+    return None
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file_obj:
+        for chunk in iter(lambda: file_obj.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _bytes_sha256(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _utc_timestamp() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
+        "+00:00", "Z"
+    )
 
 
 def _dry_run_summary(workflow_summary: Mapping[str, Any]) -> str:
@@ -298,7 +411,12 @@ def _readme_text() -> str:
             "- customer-pilot-preview.md: Markdown pilot preview for human review.",
             "- customer-pilot-preview.pdf: PDF pilot preview for human review.",
             "- README.txt: this file.",
+            "- MANIFEST.json: audit metadata and reproducibility hashes.",
             "",
+            (
+                "MANIFEST.json records the input file hash and generated file "
+                "hashes, not raw customer data."
+            ),
             (
                 "Customer-specific assessment requires tariff, constraints, "
                 "operating costs, and human validation."
