@@ -253,6 +253,11 @@ gross opportunity signal only. It is not financial advice and not
 customer-specific savings. Customer-specific assessment requires tariff,
 constraints, operating costs, and human validation.
 
+Operator docs:
+
+- [Customer pilot operator runbook](docs/PILOT_OPERATOR_RUNBOOK.md)
+- [Customer pilot acceptance checklist](docs/PILOT_ACCEPTANCE_CHECKLIST.md)
+
 Customer pilot artifact safety:
 
 - Keep raw customer files outside git. Use `/tmp` for smoke-test inputs when

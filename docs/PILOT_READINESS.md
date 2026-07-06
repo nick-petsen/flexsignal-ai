@@ -26,6 +26,11 @@ sheet is available at
 Use these materials after the public proof-of-work report when requesting
 customer data for a read-only pilot.
 
+The manual operator flow is documented in
+[PILOT_OPERATOR_RUNBOOK.md](PILOT_OPERATOR_RUNBOOK.md). Use
+[PILOT_ACCEPTANCE_CHECKLIST.md](PILOT_ACCEPTANCE_CHECKLIST.md) for internal
+review and customer-sharing sign-off.
+
 Validate local CSV intake files before any pilot or backtest analysis:
 
 ```bash
