@@ -221,12 +221,40 @@ constraints, operating costs, and human validation. Customer data and generated
 customer reports should not be committed to git unless explicitly anonymized
 and approved.
 
+To export the same workflow preview as a local PDF report:
+
+Install backend dependencies first:
+
+```bash
+cd backend && python -m pip install -e '.[dev]' && cd ..
+```
+
+Then run the exporter from the repository root with the same Python
+environment:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_PDF_WRITE=true CUSTOMER_PILOT_PDF_OUTPUT_PATH=/tmp/customer-pilot-preview.pdf python scripts/customer_pilot_pdf_export.py
+```
+
+The PDF exporter accepts CSV only through the existing workflow preview,
+prints a safe no-write summary unless PDF writing is explicitly enabled, and
+writes only the configured PDF file when
+`CUSTOMER_PILOT_PDF_WRITE=true`. It writes no other files, writes no database
+records, calls no external APIs, and remains PDF export only. The generated
+PDF is a professional human-review pilot preview for customer discussion, not
+a customer value claim. It is not financial advice and not customer-specific
+savings. Customer-specific assessment requires tariff, constraints, operating
+costs, and human validation. Customer data and generated customer PDFs must
+not be committed to git unless anonymized and explicitly approved.
+If `reportlab` is missing at runtime, install the backend dependencies from
+`backend/pyproject.toml` before rerunning.
+
 Local artifact handling:
 
 - Use `/tmp` for smoke-test customer pilot inputs and throwaway generated
   reports.
 - Use local untracked `artifacts/customer-pilots/` for temporary Markdown
-  reports that need to remain in the workspace briefly.
+  reports or PDFs that need to remain in the workspace briefly.
 - Keep raw customer files outside git. If a temporary workspace-local path is
   unavoidable, use untracked `customer-data/` or `pilot-data/`.
 - Never commit raw customer files, customer pilot input files, or generated

@@ -195,13 +195,46 @@ assessment requires tariff, constraints, operating costs, and human
 validation. Customer data and generated customer reports should not be
 committed to git unless explicitly anonymized and approved.
 
+Customer pilot PDF report export:
+
+Install backend dependencies first:
+
+```bash
+cd backend && python -m pip install -e '.[dev]' && cd ..
+```
+
+Then run the exporter from the repository root with the same Python
+environment:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv CUSTOMER_PILOT_PDF_WRITE=true CUSTOMER_PILOT_PDF_OUTPUT_PATH=/tmp/customer-pilot-preview.pdf python scripts/customer_pilot_pdf_export.py
+```
+
+The PDF exporter reuses the local workflow preview and report formatting logic
+to create a professional local pilot preview PDF for human review and customer
+discussion. It reads
+`CUSTOMER_PILOT_INPUT_PATH`, optional
+`PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`, optional
+`CUSTOMER_PILOT_PDF_OUTPUT_PATH`, optional `CUSTOMER_PILOT_PDF_WRITE`
+(default `false`), and optional `CUSTOMER_PILOT_DRY_RUN` (default `true`).
+If no PDF output path is set, or PDF writing is not explicitly enabled, it
+prints a safe no-write summary and writes no PDF. It writes only the requested
+PDF when `CUSTOMER_PILOT_PDF_WRITE=true` and
+`CUSTOMER_PILOT_PDF_OUTPUT_PATH` is set. It writes no other files, writes no
+database records, and calls no external APIs. This is PDF export only, not
+financial advice, not a customer value claim, and not customer-specific
+savings. Generated customer PDFs must not be committed to git unless
+anonymized and explicitly approved.
+If `reportlab` is missing at runtime, install the backend dependencies from
+`backend/pyproject.toml` before rerunning.
+
 Customer pilot artifact safety:
 
 - Keep raw customer files outside git. Use `/tmp` for smoke-test inputs when
   possible, or local untracked folders such as `customer-data/` and
   `pilot-data/` when a file must remain in the workspace temporarily.
 - Use local untracked `artifacts/customer-pilots/` for temporary generated
-  pilot reports.
+  pilot reports, including generated customer pilot PDFs.
 - Never commit raw customer files, customer pilot input files, or generated
   customer reports unless the artifact has been explicitly anonymized and
   approved for commit.
