@@ -2,6 +2,18 @@
 
 ## v0.1.0 - TODO
 
+- Added docs-only customer pilot operator runbook and acceptance checklist in
+  `docs/PILOT_OPERATOR_RUNBOOK.md` and
+  `docs/PILOT_ACCEPTANCE_CHECKLIST.md`. The runbook documents the manual local
+  read-only pilot flow for CSV validation, workflow preview, Markdown export,
+  PDF export, and artifact pack creation, including safe local file handling,
+  manual review, sharing rules, troubleshooting, completion criteria, and
+  forbidden claim guardrails. Updated README and pilot readiness docs to link
+  the operator materials. This changed documentation only and added no
+  frontend app code, backend API behavior, scripts, tests, database schema,
+  migrations, auth, Azure, weather/maps, fake customer data, financial advice,
+  commercial claim behavior, control, dispatch, activation, live control
+  signals, or asset integration.
 - Added `scripts/customer_pilot_artifact_pack.py`, a scripts/tests/docs-only
   local read-only customer pilot artifact pack command. It reuses the existing
   workflow preview, Markdown report exporter, and PDF exporter, reads
