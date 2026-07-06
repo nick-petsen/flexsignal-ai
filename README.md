@@ -109,6 +109,34 @@ customer-specific savings, profit, revenue, or financial advice. It adds no
 control, dispatch, activation, live control signals, or asset integration.
 Customer data and pilot CSV files must not be committed to git.
 
+Customer pilot indicative gross opportunity signal preview:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_opportunity_estimate.py
+```
+
+The opportunity estimate preview is a local read-only bounded preview after
+CSV validation and signal matching. It reads `CUSTOMER_PILOT_INPUT_PATH`,
+optional `PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`, optional
+`CUSTOMER_PILOT_PRICE_AREA`, and optional `CUSTOMER_PILOT_DRY_RUN` (default
+`true`). For v0 it accepts CSV only, writes no files, writes no database
+records, calls no external APIs, and prints a JSON summary with matched public
+risk windows, matched flexible MWh, public EUR/MWh opportunity signal, and the
+indicative gross opportunity signal.
+
+Formula:
+
+```text
+matched_flexible_energy_mwh x public_opportunity_signal_eur_per_mwh
+```
+
+This is public price signal only. It is not customer savings, not profit, not
+revenue, and not financial advice. Customer-specific value requires tariff,
+constraints, operating costs, and human validation. The preview remains
+read-only decision support, requires human review, and adds no automatic
+control, dispatch, activation, live control signals, or asset integration.
+Customer data and pilot CSV files must not be committed to git.
+
 Manual public market backtest input preview:
 
 ```bash

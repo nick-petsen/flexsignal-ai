@@ -20,6 +20,29 @@
   backend call from the frontend, database schema, migration, auth, Azure,
   weather/maps, polling/autoload, customer-specific calculation,
   control, dispatch, activation, live control signals, or asset integration.
+- Added `scripts/customer_pilot_opportunity_estimate.py`, a scripts/tests/docs-only
+  local read-only indicative gross opportunity signal preview for customer
+  pilot CSV rows after validation and signal matching. It reads
+  `CUSTOMER_PILOT_INPUT_PATH`,
+  `PUBLIC_SURPLUS_RISK_SNAPSHOT_PATH`,
+  `CUSTOMER_PILOT_PRICE_AREA`, and `CUSTOMER_PILOT_DRY_RUN`, accepts CSV only
+  for v0, writes no files, writes no database records, calls no external APIs,
+  and prints a bounded JSON summary using
+  `matched_flexible_energy_mwh x public_opportunity_signal_eur_per_mwh`.
+  The preview uses public price signal only; it is not customer savings, not
+  profit, not revenue, and not financial advice. Added mocked local-only tests
+  in `backend/tests/test_customer_pilot_opportunity_estimate.py` for DK1 and
+  DK2 overlap estimates, availability filtering, missing flexible energy,
+  unavailable public price context, no overlap, missing required columns,
+  DK1/DK2 mismatch behavior, no file/db/external write behavior, safety
+  boundary text, and forbidden claim wording in estimate content. Updated
+  README and pilot docs with usage, formula, pilot flow, human review, and
+  customer-data handling. This changed scripts/tests/docs only and added no
+  frontend app code, backend API behavior, database schema, migrations, auth,
+  Azure, weather/maps, fake customer data beyond tiny test fixtures,
+  customer-specific savings calculation, profit/revenue calculation,
+  financial advice, control, dispatch, activation, live control signals, or
+  asset integration.
 - Added `scripts/customer_pilot_signal_match.py`, a scripts/tests/docs-only
   local read-only signal match preview for comparing validated customer pilot
   CSV rows with the canonical public surplus-risk snapshot at

@@ -64,13 +64,35 @@ database records, calls no external APIs, calculates no customer-specific
 savings, profit, or revenue, and adds no control, dispatch, activation, live
 control signals, or asset integration.
 
+After validation and signal matching, preview a bounded indicative gross
+opportunity signal:
+
+```bash
+CUSTOMER_PILOT_INPUT_PATH=path/to/customer.csv python scripts/customer_pilot_opportunity_estimate.py
+```
+
+The v0 opportunity estimate preview accepts CSV only and calculates:
+
+```text
+matched_flexible_energy_mwh x public_opportunity_signal_eur_per_mwh
+```
+
+This is public price signal only. It is not customer savings, not profit, not
+revenue, and not financial advice. Customer-specific value requires tariff,
+constraints, operating costs, and human validation. The preview writes no
+files, writes no database records, calls no external APIs, remains read-only
+decision support, requires human review, and adds no automatic control,
+dispatch, activation, live control signals, or asset integration. Customer
+data and customer pilot CSV files must not be committed to git.
+
 The pilot flow is:
 
 1. Validate customer intake CSV.
 2. Match customer data to public risk windows.
-3. Human review.
-4. Only later estimate customer-specific potential if the validated data
-   supports it.
+3. Estimate indicative gross opportunity signal.
+4. Human review.
+5. Only later produce customer-specific assessment if data and contract
+   support it.
 
 ## Pilot Scope
 
@@ -133,13 +155,19 @@ The pilot estimates economic potential in a controlled, auditable sequence:
 1. The public DK1/DK2 signal identifies historical surplus-risk or
    price-opportunity windows.
 2. Customer data estimates usable flexible MWh during those windows.
-3. Gross opportunity equals flexible MWh multiplied by the relevant
-   price/opportunity signal.
+3. Indicative gross opportunity signal equals:
+
+   ```text
+   matched_flexible_energy_mwh x public_opportunity_signal_eur_per_mwh
+   ```
+
 4. Customer-specific value requires validated tariff terms, operating
    constraints, operating costs, and customer review.
 
-This method is an estimate for decision support. It must be reviewed with the
-customer before being used for planning.
+This method is public price signal only and is a read-only decision-support
+preview. It is not customer savings, not profit, not revenue, and not
+financial advice. It must be reviewed with the customer before any later
+customer-specific assessment.
 
 ## Deliverables
 
