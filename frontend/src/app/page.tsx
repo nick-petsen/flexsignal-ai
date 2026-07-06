@@ -1895,9 +1895,11 @@ function buildPublicProofOfWorkMarkdownReport(): string {
           snapshot.durationHours
         }h | ${formatNumber(snapshot.score)} | ${snapshot.level} | ${formatNumber(
           snapshot.lowPriceHours
-        )} | ${formatNumber(snapshot.negativePriceHours)} | ${
-          snapshot.averageRenewableShare
-        } | ${snapshot.maxRenewableShare} | ${snapshot.reasons
+        )} | ${formatNumber(snapshot.negativePriceHours)} | Avg price: ${
+          snapshot.averagePrice
+        }; Min price: ${snapshot.minPrice}; EUR/MWh signal: ${
+          snapshot.opportunitySignal
+        } | ${snapshot.averageRenewableShare} | ${snapshot.maxRenewableShare} | ${snapshot.reasons
           .map((reason) => publicRiskReasonLabels[reason] ?? reason)
           .join(", ")} |`
     )
@@ -1920,8 +1922,8 @@ function buildPublicProofOfWorkMarkdownReport(): string {
     "",
     "## Verified top risk windows",
     "",
-    "| Area | Start | End | Duration | Score | Level | Low price hours | Negative price hours | Average renewable share | Max renewable share | Main reasons |",
-    "| --- | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | --- |",
+    "| Area | Start | End | Duration | Score | Level | Low price hours | Negative price hours | Public price signal | Average renewable share | Max renewable share | Main reasons |",
+    "| --- | --- | --- | ---: | ---: | --- | ---: | ---: | --- | ---: | ---: | --- |",
     windowRows,
     "",
     "## Commercial interpretation",
@@ -1994,6 +1996,9 @@ function buildPublicProofOfWorkPrintableReportHtml(): string {
           <td>${escapeHtml(formatRiskLabel(snapshot.level))}</td>
           <td>${escapeHtml(formatNumber(snapshot.lowPriceHours))}</td>
           <td>${escapeHtml(formatNumber(snapshot.negativePriceHours))}</td>
+          <td>${escapeHtml(
+            `Avg price: ${snapshot.averagePrice}; Min price: ${snapshot.minPrice}; EUR/MWh signal: ${snapshot.opportunitySignal}`
+          )}</td>
           <td>${escapeHtml(snapshot.averageRenewableShare)}</td>
           <td>${escapeHtml(snapshot.maxRenewableShare)}</td>
           <td>${escapeHtml(reasons)}</td>
@@ -2431,6 +2436,7 @@ function buildPublicProofOfWorkPrintableReportHtml(): string {
                 <th>Level</th>
                 <th>Low price hours</th>
                 <th>Negative price hours</th>
+                <th>Public price signal</th>
                 <th>Average renewable share</th>
                 <th>Max renewable share</th>
                 <th>Main reasons</th>
@@ -2569,7 +2575,7 @@ function VerifiedPublicRiskWindowSnapshot() {
           <p>
             Top public DK1/DK2 surplus-risk windows from the verified snapshot.
             This is market and system-level evidence for human review, not a
-            customer savings calculation.
+            customer-specific calculation.
           </p>
         </div>
         <span className="status">Read-only snapshot</span>
@@ -2586,6 +2592,7 @@ function VerifiedPublicRiskWindowSnapshot() {
               <th scope="col">Level</th>
               <th scope="col">Low price hours</th>
               <th scope="col">Negative price hours</th>
+              <th scope="col">Public price signal</th>
               <th scope="col">Avg renewable share</th>
               <th scope="col">Main reasons</th>
               <th scope="col">Human review action</th>
@@ -2617,6 +2624,16 @@ function VerifiedPublicRiskWindowSnapshot() {
                 </td>
                 <td>{formatNumber(snapshot.lowPriceHours)}</td>
                 <td>{formatNumber(snapshot.negativePriceHours)}</td>
+                <td>
+                  <span
+                    className="risk-window-table__price"
+                    title={snapshot.opportunitySignalNote}
+                  >
+                    <span>Avg price {snapshot.averagePrice}</span>
+                    <span>Min price {snapshot.minPrice}</span>
+                    <span>EUR/MWh signal {snapshot.opportunitySignal}</span>
+                  </span>
+                </td>
                 <td>
                   <span className="risk-window-table__renewables">
                     {snapshot.averageRenewableShare}

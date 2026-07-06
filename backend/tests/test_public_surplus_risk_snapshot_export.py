@@ -27,6 +27,29 @@ def load_script_module(script_name: str) -> ModuleType:
 
 snapshot_export = load_script_module("public_surplus_risk_snapshot_export.py")
 
+UNAVAILABLE_PRICE_CONTEXT = {
+    "min_price_eur_per_mwh": None,
+    "average_price_eur_per_mwh": None,
+    "max_price_eur_per_mwh": None,
+    "price_context_status": "not_available",
+    "opportunity_signal_eur_per_mwh": None,
+    "opportunity_signal_note": (
+        "Public DayAheadPrices rows were unavailable or insufficient for this "
+        "window."
+    ),
+}
+
+
+def price_context_counts(
+    *,
+    low_price_hours: int,
+    negative_price_hours: int,
+) -> dict[str, int]:
+    return {
+        "low_price_hour_count": low_price_hours,
+        "negative_price_hour_count": negative_price_hours,
+    }
+
 
 def test_snapshot_validates_schema_version() -> None:
     snapshot = snapshot_export.build_snapshot()
@@ -85,6 +108,17 @@ def test_snapshot_contains_top_risk_windows() -> None:
             "renewable_generation_above_consumption",
             "negative_price",
         ],
+        "min_price_eur_per_mwh": -25.4575,
+        "average_price_eur_per_mwh": 16.656225,
+        "max_price_eur_per_mwh": 115.707498,
+        "price_context_status": "available",
+        "opportunity_signal_eur_per_mwh": 8.343775,
+        "opportunity_signal_note": (
+            "Public market/system-level signal only: max(0, public low-price "
+            "threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). "
+            "Customer load, flexibility, tariff, and constraints are excluded."
+        ),
+        **price_context_counts(low_price_hours=39, negative_price_hours=20),
     }
     assert windows["DK2"][0] == {
         "start": "2026-04-24T21:00:00",
@@ -101,7 +135,76 @@ def test_snapshot_contains_top_risk_windows() -> None:
             "renewable_generation_above_consumption",
             "low_price",
         ],
+        "min_price_eur_per_mwh": 8.07,
+        "average_price_eur_per_mwh": 43.43525,
+        "max_price_eur_per_mwh": 104.827501,
+        "price_context_status": "available",
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": (
+            "Public market/system-level signal only: max(0, public low-price "
+            "threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). "
+            "Customer load, flexibility, tariff, and constraints are excluded."
+        ),
+        **price_context_counts(low_price_hours=3, negative_price_hours=0),
     }
+
+
+def test_snapshot_price_context_fields_exist_and_are_available() -> None:
+    windows = snapshot_export.build_snapshot()["top_risk_windows"]
+    available_by_area = {"DK1": False, "DK2": False}
+
+    for price_area, area_windows in windows.items():
+        for window in area_windows:
+            assert window["price_context_status"] == "available"
+            assert isinstance(window["min_price_eur_per_mwh"], float | int)
+            assert isinstance(window["average_price_eur_per_mwh"], float | int)
+            assert isinstance(window["max_price_eur_per_mwh"], float | int)
+            assert isinstance(
+                window["opportunity_signal_eur_per_mwh"],
+                float | int,
+            )
+            expected_signal = max(0.0, 25.0 - window["average_price_eur_per_mwh"])
+            assert round(window["opportunity_signal_eur_per_mwh"], 6) == round(
+                expected_signal,
+                6,
+            )
+            assert window["low_price_hour_count"] == window["low_price_hours"]
+            assert (
+                window["negative_price_hour_count"]
+                == window["negative_price_hours"]
+            )
+            available_by_area[price_area] = True
+
+    assert available_by_area == {"DK1": True, "DK2": True}
+
+
+def test_missing_public_price_rows_stay_unavailable() -> None:
+    context = snapshot_export.build_price_context_from_public_prices(
+        [],
+        low_price_hour_count=0,
+        negative_price_hour_count=0,
+    )
+
+    assert context == {
+        **UNAVAILABLE_PRICE_CONTEXT,
+        "low_price_hour_count": None,
+        "negative_price_hour_count": None,
+    }
+
+
+def test_available_public_price_context_signal_is_deterministic() -> None:
+    context = snapshot_export.build_price_context_from_public_prices(
+        [10.0, 20.0, 40.0],
+        low_price_hour_count=2,
+        negative_price_hour_count=0,
+    )
+
+    assert context["price_context_status"] == "available"
+    assert context["average_price_eur_per_mwh"] == 70.0 / 3.0
+    assert context["opportunity_signal_eur_per_mwh"] == 25.0 - (70.0 / 3.0)
+    assert "Public market/system-level signal only" in context[
+        "opportunity_signal_note"
+    ]
 
 
 def test_snapshot_contains_safety_boundaries() -> None:
@@ -198,6 +301,49 @@ def test_no_customer_specific_savings_calculated_or_claimed() -> None:
     assert snapshot["customer_specific_savings_calculated"] is False
     assert snapshot["not_customer_specific_savings"] is True
     assert "not customer-specific savings" in payload
+    assert "saved money" not in payload
+    assert "profit" not in payload
+    assert "revenue" not in payload
     assert "customer-specific savings are" not in payload
     assert "customer-specific savings of" not in payload
     assert "savings estimate" not in payload
+
+
+def test_snapshot_export_keeps_backend_api_contract_out_of_scope() -> None:
+    source = (
+        REPO_ROOT / "scripts" / "public_surplus_risk_snapshot_export.py"
+    ).read_text(encoding="utf-8")
+
+    assert "/api/" not in source
+    assert "FastAPI" not in source
+    assert "APIRouter" not in source
+
+
+def test_frontend_snapshot_typing_supports_public_price_context() -> None:
+    source = (
+        REPO_ROOT / "frontend" / "src" / "lib" / "publicBacktestSnapshot.ts"
+    ).read_text(encoding="utf-8")
+
+    for term in (
+        "min_price_eur_per_mwh",
+        "average_price_eur_per_mwh",
+        "max_price_eur_per_mwh",
+        "negative_price_hour_count",
+        "low_price_hour_count",
+        "price_context_status",
+        "opportunity_signal_eur_per_mwh",
+        "opportunity_signal_note",
+        "averagePrice",
+        "opportunitySignal",
+    ):
+        assert term in source
+
+
+def test_frontend_snapshot_loader_does_not_call_backend() -> None:
+    source = (
+        REPO_ROOT / "frontend" / "src" / "lib" / "publicBacktestSnapshot.ts"
+    ).read_text(encoding="utf-8")
+
+    assert "fetch(" not in source
+    assert "backendApiBaseUrl" not in source
+    assert "/api/" not in source

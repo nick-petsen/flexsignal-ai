@@ -137,10 +137,11 @@ windows, commercial interpretation, limitations, next customer pilot step, and
 safety boundary.
 
 The report is public market/system-level only. It is not customer-specific
-savings, does not calculate customer-specific value, does not claim production
-readiness, and remains read-only decision support with no automatic control,
-dispatch, activation, live control signals, or asset integration. Customer
-specific value requires customer load, asset, tariff, and operational data.
+savings, does not calculate a customer-specific result, does not claim
+production readiness, and remains read-only decision support with no automatic
+control, dispatch, activation, live control signals, or asset integration.
+Customer-specific analysis requires customer load, asset, tariff, and
+operational data.
 
 ## Public Surplus-Risk Snapshot Artifact v1
 
@@ -179,6 +180,22 @@ The artifact has schema version `public_surplus_risk_snapshot.v1`, covers
 read-only decision support only. It is not customer-specific savings, does not
 calculate customer-specific savings, and adds no automatic control, dispatch,
 activation, live control signals, or asset integration.
+
+Each canonical `top_risk_windows` entry now includes public price context
+fields: min/average/max EUR/MWh price, negative/low price hour counts,
+`price_context_status`, `opportunity_signal_eur_per_mwh`, and
+`opportunity_signal_note`. When the surplus-risk backtest has joined public
+DayAheadPrices rows for a window, the signal is calculated deterministically:
+
+```text
+max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh)
+```
+
+The committed canonical artifact contains verified public DayAheadPrices
+context for each top risk window. No price values are invented. This is public
+market/system-level context only; a separate customer-specific analysis
+requires validated customer load, flexibility, tariff, constraints, and human
+review.
 
 Public DK1/DK2 market backtest input foundation:
 

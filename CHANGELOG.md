@@ -2,6 +2,24 @@
 
 ## v0.1.0 - TODO
 
+- Added public risk-window price context v1 for verified public surplus-risk
+  windows. `scripts/public_surplus_risk_backtest.py` now includes per-window
+  public DayAheadPrices context when joined source price rows are present:
+  min/average/max EUR/MWh, negative/low price hour counts, availability
+  status, and a deterministic public EUR/MWh opportunity signal. The signal
+  uses `max(0, public low-price threshold 25 EUR/MWh - average window
+  DayAheadPrices EUR/MWh)` and is public market/system-level only. The
+  canonical snapshot schema and Reports risk-window table now support a
+  compact `Public price signal` column using the canonical JSON artifact. The
+  committed snapshot includes verified public DayAheadPrices-derived price
+  context values for each top risk window.
+  Added tests for deterministic signal calculation, unavailable context,
+  snapshot fields, no database writes, API contract staying out of scope, and
+  frontend snapshot typing. Updated README and model/backtest docs. This
+  changed scripts/tests/frontend/docs only and added no backend endpoint,
+  backend call from the frontend, database schema, migration, auth, Azure,
+  weather/maps, polling/autoload, customer-specific calculation,
+  control, dispatch, activation, live control signals, or asset integration.
 - Added `scripts/customer_pilot_signal_match.py`, a scripts/tests/docs-only
   local read-only signal match preview for comparing validated customer pilot
   CSV rows with the canonical public surplus-risk snapshot at
