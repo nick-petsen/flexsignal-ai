@@ -1285,13 +1285,15 @@ tr:last-child td {
 
 .risk-window-table__window,
 .risk-window-table__renewables,
+.risk-window-table__price,
 .risk-window-table__reasons {
   display: grid;
   gap: 4px;
 }
 
 .risk-window-table__window span,
-.risk-window-table__renewables small {
+.risk-window-table__renewables small,
+.risk-window-table__price span {
   color: var(--muted-soft);
   font-size: 0.75rem;
   font-weight: 650;

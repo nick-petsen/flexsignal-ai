@@ -2,6 +2,7 @@ import snapshotArtifact from "../data/public-surplus-risk-backtest-snapshot.json
 import type { PriceArea } from "./api";
 
 type RiskLevel = "medium" | "high";
+type PriceContextStatus = "available" | "not_available";
 
 type PublicSnapshotSummaryMetric = {
   joined_hours: number;
@@ -24,6 +25,14 @@ type PublicSnapshotRiskWindow = {
   level: RiskLevel;
   low_price_hours: number;
   negative_price_hours: number;
+  min_price_eur_per_mwh: number | null;
+  average_price_eur_per_mwh: number | null;
+  max_price_eur_per_mwh: number | null;
+  negative_price_hour_count: number | null;
+  low_price_hour_count: number | null;
+  price_context_status: PriceContextStatus;
+  opportunity_signal_eur_per_mwh: number | null;
+  opportunity_signal_note: string;
   average_renewable_share_percent: number;
   max_renewable_share_percent: number;
   reasons: string[];
@@ -79,6 +88,12 @@ export type PublicRiskWindowSnapshot = {
   level: RiskLevel;
   negativePriceHours: number;
   lowPriceHours: number;
+  minPrice: string;
+  averagePrice: string;
+  maxPrice: string;
+  priceContextStatus: PriceContextStatus;
+  opportunitySignal: string;
+  opportunitySignalNote: string;
   averageRenewableShare: string;
   maxRenewableShare: string;
   reasons: string[];
@@ -127,6 +142,16 @@ export const publicRiskWindowSnapshots: PublicRiskWindowSnapshot[] =
       level: window.level,
       negativePriceHours: window.negative_price_hours,
       lowPriceHours: window.low_price_hours,
+      minPrice: formatOptionalSnapshotPrice(window.min_price_eur_per_mwh),
+      averagePrice: formatOptionalSnapshotPrice(
+        window.average_price_eur_per_mwh,
+      ),
+      maxPrice: formatOptionalSnapshotPrice(window.max_price_eur_per_mwh),
+      priceContextStatus: window.price_context_status,
+      opportunitySignal: formatOptionalSnapshotPrice(
+        window.opportunity_signal_eur_per_mwh,
+      ),
+      opportunitySignalNote: window.opportunity_signal_note,
       averageRenewableShare: formatSnapshotPercent(
         window.average_renewable_share_percent,
       ),
@@ -139,4 +164,12 @@ export const publicRiskWindowSnapshots: PublicRiskWindowSnapshot[] =
 
 function formatSnapshotPercent(value: number): string {
   return `${value.toFixed(1)}%`;
+}
+
+function formatOptionalSnapshotPrice(value: number | null): string {
+  if (value === null) {
+    return "Not available";
+  }
+
+  return `${value.toFixed(1)} EUR/MWh`;
 }

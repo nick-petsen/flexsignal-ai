@@ -106,7 +106,12 @@ timestamp, skips missing or unjoinable rows instead of inventing data, and
 scores joined rows with deterministic rules: negative price, low price,
 medium/high renewable share, and renewable generation above gross consumption.
 Default thresholds are `25` EUR/MWh for low price, `0.65` for medium renewable
-share, and `0.80` for high renewable share. The output is public
+share, and `0.80` for high renewable share. Window snapshots include public
+price context when source DayAheadPrices rows are available: min/average/max
+EUR/MWh, negative/low price hour counts, availability status, and a
+deterministic public EUR/MWh opportunity signal calculated as
+`max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh)`.
+The output is public
 market/system-level decision support only, not customer-specific savings,
 revenue, profit, tariff, tax, fee, load, asset behavior, dispatch, activation,
 or control. Customer-specific results require customer load, asset, tariff, and
@@ -163,6 +168,13 @@ the read-only decision-support boundary. It is not customer-specific savings,
 does not calculate customer-specific savings, and adds no automatic control,
 dispatch, activation, live control signals, asset integration, database write,
 LLM forecasting, or ML forecasting behavior.
+
+The canonical `top_risk_windows` schema includes public price context fields.
+The committed artifact contains verified public DayAheadPrices-derived
+min/average/max EUR/MWh and public EUR/MWh signal values for each top risk
+window. This does not change the customer boundary. Any customer-specific
+assessment still requires validated customer load, flexibility, tariff,
+constraints, and human review.
 
 The frontend spot price and power balance trend charts are not part of
 `rule-engine-v0` and do not change scoring, forecasting, backtest pairing,

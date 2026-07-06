@@ -28,6 +28,8 @@ DEFAULT_RENEWABLE_SHARE_MEDIUM_THRESHOLD = "0.65"
 DEFAULT_RENEWABLE_SHARE_HIGH_THRESHOLD = "0.80"
 DEFAULT_TOP_RISK_WINDOWS = "10"
 DEFAULT_WINDOW_SNAPSHOT_ONLY = "false"
+PRICE_CONTEXT_STATUS_AVAILABLE = "available"
+PRICE_CONTEXT_STATUS_NOT_AVAILABLE = "not_available"
 
 NEGATIVE_PRICE_REASON = "negative_price"
 LOW_PRICE_REASON = "low_price"
@@ -104,8 +106,14 @@ class RiskWindowSnapshot:
     highest_risk_score: int
     average_risk_score: float | None
     risk_level: str
+    min_price_eur_per_mwh: float | None
+    average_price_eur_per_mwh: float | None
+    max_price_eur_per_mwh: float | None
     negative_price_hour_count: int | None
     low_price_hour_count: int | None
+    price_context_status: str
+    opportunity_signal_eur_per_mwh: float | None
+    opportunity_signal_note: str
     average_renewable_share: float | None
     max_renewable_share: float | None
     top_reason_codes: Mapping[str, int] | None
@@ -718,12 +726,36 @@ def print_window_snapshot(
             )
             print(f"      risk_level: {snapshot.risk_level}")
             print(
+                "      min_price_eur_per_mwh: "
+                f"{_format_optional_float(snapshot.min_price_eur_per_mwh)}"
+            )
+            print(
+                "      average_price_eur_per_mwh: "
+                f"{_format_optional_float(snapshot.average_price_eur_per_mwh)}"
+            )
+            print(
+                "      max_price_eur_per_mwh: "
+                f"{_format_optional_float(snapshot.max_price_eur_per_mwh)}"
+            )
+            print(
                 "      negative_price_hour_count: "
                 f"{_format_optional_int(snapshot.negative_price_hour_count)}"
             )
             print(
                 "      low_price_hour_count: "
                 f"{_format_optional_int(snapshot.low_price_hour_count)}"
+            )
+            print(
+                "      price_context_status: "
+                f"{snapshot.price_context_status}"
+            )
+            print(
+                "      opportunity_signal_eur_per_mwh: "
+                f"{_format_optional_float(snapshot.opportunity_signal_eur_per_mwh)}"
+            )
+            print(
+                "      opportunity_signal_note: "
+                f"{snapshot.opportunity_signal_note}"
             )
             print(
                 "      average_renewable_share: "
@@ -812,21 +844,46 @@ def _build_window_snapshot(
 ) -> RiskWindowSnapshot:
     rows = _joined_rows_for_window(summary.joined_rows, window)
     average_risk_score: float | None = None
+    min_price_eur_per_mwh: float | None = None
+    average_price_eur_per_mwh: float | None = None
+    max_price_eur_per_mwh: float | None = None
     negative_price_hour_count: int | None = None
     low_price_hour_count: int | None = None
+    price_context_status = PRICE_CONTEXT_STATUS_NOT_AVAILABLE
+    opportunity_signal_eur_per_mwh: float | None = None
+    opportunity_signal_note = (
+        "Public DayAheadPrices rows were unavailable or insufficient for this "
+        "window."
+    )
     average_renewable_share: float | None = None
     max_renewable_share: float | None = None
     top_reason_codes: Mapping[str, int] | None = None
 
     if rows:
+        window_prices = [row.price_eur_per_mwh for row in rows]
+        min_price_eur_per_mwh = min(window_prices)
+        average_price_eur_per_mwh = sum(window_prices) / len(window_prices)
+        max_price_eur_per_mwh = max(window_prices)
         average_risk_score = sum(row.risk_score for row in rows) / len(rows)
         negative_price_hour_count = sum(
-            1 for row in rows if row.price_eur_per_mwh < 0
+            1 for price in window_prices if price < 0
         )
         low_price_hour_count = sum(
             1
-            for row in rows
-            if LOW_PRICE_REASON in row.reason_codes
+            for price in window_prices
+            if price <= summary.low_price_threshold_eur_per_mwh
+        )
+        price_context_status = PRICE_CONTEXT_STATUS_AVAILABLE
+        opportunity_signal_eur_per_mwh = max(
+            0.0,
+            summary.low_price_threshold_eur_per_mwh
+            - average_price_eur_per_mwh,
+        )
+        opportunity_signal_note = (
+            "Public market signal only: max(0, public low-price threshold "
+            f"{_format_float(summary.low_price_threshold_eur_per_mwh)} "
+            "EUR/MWh - average window DayAheadPrices EUR/MWh). Customer "
+            "load, flexibility, tariff, and constraints are excluded."
         )
         average_renewable_share = (
             sum(row.renewable_share for row in rows) / len(rows)
@@ -849,8 +906,14 @@ def _build_window_snapshot(
         highest_risk_score=window.highest_risk_score,
         average_risk_score=average_risk_score,
         risk_level=window.highest_risk_level,
+        min_price_eur_per_mwh=min_price_eur_per_mwh,
+        average_price_eur_per_mwh=average_price_eur_per_mwh,
+        max_price_eur_per_mwh=max_price_eur_per_mwh,
         negative_price_hour_count=negative_price_hour_count,
         low_price_hour_count=low_price_hour_count,
+        price_context_status=price_context_status,
+        opportunity_signal_eur_per_mwh=opportunity_signal_eur_per_mwh,
+        opportunity_signal_note=opportunity_signal_note,
         average_renewable_share=average_renewable_share,
         max_renewable_share=max_renewable_share,
         top_reason_codes=top_reason_codes,

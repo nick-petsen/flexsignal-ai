@@ -1,5 +1,5 @@
 {
-  "commercial_interpretation": "The verified public backtest shows that DK1/DK2 surplus-risk windows can be identified from public market, consumption, and renewable production data. This is public market/system-level evidence for human review. It is not customer-specific savings and does not say customers saved money.",
+  "commercial_interpretation": "The verified public backtest shows that DK1/DK2 surplus-risk windows can be identified from public market, consumption, and renewable production data. This is public market/system-level evidence for human review. It is not customer-specific savings.",
   "customer_specific_savings_calculated": false,
   "database_write_performed": false,
   "decision_boundary": "read-only decision support",
@@ -65,13 +65,21 @@
   "top_risk_windows": {
     "DK1": [
       {
+        "average_price_eur_per_mwh": 16.656225,
         "average_renewable_share_percent": 98.6,
         "duration_hours": 51,
         "end": "2026-04-06T23:00:00",
         "level": "high",
+        "low_price_hour_count": 39,
         "low_price_hours": 39,
+        "max_price_eur_per_mwh": 115.707498,
         "max_renewable_share_percent": 163.3,
+        "min_price_eur_per_mwh": -25.4575,
+        "negative_price_hour_count": 20,
         "negative_price_hours": 20,
+        "opportunity_signal_eur_per_mwh": 8.343775,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "low_price",
           "high_renewable_share",
@@ -82,13 +90,21 @@
         "start": "2026-04-04T21:00:00"
       },
       {
+        "average_price_eur_per_mwh": 43.215732,
         "average_renewable_share_percent": 117.3,
         "duration_hours": 41,
         "end": "2026-04-25T22:00:00",
         "level": "high",
+        "low_price_hour_count": 18,
         "low_price_hours": 18,
+        "max_price_eur_per_mwh": 131.535,
         "max_renewable_share_percent": 192.2,
+        "min_price_eur_per_mwh": -31.2775,
+        "negative_price_hour_count": 8,
         "negative_price_hours": 8,
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "renewable_generation_above_consumption",
@@ -99,13 +115,21 @@
         "start": "2026-04-24T06:00:00"
       },
       {
+        "average_price_eur_per_mwh": 44.875682,
         "average_renewable_share_percent": 108.6,
         "duration_hours": 11,
         "end": "2026-05-29T16:00:00",
         "level": "high",
+        "low_price_hour_count": 6,
         "low_price_hours": 6,
+        "max_price_eur_per_mwh": 133.722502,
         "max_renewable_share_percent": 136.4,
+        "min_price_eur_per_mwh": -0.005,
+        "negative_price_hour_count": 1,
         "negative_price_hours": 1,
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "renewable_generation_above_consumption",
@@ -116,13 +140,21 @@
         "start": "2026-05-29T06:00:00"
       },
       {
+        "average_price_eur_per_mwh": 31.859961,
         "average_renewable_share_percent": 110.2,
         "duration_hours": 65,
         "end": "2026-06-15T18:00:00",
         "level": "high",
+        "low_price_hour_count": 33,
         "low_price_hours": 33,
+        "max_price_eur_per_mwh": 148.744995,
         "max_renewable_share_percent": 171.3,
+        "min_price_eur_per_mwh": -28.95,
+        "negative_price_hour_count": 14,
         "negative_price_hours": 14,
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "renewable_generation_above_consumption",
@@ -133,13 +165,21 @@
         "start": "2026-06-13T02:00:00"
       },
       {
+        "average_price_eur_per_mwh": 77.876813,
         "average_renewable_share_percent": 113.2,
         "duration_hours": 40,
         "end": "2026-05-28T01:00:00",
         "level": "high",
+        "low_price_hour_count": 12,
         "low_price_hours": 12,
+        "max_price_eur_per_mwh": 148.340004,
         "max_renewable_share_percent": 162.7,
+        "min_price_eur_per_mwh": -1.3825,
+        "negative_price_hour_count": 10,
         "negative_price_hours": 10,
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "renewable_generation_above_consumption",
@@ -152,13 +192,21 @@
     ],
     "DK2": [
       {
+        "average_price_eur_per_mwh": 43.43525,
         "average_renewable_share_percent": 98.0,
         "duration_hours": 10,
         "end": "2026-04-25T06:00:00",
         "level": "high",
+        "low_price_hour_count": 3,
         "low_price_hours": 3,
+        "max_price_eur_per_mwh": 104.827501,
         "max_renewable_share_percent": 108.6,
+        "min_price_eur_per_mwh": 8.07,
+        "negative_price_hour_count": 0,
         "negative_price_hours": 0,
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "renewable_generation_above_consumption",
@@ -168,13 +216,21 @@
         "start": "2026-04-24T21:00:00"
       },
       {
+        "average_price_eur_per_mwh": 40.335833,
         "average_renewable_share_percent": 92.2,
         "duration_hours": 9,
         "end": "2026-06-15T04:00:00",
         "level": "medium",
+        "low_price_hour_count": 0,
         "low_price_hours": 0,
+        "max_price_eur_per_mwh": 78.415,
         "max_renewable_share_percent": 100.7,
+        "min_price_eur_per_mwh": 25.5475,
+        "negative_price_hour_count": 0,
         "negative_price_hours": 0,
+        "opportunity_signal_eur_per_mwh": 0.0,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "renewable_generation_above_consumption"
@@ -183,13 +239,21 @@
         "start": "2026-06-14T20:00:00"
       },
       {
+        "average_price_eur_per_mwh": 14.893846,
         "average_renewable_share_percent": 77.1,
         "duration_hours": 13,
         "end": "2026-01-02T05:00:00",
         "level": "medium",
+        "low_price_hour_count": 13,
         "low_price_hours": 13,
+        "max_price_eur_per_mwh": 24.9525,
         "max_renewable_share_percent": 85.4,
+        "min_price_eur_per_mwh": 6.685,
+        "negative_price_hour_count": 0,
         "negative_price_hours": 0,
+        "opportunity_signal_eur_per_mwh": 10.106154,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "low_price",
           "medium_renewable_share",
@@ -199,13 +263,21 @@
         "start": "2026-01-01T17:00:00"
       },
       {
+        "average_price_eur_per_mwh": 17.323125,
         "average_renewable_share_percent": 90.2,
         "duration_hours": 12,
         "end": "2026-04-04T08:00:00",
         "level": "medium",
+        "low_price_hour_count": 10,
         "low_price_hours": 10,
+        "max_price_eur_per_mwh": 49.612501,
         "max_renewable_share_percent": 97.3,
+        "min_price_eur_per_mwh": 3.21,
+        "negative_price_hour_count": 0,
         "negative_price_hours": 0,
+        "opportunity_signal_eur_per_mwh": 7.676875,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "low_price"
@@ -214,13 +286,21 @@
         "start": "2026-04-03T21:00:00"
       },
       {
+        "average_price_eur_per_mwh": 22.125,
         "average_renewable_share_percent": 84.8,
         "duration_hours": 10,
         "end": "2026-03-26T05:00:00",
         "level": "medium",
+        "low_price_hour_count": 8,
         "low_price_hours": 8,
+        "max_price_eur_per_mwh": 63.624999,
         "max_renewable_share_percent": 90.8,
+        "min_price_eur_per_mwh": 14.035,
+        "negative_price_hour_count": 0,
         "negative_price_hours": 0,
+        "opportunity_signal_eur_per_mwh": 2.875,
+        "opportunity_signal_note": "Public market/system-level signal only: max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh). Customer load, flexibility, tariff, and constraints are excluded.",
+        "price_context_status": "available",
         "reasons": [
           "high_renewable_share",
           "low_price"

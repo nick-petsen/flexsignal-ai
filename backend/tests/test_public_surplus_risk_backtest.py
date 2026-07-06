@@ -491,7 +491,36 @@ def test_compact_window_output_includes_timestamps_and_scores(
     assert "highest_risk_score: 95" in output
     assert "average_risk_score: 70" in output
     assert "risk_level: high" in output
+    assert "average_price_eur_per_mwh: 7.5" in output
+    assert "price_context_status: available" in output
+    assert "opportunity_signal_eur_per_mwh: 17.5" in output
     assert "recommended_human_action: Human review:" in output
+
+
+def test_window_price_context_signal_is_deterministic_from_public_prices() -> None:
+    summary = public_surplus_risk_backtest.run_public_surplus_risk_backtest(
+        config(),
+        fetch=payload_for_url,
+        sleep_fn=lambda seconds: None,
+    )
+
+    snapshots = public_surplus_risk_backtest.build_risk_window_snapshots(
+        summary,
+        top_per_price_area=10,
+    )
+    snapshot = snapshots[0]
+
+    assert snapshot.min_price_eur_per_mwh == pytest.approx(-5.0)
+    assert snapshot.average_price_eur_per_mwh == pytest.approx(7.5)
+    assert snapshot.max_price_eur_per_mwh == pytest.approx(20.0)
+    assert snapshot.negative_price_hour_count == 1
+    assert snapshot.low_price_hour_count == 2
+    assert snapshot.price_context_status == "available"
+    assert snapshot.opportunity_signal_eur_per_mwh == pytest.approx(17.5)
+    assert "Public market signal only" in snapshot.opportunity_signal_note
+    assert "savings" not in snapshot.opportunity_signal_note.lower()
+    assert "profit" not in snapshot.opportunity_signal_note.lower()
+    assert "revenue" not in snapshot.opportunity_signal_note.lower()
 
 
 def test_missing_optional_window_metrics_are_not_invented(
@@ -519,13 +548,21 @@ def test_missing_optional_window_metrics_are_not_invented(
     output = capsys.readouterr().out
 
     assert snapshots[0].average_risk_score is None
+    assert snapshots[0].min_price_eur_per_mwh is None
+    assert snapshots[0].average_price_eur_per_mwh is None
+    assert snapshots[0].max_price_eur_per_mwh is None
     assert snapshots[0].negative_price_hour_count is None
     assert snapshots[0].low_price_hour_count is None
+    assert snapshots[0].price_context_status == "not_available"
+    assert snapshots[0].opportunity_signal_eur_per_mwh is None
     assert snapshots[0].average_renewable_share is None
     assert snapshots[0].max_renewable_share is None
     assert snapshots[0].top_reason_codes is None
     assert "average_risk_score: not_calculated" in output
+    assert "average_price_eur_per_mwh: not_calculated" in output
     assert "negative_price_hour_count: not_calculated" in output
+    assert "price_context_status: not_available" in output
+    assert "opportunity_signal_eur_per_mwh: not_calculated" in output
     assert "top_reason_codes: not_calculated" in output
 
 
@@ -591,6 +628,13 @@ def test_no_customer_specific_savings_are_calculated(
     )
     assert "savings" not in reason_text
     assert not hasattr(summary.area_summaries[0], "customer_savings")
+    snapshots = public_surplus_risk_backtest.build_risk_window_snapshots(
+        summary,
+        top_per_price_area=10,
+    )
+    assert not hasattr(snapshots[0], "customer_savings")
+    assert not hasattr(snapshots[0], "customer_profit")
+    assert not hasattr(snapshots[0], "customer_revenue")
 
 
 def test_notes_include_not_customer_specific_savings_and_no_control() -> None:

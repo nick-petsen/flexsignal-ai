@@ -3403,6 +3403,37 @@ Important boundary notes:
 - No automatic control, dispatch, activation, or operational functionality
   exists.
 
+## Public Risk-Window Price Context v1
+
+Public surplus-risk window snapshots now have optional public market price
+context fields for each verified top risk window:
+
+- `min_price_eur_per_mwh`
+- `average_price_eur_per_mwh`
+- `max_price_eur_per_mwh`
+- `negative_price_hour_count`
+- `low_price_hour_count`
+- `price_context_status`
+- `opportunity_signal_eur_per_mwh`
+- `opportunity_signal_note`
+
+When public DayAheadPrices rows are available in the surplus-risk backtest,
+the window snapshot calculates those fields from public market rows only. The
+EUR/MWh opportunity signal is deterministic:
+
+```text
+max(0, public low-price threshold 25 EUR/MWh - average window DayAheadPrices EUR/MWh)
+```
+
+The committed canonical JSON artifact contains verified public
+DayAheadPrices-derived price context for each top risk window. These values
+come from hourly public market prices for the verified UTC window boundaries;
+prices are not invented.
+
+This context is public market/system-level only. It is not customer-specific
+savings. Any separate customer-specific analysis requires validated customer
+load, flexibility, tariff, operating constraints, and human review.
+
 ## Compliance Principles
 
 - Read-only decision support in `v0.1`.
