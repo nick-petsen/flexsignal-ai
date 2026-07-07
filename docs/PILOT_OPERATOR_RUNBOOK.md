@@ -44,6 +44,12 @@ Confirm these inputs before running any command:
 If any required input is unclear, stop and resolve it with the customer contact
 or internal reviewer before creating a shareable PDF.
 
+Use the customer outreach pack before requesting or handling pilot files:
+
+- [Pilot customer data request](PILOT_CUSTOMER_DATA_REQUEST.md)
+- [Pilot customer email template](PILOT_CUSTOMER_EMAIL_TEMPLATE.md)
+- [Pilot data handling notice](PILOT_DATA_HANDLING_NOTICE.md)
+
 ## Safe Local File Handling
 
 Use local ignored paths for all customer material:
