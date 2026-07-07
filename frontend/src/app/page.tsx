@@ -148,6 +148,8 @@ type CockpitKpi = {
   tone?: "neutral" | "good" | "warning" | "danger";
 };
 
+type UnavailableContext = "database-read" | "audit-write" | "backend";
+
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
 const forecastPreviewNumericFields: (keyof ForecastPreviewRow)[] = [
   "price_dkk_per_mwh",
@@ -257,7 +259,7 @@ function EnergyCard<Row extends { source_record_id: string }>({
           <p className="muted">Loading read-only data...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="database-read" />
         )}
         {state.status === "success" && (
           <>
@@ -741,7 +743,7 @@ function CurrentRiskCard({
           <p className="muted">Loading read-only risk view...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="database-read" />
         )}
         {state.status === "success" && <RiskResult data={state.data} />}
       </div>
@@ -1597,6 +1599,10 @@ function getRiskActionStatus(state: RiskRequestState): string {
     case "success":
       return "Latest risk view loaded.";
     case "error":
+      if (isDatabaseConfigurationMessage(state.message)) {
+        return getUnavailableMessage(state.message, "database-read");
+      }
+
       return `Risk view unavailable: ${state.message}`;
     case "idle":
     default:
@@ -1625,6 +1631,10 @@ function getFreshnessActionStatus(state: FreshnessRequestState): string {
     case "success":
       return "Data freshness checked.";
     case "error":
+      if (isDatabaseConfigurationMessage(state.message)) {
+        return getUnavailableMessage(state.message, "database-read");
+      }
+
       return `Data freshness unavailable: ${state.message}`;
     case "idle":
     default:
@@ -1641,6 +1651,10 @@ function getDecisionSummaryActionStatus(
     case "success":
       return "Decision summary loaded.";
     case "error":
+      if (isDatabaseConfigurationMessage(state.message)) {
+        return getUnavailableMessage(state.message, "database-read");
+      }
+
       return `Decision summary unavailable: ${state.message}`;
     case "idle":
     default:
@@ -1662,6 +1676,10 @@ function getActionStatusClass(
   }
 
   if (state.status === "error") {
+    if (isDatabaseConfigurationMessage(state.message)) {
+      return `${baseClass} ${baseClass}--neutral`;
+    }
+
     return `${baseClass} ${baseClass}--error`;
   }
 
@@ -1756,7 +1774,7 @@ function ForecastPreviewCard({
         onClick={onLoad}
         disabled={isLoading}
       >
-        {isLoading ? "Loading..." : "Review forecast window"}
+        {isLoading ? "Loading..." : "Load forecast preview"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
@@ -1769,7 +1787,7 @@ function ForecastPreviewCard({
           <p className="muted">Loading read-only forecast preview...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="backend" />
         )}
         {state.status === "success" && (
           <ForecastPreviewResult data={state.data} />
@@ -2708,7 +2726,7 @@ function ReportSummaryPreviewCard({
         onClick={onLoad}
         disabled={isLoading}
       >
-        {isLoading ? "Loading..." : "Load report summary preview"}
+        {isLoading ? "Loading..." : "Load preview"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
@@ -2721,7 +2739,7 @@ function ReportSummaryPreviewCard({
           <p className="muted">Loading report summary preview...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="backend" />
         )}
         {state.status === "success" && (
           <ReportSummaryPreviewResult data={state.data} />
@@ -2760,7 +2778,7 @@ function ReportMarkdownPreviewCard({
         onClick={onLoad}
         disabled={isLoading}
       >
-        {isLoading ? "Loading..." : "Load report Markdown preview"}
+        {isLoading ? "Loading..." : "Open report preview"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
@@ -2773,7 +2791,7 @@ function ReportMarkdownPreviewCard({
           <p className="muted">Loading report Markdown preview...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="backend" />
         )}
         {state.status === "success" && (
           <ReportMarkdownPreviewResult data={state.data} />
@@ -2812,7 +2830,7 @@ function ReportPdfPreviewCard({
         onClick={onLoad}
         disabled={isLoading}
       >
-        {isLoading ? "Loading..." : "Load PDF dry-run preview"}
+        {isLoading ? "Loading..." : "Load PDF preview"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
@@ -2825,7 +2843,7 @@ function ReportPdfPreviewCard({
           <p className="muted">Loading PDF dry-run preview only...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="backend" />
         )}
         {state.status === "success" && (
           <ReportPdfPreviewResult data={state.data} />
@@ -2861,7 +2879,7 @@ function ReportPdfExportCard({
         onClick={onDownload}
         disabled={isLoading}
       >
-        {isLoading ? "Downloading..." : "Download PDF report"}
+        {isLoading ? "Downloading..." : "Download PDF preview"}
       </button>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
@@ -2874,7 +2892,7 @@ function ReportPdfExportCard({
           <p className="muted">Requesting manual PDF download...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Backend unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="backend" />
         )}
         {state.status === "success" && (
           <ReportPdfExportResult
@@ -2910,6 +2928,7 @@ function AuditedReportPdfExportCard({
       <ul className="safety-copy">
         <li>Generates PDF in memory.</li>
         <li>Persists one audit event to audit_events.</li>
+        <li>Requires backend DATABASE_URL for audit persistence.</li>
         <li>Writes no server-side PDF file.</li>
         <li>Database write scope is audit_events only.</li>
         <li>Does not read/write energy data tables.</li>
@@ -2918,7 +2937,7 @@ function AuditedReportPdfExportCard({
         <li>Human review remains required.</li>
       </ul>
       <button
-        className="load-button"
+        className="load-button load-button--secondary"
         type="button"
         onClick={onDownload}
         disabled={isLoading}
@@ -2940,7 +2959,7 @@ function AuditedReportPdfExportCard({
           </p>
         )}
         {state.status === "error" && (
-          <p className="error">Audited PDF export unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="audit-write" />
         )}
         {state.status === "success" && (
           <AuditedReportPdfExportResult
@@ -2978,6 +2997,7 @@ function AuditPdfExportPersistCard({
       <ul className="safety-copy">
         <li>Audit DB write only.</li>
         <li>Writes only to audit_events.</li>
+        <li>Requires backend DATABASE_URL for audit persistence.</li>
         <li>Does not generate PDF.</li>
         <li>Does not write files.</li>
         <li>Does not read/write energy data tables.</li>
@@ -2986,7 +3006,7 @@ function AuditPdfExportPersistCard({
         <li>Human review remains required.</li>
       </ul>
       <button
-        className="load-button"
+        className="load-button load-button--secondary"
         type="button"
         onClick={onPersist}
         disabled={isLoading}
@@ -3006,7 +3026,7 @@ function AuditPdfExportPersistCard({
           <p className="muted">Persisting one manual audit event...</p>
         )}
         {state.status === "error" && (
-          <p className="error">Audit persistence unavailable: {state.message}</p>
+          <UnavailableNotice message={state.message} context="audit-write" />
         )}
         {state.status === "success" && (
           <AuditPdfExportPersistResult data={state.data} />
@@ -3047,26 +3067,26 @@ function EnergyFreshnessCard({
         <button
           className="load-button"
           type="button"
-          onClick={onLoadRead}
-          disabled={isLoading}
-        >
-          {isLoading ? "Loading..." : "Load DB-backed read"}
-        </button>
-        <button
-          className="load-button load-button--secondary"
-          type="button"
           onClick={onLoadDryRun}
           disabled={isLoading}
         >
           {isLoading ? "Loading..." : "Load dry-run plan"}
         </button>
+        <button
+          className="load-button load-button--secondary"
+          type="button"
+          onClick={onLoadRead}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Load SELECT-only DB read"}
+        </button>
       </div>
       <div className="result" aria-live="polite">
         {state.status === "idle" && (
           <p className="muted">
-            No request has been made. Use the manual button to call{" "}
-            <code>GET /api/energy/freshness/read</code> for a SELECT-only
-            DB-backed freshness read, or preview the dry-run query plan.
+            No request has been made. Load the dry-run plan for a local-safe
+            preview, or use the SELECT-only DB read when the backend has{" "}
+            <code>DATABASE_URL</code> configured.
           </p>
         )}
         {state.status === "loading" && (
@@ -3074,7 +3094,9 @@ function EnergyFreshnessCard({
             Loading read-only energy freshness data...
           </p>
         )}
-        {state.status === "error" && <p className="error">{state.message}</p>}
+        {state.status === "error" && (
+          <UnavailableNotice message={state.message} context="database-read" />
+        )}
         {state.status === "success" && (
           <EnergyFreshnessResult data={state.data} />
         )}
@@ -4188,6 +4210,53 @@ function errorMessage(error: unknown): string {
   }
 
   return "Request failed";
+}
+
+function isDatabaseConfigurationMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("database_url") ||
+    normalized.includes("requires backend database") ||
+    normalized.includes("requires_database_url")
+  );
+}
+
+function getUnavailableMessage(
+  message: string,
+  context: UnavailableContext
+): string {
+  if (context === "audit-write" && isDatabaseConfigurationMessage(message)) {
+    return "Database-backed audit action requires DATABASE_URL. No database read or write was attempted.";
+  }
+
+  if (context === "database-read" && isDatabaseConfigurationMessage(message)) {
+    return "Database-backed view requires DATABASE_URL. No database read or write was attempted.";
+  }
+
+  return context === "backend"
+    ? `Backend unavailable: ${message}`
+    : message;
+}
+
+function UnavailableNotice({
+  message,
+  context
+}: {
+  message: string;
+  context: UnavailableContext;
+}) {
+  const isExpectedDatabaseConfig =
+    context !== "backend" && isDatabaseConfigurationMessage(message);
+  const className = isExpectedDatabaseConfig
+    ? "notice notice--neutral"
+    : "error";
+
+  return (
+    <p className={className}>
+      {getUnavailableMessage(message, context)}
+    </p>
+  );
 }
 
 function SectionIntro({
