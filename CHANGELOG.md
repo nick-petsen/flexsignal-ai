@@ -2,6 +2,20 @@
 
 ## v0.1.0 - TODO
 
+- Added a docs/templates-only pilot target shortlist and outreach tracker in
+  `docs/PILOT_TARGET_SHORTLIST.md`,
+  `docs/PILOT_OUTREACH_TRACKER.md`, and
+  `docs/templates/pilot_target_tracker.csv`. The docs define target customer
+  categories, ideal and red-flag pilot profiles, a manual 1-5 scoring model,
+  priority tiers, required pre-contact notes, outreach stages, first-call
+  questions, safe wording, and a go/no-go rule for staying within read-only
+  decision support. The CSV uses placeholder rows only. Updated README and
+  pilot data-request docs to link the process before requesting customer data.
+  This changed documentation/templates only and added no frontend app code,
+  backend API behavior, scripts, tests, database schema, migrations, auth,
+  Azure, weather/maps, fake customer data, financial advice, automatic
+  control, live control signals, asset integration, or operational workflow
+  behavior.
 - Added a docs-only customer pilot outreach and data request pack in
   `docs/PILOT_CUSTOMER_DATA_REQUEST.md`,
   `docs/PILOT_CUSTOMER_EMAIL_TEMPLATE.md`, and

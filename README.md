@@ -261,9 +261,23 @@ Operator docs:
 
 - [Customer pilot operator runbook](docs/PILOT_OPERATOR_RUNBOOK.md)
 - [Customer pilot acceptance checklist](docs/PILOT_ACCEPTANCE_CHECKLIST.md)
+- [Pilot target shortlist](docs/PILOT_TARGET_SHORTLIST.md)
+- [Pilot outreach tracker](docs/PILOT_OUTREACH_TRACKER.md)
 - [Pilot customer data request](docs/PILOT_CUSTOMER_DATA_REQUEST.md)
 - [Pilot customer email template](docs/PILOT_CUSTOMER_EMAIL_TEMPLATE.md)
 - [Pilot data handling notice](docs/PILOT_DATA_HANDLING_NOTICE.md)
+
+Pilot target selection:
+
+- Use [Pilot target shortlist](docs/PILOT_TARGET_SHORTLIST.md) to score
+  placeholder targets before more product development.
+- Use [Pilot outreach tracker](docs/PILOT_OUTREACH_TRACKER.md) with
+  [pilot target tracker CSV](docs/templates/pilot_target_tracker.csv) to track
+  manual stages, next action, safe wording, and do-not-claim notes.
+- Outreach must stay within read-only decision support, public price signal
+  only, indicative gross opportunity signal only, not a customer value claim,
+  and human review required. Customer-specific assessment requires tariff,
+  constraints, operating costs, and human validation.
 
 Customer pilot artifact safety:
 

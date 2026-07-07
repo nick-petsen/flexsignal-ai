@@ -12,6 +12,13 @@ and human validation.
 FlexSignal AI v0.1 remains read-only decision support. Human review is
 required before any customer-facing interpretation is shared.
 
+Before requesting data, use
+[Pilot target shortlist](PILOT_TARGET_SHORTLIST.md) and
+[Pilot outreach tracker](PILOT_OUTREACH_TRACKER.md) to confirm the target is a
+safe v0 fit. The tracker should document the likely problem, likely data,
+what would make the pilot useful, and what must not be claimed before outreach
+moves to `ready_to_contact`.
+
 ## What The Customer Gets Back
 
 - PDF pilot preview report.
