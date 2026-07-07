@@ -261,6 +261,9 @@ Operator docs:
 
 - [Customer pilot operator runbook](docs/PILOT_OPERATOR_RUNBOOK.md)
 - [Customer pilot acceptance checklist](docs/PILOT_ACCEPTANCE_CHECKLIST.md)
+- [Pilot customer data request](docs/PILOT_CUSTOMER_DATA_REQUEST.md)
+- [Pilot customer email template](docs/PILOT_CUSTOMER_EMAIL_TEMPLATE.md)
+- [Pilot data handling notice](docs/PILOT_DATA_HANDLING_NOTICE.md)
 
 Customer pilot artifact safety:
 

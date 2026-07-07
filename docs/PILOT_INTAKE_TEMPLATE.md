@@ -151,6 +151,12 @@ calculation. It writes no files, writes no database records, calls no external
 APIs, performs no automatic control, and sends no dispatch, activation, or live
 control signals.
 
+For customer-facing request material, use:
+
+- [Pilot customer data request](PILOT_CUSTOMER_DATA_REQUEST.md)
+- [Pilot customer email template](PILOT_CUSTOMER_EMAIL_TEMPLATE.md)
+- [Pilot data handling notice](PILOT_DATA_HANDLING_NOTICE.md)
+
 After the CSV validates, run the local read-only signal match preview:
 
 ```bash

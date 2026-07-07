@@ -2,6 +2,21 @@
 
 ## v0.1.0 - TODO
 
+- Added a docs-only customer pilot outreach and data request pack in
+  `docs/PILOT_CUSTOMER_DATA_REQUEST.md`,
+  `docs/PILOT_CUSTOMER_EMAIL_TEMPLATE.md`, and
+  `docs/PILOT_DATA_HANDLING_NOTICE.md`. The pack documents required pilot
+  data, preferred history, customer-type sections, file format expectations,
+  CSV column references, operational review questions, Danish and optional
+  English outreach templates, local/controlled data handling, git hygiene,
+  sharing rules, manual retention status, human review, public price signal
+  only, and the indicative gross opportunity signal. Updated README, pilot
+  intake, and pilot operator docs to link the outreach pack. This changed
+  documentation only and added no frontend app code, backend API behavior,
+  scripts, tests, database schema, migrations, auth, Azure, weather/maps,
+  fake customer data, customer savings claim, profit claim, revenue claim,
+  financial advice, control, dispatch, activation, live control signals, or
+  asset integration.
 - Added `MANIFEST.json` to local customer pilot artifact packs. Write mode now
   creates exactly `workflow-summary.json`, `customer-pilot-preview.md`,
   `customer-pilot-preview.pdf`, `README.txt`, and `MANIFEST.json`.
