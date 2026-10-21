@@ -10,6 +10,7 @@ import time
 import urllib.error
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlencode
@@ -185,7 +186,7 @@ def fetch_dataset_area(
 
     all_records: list[Any] = []
     request_urls: list[str] = []
-    normalized_by_id: dict[str, dict[str, Any]] = {}
+    normalized_by_instant: dict[tuple[str, str, str], dict[str, Any]] = {}
     missing_field_warnings: set[str] = set()
 
     for chunk_start, chunk_end in market_input.build_request_chunks(
@@ -217,12 +218,12 @@ def fetch_dataset_area(
                     "EDS records did not match requested price area for "
                     f"{dataset} {price_area}"
                 )
-            normalized_by_id.setdefault(
-                str(normalized_row["source_record_id"]),
+            normalized_by_instant.setdefault(
+                (dataset, price_area, str(normalized_row["timestamp_utc"])),
                 normalized_row,
             )
 
-    normalized_rows = list(normalized_by_id.values())
+    normalized_rows = list(normalized_by_instant.values())
     if not normalized_rows:
         raise PublicSurplusRiskInputError(
             f"Required normalized records missing for {dataset} {price_area}"
@@ -305,8 +306,9 @@ def normalize_records(
 
 def normalize_day_ahead_price_record(record: Mapping[str, Any]) -> dict[str, Any]:
     normalized = market_input.normalize_day_ahead_price(dict(record))
+    timestamp_utc = normalize_source_timestamp(normalized["timestamp_utc"], "TimeUTC")
     return _base_normalized_row(
-        timestamp_utc=normalized["timestamp_utc"],
+        timestamp_utc=timestamp_utc,
         price_area=normalized["price_area"],
         source=f"{SOURCE}:{DAY_AHEAD_PRICES}",
         source_record_id=normalized["source_record_id"],
@@ -320,7 +322,8 @@ def normalize_production_consumption_record(
     index: int = 0,
 ) -> tuple[dict[str, Any], tuple[str, ...]]:
     price_area = _require_price_area(record)
-    timestamp_utc = _require_field(record, "HourUTC")
+    source_timestamp = _require_field(record, "HourUTC")
+    timestamp_utc = normalize_source_timestamp(source_timestamp, "HourUTC")
     warnings = _missing_optional_field_warnings(
         PRODUCTION_CONSUMPTION_SETTLEMENT,
         record,
@@ -363,7 +366,7 @@ def normalize_production_consumption_record(
         price_area=price_area,
         source=f"{SOURCE}:{PRODUCTION_CONSUMPTION_SETTLEMENT}",
         source_record_id=(
-            f"{PRODUCTION_CONSUMPTION_SETTLEMENT}:{price_area}:{timestamp_utc}"
+            f"{PRODUCTION_CONSUMPTION_SETTLEMENT}:{price_area}:{source_timestamp}"
         ),
         gross_consumption_mwh=_numeric_or_none(
             record.get("GrossConsumptionMWh"),
@@ -380,6 +383,21 @@ def normalize_production_consumption_record(
         normalized["exchange_net_mwh"] = _sum_optional_values(*exchange_values.values())
 
     return normalized, tuple(sorted(warnings))
+
+
+def normalize_source_timestamp(value: Any, field: str) -> str:
+    """Normalize the EDS TimeUTC/HourUTC source contract to a UTC instant."""
+    if field not in {"TimeUTC", "HourUTC"}:
+        raise ValueError(f"No UTC source contract for {field}")
+    if not isinstance(value, str) or "T" not in value:
+        raise ValueError(f"{field} must be an ISO timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{field} must be an ISO timestamp") from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).replace(tzinfo=None).isoformat()
 
 
 def build_summary(

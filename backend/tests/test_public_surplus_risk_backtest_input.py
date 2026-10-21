@@ -184,6 +184,25 @@ def test_day_ahead_prices_normalization() -> None:
     ]
 
 
+def test_day_ahead_price_requires_time_utc_even_when_time_dk_is_present() -> None:
+    record = day_ahead_payload("DK1")["records"][0].copy()
+    record.pop("TimeUTC")
+    record["TimeDK"] = "2026-07-01T14:00:00+02:00"
+    with pytest.raises(ValueError, match="TimeUTC"):
+        public_surplus_risk_backtest_input.normalize_day_ahead_price_record(record)
+
+
+def test_day_ahead_price_uses_time_utc_and_preserves_raw_source_id() -> None:
+    record = day_ahead_payload("DK1")["records"][0].copy()
+    record["TimeUTC"] = "2026-07-01T14:00:00+02:00"
+    record["TimeDK"] = "2026-07-01T15:00:00+02:00"
+    normalized = public_surplus_risk_backtest_input.normalize_day_ahead_price_record(
+        record
+    )
+    assert normalized["timestamp_utc"] == "2026-07-01T12:00:00"
+    assert normalized["source_record_id"] == "DayAheadPrices:DK1:2026-07-01T14:00:00+02:00"
+
+
 def test_production_consumption_settlement_normalization() -> None:
     rows, warnings = public_surplus_risk_backtest_input.normalize_records(
         "ProductionConsumptionSettlement",
@@ -205,6 +224,88 @@ def test_production_consumption_settlement_normalization() -> None:
     assert rows[0]["exchange_net_mwh"] == -9
     assert "source_record_id" in rows[0]
     assert any("ExchangeGB_MWh" in warning for warning in warnings)
+
+
+def test_settlement_preserves_raw_source_id_after_utc_normalization() -> None:
+    record = production_consumption_payload("DK1")["records"][0].copy()
+    record["HourUTC"] = "2026-01-01T13:00:00+01:00"
+    normalized, _ = (
+        public_surplus_risk_backtest_input.normalize_production_consumption_record(
+            record
+        )
+    )
+    assert normalized["timestamp_utc"] == "2026-01-01T12:00:00"
+    assert normalized["source_record_id"] == (
+        "ProductionConsumptionSettlement:DK1:2026-01-01T13:00:00+01:00"
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "source_timestamp", "expected_utc"),
+    [
+        ("TimeUTC", "2026-07-01T14:00:00+02:00", "2026-07-01T12:00:00"),
+        ("HourUTC", "2026-01-01T13:00:00+01:00", "2026-01-01T12:00:00"),
+        ("TimeUTC", "2026-03-29T01:00:00+01:00", "2026-03-29T00:00:00"),
+        ("TimeUTC", "2026-03-29T03:00:00+02:00", "2026-03-29T01:00:00"),
+        ("HourUTC", "2026-10-25T02:00:00+02:00", "2026-10-25T00:00:00"),
+        ("HourUTC", "2026-10-25T02:00:00+01:00", "2026-10-25T01:00:00"),
+    ],
+)
+def test_source_timestamps_preserve_instants(
+    field: str, source_timestamp: str, expected_utc: str
+) -> None:
+    assert (
+        public_surplus_risk_backtest_input.normalize_source_timestamp(
+            source_timestamp, field
+        )
+        == expected_utc
+    )
+
+
+def test_naive_source_timestamp_uses_documented_utc_field_only() -> None:
+    normalize = public_surplus_risk_backtest_input.normalize_source_timestamp
+    assert normalize("2026-07-01T12:00:00", "TimeUTC") == "2026-07-01T12:00:00"
+    with pytest.raises(ValueError, match="No UTC source contract"):
+        normalize("2026-07-01T12:00:00", "TimeDK")
+
+
+def test_offset_equivalent_source_rows_deduplicate_to_one_utc_instant() -> None:
+    rows = [
+        {**day_ahead_payload("DK1")["records"][0], "TimeUTC": timestamp}
+        for timestamp in ("2026-07-01T14:00:00+02:00", "2026-07-01T12:00:00Z")
+    ]
+    result = public_surplus_risk_backtest_input.fetch_dataset_area(
+        dataset="DayAheadPrices",
+        price_area="DK1",
+        start_date="2026-07-01",
+        end="2026-07-02",
+        fetch=lambda url: {"records": rows},
+    )
+    assert result.normalized_record_count == 1
+    assert result.normalized_rows[0]["timestamp_utc"] == "2026-07-01T12:00:00"
+    assert result.normalized_rows[0]["source_record_id"] == (
+        "DayAheadPrices:DK1:2026-07-01T14:00:00+02:00"
+    )
+
+
+def test_repeated_local_hour_keeps_two_source_record_identities() -> None:
+    rows = [
+        {**day_ahead_payload("DK1")["records"][0], "TimeUTC": timestamp}
+        for timestamp in ("2026-10-25T02:00:00+02:00", "2026-10-25T02:00:00+01:00")
+    ]
+    result = public_surplus_risk_backtest_input.fetch_dataset_area(
+        dataset="DayAheadPrices",
+        price_area="DK1",
+        start_date="2026-10-25",
+        end="2026-10-26",
+        fetch=lambda url: {"records": rows},
+    )
+    assert result.normalized_record_count == 2
+    assert [row["timestamp_utc"] for row in result.normalized_rows] == [
+        "2026-10-25T00:00:00",
+        "2026-10-25T01:00:00",
+    ]
+    assert len({row["source_record_id"] for row in result.normalized_rows}) == 2
 
 
 def test_renewable_generation_is_derived_from_available_renewable_fields() -> None:
