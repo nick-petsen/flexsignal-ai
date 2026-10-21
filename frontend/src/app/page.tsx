@@ -151,6 +151,8 @@ type CockpitKpi = {
 type UnavailableContext = "database-read" | "audit-write" | "backend";
 
 const priceAreas: PriceArea[] = ["DK1", "DK2"];
+const forecastCalibrationDetail =
+  "The API score subtracts fixed penalties for missing price or production/renewable inputs. It has not been calibrated against outcomes. Human review required.";
 const forecastPreviewNumericFields: (keyof ForecastPreviewRow)[] = [
   "price_dkk_per_mwh",
   "production_mw",
@@ -772,8 +774,8 @@ function RiskResult({ data }: { data: CurrentRiskResponse }) {
           <dd>{formatValue(data.risk_score)}</dd>
         </div>
         <div>
-          <dt>confidence_score</dt>
-          <dd>{formatValue(data.confidence_score)}</dd>
+          <dt>Forecast calibration</dt>
+          <dd>Not calibrated. {forecastCalibrationDetail}</dd>
         </div>
         <div>
           <dt>reason_codes</dt>
@@ -905,20 +907,6 @@ function formatRiskLabel(value: unknown): string {
   return "Not available";
 }
 
-function formatConfidence(value: unknown): string {
-  const parsed = parseNumber(
-    typeof value === "string" || typeof value === "number" ? value : null
-  );
-
-  if (parsed === null) {
-    return "Not available";
-  }
-
-  return parsed >= 0 && parsed <= 1
-    ? `${formatNumber(parsed * 100)}%`
-    : formatNumber(parsed);
-}
-
 function formatSummaryStatus(
   status: DashboardDecisionSummaryStatus | undefined,
   availableLabel = "Available"
@@ -957,7 +945,7 @@ function getDecisionSummaryIdleKpis(): CockpitKpi[] {
       detail: "Forecast window is not available in this summary yet."
     },
     {
-      label: "Confidence",
+      label: "Forecast calibration",
       value: "Not available",
       detail: "Awaiting manual refresh."
     },
@@ -1096,21 +1084,21 @@ function getDecisionSummaryWindowKpi(
 function getDecisionSummaryConfidenceKpi(
   data: DashboardDecisionSummaryPreviewResponse
 ): CockpitKpi {
-  const confidenceValue =
-    data.confidence.value ?? data.current_risk.confidence_score;
-
-  if (confidenceValue !== undefined && confidenceValue !== null) {
+  if (
+    data.current_risk.status !== "not_available" &&
+    (data.confidence.value != null || data.current_risk.confidence_score != null)
+  ) {
     return {
-      label: "Confidence",
-      value: formatConfidence(confidenceValue),
-      detail: "Human review required."
+      label: "Forecast calibration",
+      value: "Not calibrated",
+      detail: forecastCalibrationDetail
     };
   }
 
   return {
-    label: "Confidence",
+    label: "Forecast calibration",
     value: formatSummaryStatus(data.confidence.status),
-    detail: "Awaiting manual refresh."
+    detail: "No current risk result is available."
   };
 }
 
@@ -1338,46 +1326,6 @@ function getForecastWindowKpi(state: ForecastRequestState): CockpitKpi {
     label: "Next surplus window",
     value: "Not calculated yet",
     detail: "Forecast window is not available in this summary yet."
-  };
-}
-
-function getConfidenceKpi(
-  riskState: RiskRequestState,
-  forecastState: ForecastRequestState
-): CockpitKpi {
-  if (riskState.status === "loading" || forecastState.status === "loading") {
-    return {
-      label: "Confidence",
-      value: "Loading...",
-      detail: "Manual review is being loaded."
-    };
-  }
-
-  if (forecastState.status === "success") {
-    const nextWindow = getNextForecastWindow(forecastState.data);
-    const confidence = nextWindow?.average_confidence_score;
-
-    return {
-      label: "Confidence",
-      value: formatConfidence(confidence),
-      detail: nextWindow
-        ? "From the reviewed forecast window."
-        : "Forecast window is not available in this summary yet."
-    };
-  }
-
-  if (riskState.status === "success") {
-    return {
-      label: "Confidence",
-      value: formatConfidence(riskState.data.confidence_score),
-      detail: "From the loaded risk view."
-    };
-  }
-
-  return {
-    label: "Confidence",
-    value: "Not available",
-    detail: "Awaiting manual refresh."
   };
 }
 
@@ -3726,8 +3674,12 @@ function ReportCurrentRiskSummary({
           <dd>{formatValue(data?.risk_score)}</dd>
         </div>
         <div>
-          <dt>confidence_score</dt>
-          <dd>{formatValue(data?.confidence_score)}</dd>
+          <dt>Forecast calibration</dt>
+          <dd>
+            {data?.confidence_score == null
+              ? "Not available"
+              : `Not calibrated. ${forecastCalibrationDetail}`}
+          </dd>
         </div>
         <div>
           <dt>reason_codes</dt>
