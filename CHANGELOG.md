@@ -2,6 +2,13 @@
 
 ## v0.1.0 - TODO
 
+- Clarified backend report confidence semantics. Report summary JSON retains
+  `current_risk_summary.confidence_score` for existing consumers, while
+  Markdown and PDF reports show "Forecast calibration: Not calibrated" and
+  explain the fixed missing-input penalties instead of displaying the raw
+  score. API field descriptions and model cards now identify the score as an
+  uncalibrated internal input-availability heuristic. Risk and forecast
+  calculations, API field names, and read-only behavior are unchanged.
 - Added a docs/templates-only pilot target shortlist and outreach tracker in
   `docs/PILOT_TARGET_SHORTLIST.md`,
   `docs/PILOT_OUTREACH_TRACKER.md`, and

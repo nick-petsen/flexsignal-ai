@@ -28,6 +28,26 @@ def test_route_exists() -> None:
     assert any(getattr(route, "path", None) == PREVIEW_PATH for route in app.routes)
 
 
+def test_openapi_describes_internal_score_without_changing_fields() -> None:
+    schemas = client.get("/openapi.json").json()["components"]["schemas"]
+
+    risk_schema = schemas["RiskPreviewResponse"]
+    window_schema = schemas["ForecastWindowSummary"]
+    assert "confidence_score" in risk_schema["required"]
+    assert "average_confidence_score" in window_schema["required"]
+    assert "uncalibrated" in risk_schema["properties"]["confidence_score"]["description"].lower()
+    assert "uncalibrated" in window_schema["properties"]["average_confidence_score"]["description"].lower()
+
+    for response_name in (
+        "ReportSummaryPreviewResponse",
+        "ReportMarkdownPreviewResponse",
+        "ReportPdfPreviewResponse",
+    ):
+        schema = schemas[response_name]
+        assert "report_summary" in schema["required"]
+        assert "confidence_score" in schema["properties"]["report_summary"]["description"]
+
+
 def test_preview_returns_http_200_and_required_flags() -> None:
     response = client.post(PREVIEW_PATH, json={})
 

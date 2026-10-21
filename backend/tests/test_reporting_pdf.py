@@ -78,6 +78,15 @@ def test_pdf_renderer_returns_non_empty_pdf_bytes() -> None:
     assert len(data) > 1000
 
 
+def test_pdf_export_inherits_calibration_disclaimer_without_raw_score() -> None:
+    data = render_report_markdown_pdf_bytes(_markdown())
+
+    assert b"risk_score: 45" in data
+    assert b"confidence_score:" not in data
+    assert b"Forecast calibration: Not calibrated" in data
+    assert b"fixed penalties for missing inputs" in data
+
+
 def test_pdf_renderer_preserves_required_safety_wording_in_uncompressed_output() -> None:
     safety_wording = (
         "must not be used for automatic " + "control, dispatch, or activation"

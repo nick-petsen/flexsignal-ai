@@ -39,7 +39,7 @@ Each forecast output should include:
 
 - Surplus risk: low, medium, or high
 - Expected time window
-- Confidence score
+- Internal input-availability score, when exposed for compatibility
 - Recommended action for human review
 - Estimated economic potential
 - Key drivers or explanation references
@@ -50,7 +50,11 @@ Each forecast output should include:
 - Forecasts may be wrong during unusual market, weather, or grid conditions.
 - Data delays or source errors may reduce reliability.
 - Simple models may miss complex system dynamics.
-- Confidence scores are estimates and require validation.
+- `confidence_score` is an uncalibrated, rule-based internal input-availability
+  heuristic. It uses fixed penalties for missing inputs and has not been
+  statistically calibrated against outcomes. It is neither a forecast
+  probability nor a measured input coverage percentage.
+- Forecast calibration: Not calibrated.
 - Recommendations are not instructions for automatic activation.
 
 ## Evaluation and Backtesting Plan

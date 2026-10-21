@@ -124,6 +124,10 @@ def test_export_pdf_uses_report_summary_markdown_content() -> None:
     for phrase in expected_phrases:
         assert phrase in pdf
 
+    assert b"Forecast calibration: Not calibrated" in pdf
+    assert b"fixed penalties for missing inputs" in pdf
+    assert b"confidence_score:" not in pdf
+
 
 def test_app_import_works_without_database_url(monkeypatch: Any) -> None:
     monkeypatch.delenv("DATABASE_URL", raising=False)

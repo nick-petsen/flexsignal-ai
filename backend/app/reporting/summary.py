@@ -20,6 +20,11 @@ SAFETY_NOTES = [
 BASE_LIMITATIONS = [
     "no production forecast validation",
     "no outcome labels",
+    "Forecast calibration: Not calibrated",
+    (
+        "The internal score uses fixed penalties for missing inputs and has "
+        "not been statistically calibrated against outcomes."
+    ),
     "no DMI/weather data yet",
     "no ML training in report builder",
     "no LLM use in report builder",
