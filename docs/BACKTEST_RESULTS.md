@@ -291,6 +291,22 @@ Public DK1/DK2 surplus-risk backtest engine v1:
   rows exist. Price and settlement rows are paired only by price area and
   hourly UTC timestamp. Unjoinable rows and rows missing required calculation
   values are skipped and counted; missing values are not invented.
+- Timestamp parsing uses EDS `TimeUTC` and `HourUTC` as the UTC source contract.
+  Offset-aware values are converted to UTC before hourly aggregation or pairing;
+  naive values are accepted only from these named UTC fields. Naive values with
+  no documented UTC source contract fail clearly. This preserves the two
+  distinct UTC hours during the Danish autumn clock change. `source_record_id`
+  retains the original EDS timestamp text for traceability; duplicate source
+  rows are identified by dataset, price area, and normalized UTC instant, with
+  the first row retained as before.
+- Earlier historical joined hours, DK1/DK2 risk windows and their timestamps,
+  and summary metrics may differ if the EDS rows used to produce them contained
+  nonzero offsets. The committed public snapshot JSON is unchanged here and
+  may therefore represent earlier results. Re-run the read-only backtest for
+  the original period, compare per-area counts and top windows with the
+  published proof, then review any snapshot regeneration in a separate change.
+  EDS request boundaries use Danish local time and source settlement values
+  can be revised later; these alignment and reproducibility risks remain.
 - Per joined hourly row, the engine calculates `price_eur_per_mwh`,
   `gross_consumption_mwh`, `renewable_generation_mwh`, `renewable_share`,
   `risk_score` from `0` to `100`, `risk_level`, and transparent

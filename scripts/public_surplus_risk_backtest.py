@@ -11,7 +11,7 @@ import urllib.error
 from collections import Counter, defaultdict
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -367,7 +367,9 @@ def join_and_score_hourly_rows(
         if row.get("price_area") != price_area:
             skipped_rows += 1
             continue
-        timestamp = _hourly_timestamp_or_none(row.get("timestamp_utc"))
+        timestamp = _hourly_timestamp_or_none(
+            row.get("timestamp_utc"), source=row.get("source")
+        )
         if timestamp is None:
             skipped_rows += 1
             continue
@@ -432,7 +434,9 @@ def aggregate_hourly_prices(
         if row.get("price_area") != price_area:
             skipped_rows += 1
             continue
-        timestamp = _hourly_timestamp_or_none(row.get("timestamp_utc"))
+        timestamp = _hourly_timestamp_or_none(
+            row.get("timestamp_utc"), source=row.get("source")
+        )
         price = _finite_float_or_none(row.get("day_ahead_price_eur_per_mwh"))
         if price is None:
             price = _finite_float_or_none(row.get("price_eur_per_mwh"))
@@ -495,7 +499,7 @@ def group_risk_windows(
         current: list[JoinedHourlyRiskRow] = []
         previous_timestamp: datetime | None = None
         for row in sorted(risk_rows, key=lambda item: item.timestamp_utc):
-            timestamp = _parse_utc_hour(row.timestamp_utc)
+            timestamp = _parse_utc_hour(row.timestamp_utc, allow_naive_utc=True)
             if (
                 current
                 and previous_timestamp is not None
@@ -927,13 +931,13 @@ def _joined_rows_for_window(
     joined_rows: Sequence[JoinedHourlyRiskRow],
     window: RiskWindow,
 ) -> tuple[JoinedHourlyRiskRow, ...]:
-    start = _parse_utc_hour(window.start_timestamp_utc)
-    end = _parse_utc_hour(window.end_timestamp_utc)
+    start = _parse_utc_hour(window.start_timestamp_utc, allow_naive_utc=True)
+    end = _parse_utc_hour(window.end_timestamp_utc, allow_naive_utc=True)
     return tuple(
         row
         for row in joined_rows
         if row.price_area == window.price_area
-        and start <= _parse_utc_hour(row.timestamp_utc) <= end
+        and start <= _parse_utc_hour(row.timestamp_utc, allow_naive_utc=True) <= end
     )
 
 
@@ -973,20 +977,36 @@ def _risk_level(score: int) -> str:
     return "low"
 
 
-def _hourly_timestamp_or_none(value: Any) -> str | None:
+def _hourly_timestamp_or_none(value: Any, *, source: Any = None) -> str | None:
     if not isinstance(value, str) or not value.strip():
         return None
     try:
-        parsed = _parse_utc_hour(value)
+        parsed = _parse_utc_hour(
+            value,
+            allow_naive_utc=source in {
+                "Energi Data Service:DayAheadPrices",
+                "Energi Data Service:ProductionConsumptionSettlement",
+            },
+        )
     except ValueError:
         return None
     return parsed.strftime("%Y-%m-%dT%H:00:00")
 
 
-def _parse_utc_hour(value: str) -> datetime:
+def _parse_utc_hour(value: str, *, allow_naive_utc: bool = False) -> datetime:
     normalized = value.strip().replace("Z", "+00:00")
+    if "T" not in normalized:
+        raise ValueError("Hourly timestamp must include a time")
     parsed = datetime.fromisoformat(normalized)
-    return parsed.replace(minute=0, second=0, microsecond=0, tzinfo=None)
+    if parsed.tzinfo is None:
+        if not allow_naive_utc:
+            raise PublicSurplusRiskBacktestError(
+                "Naive timestamp has no documented UTC source contract"
+            )
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).replace(
+        minute=0, second=0, microsecond=0, tzinfo=None
+    )
 
 
 def _finite_float_or_none(value: Any) -> float | None:

@@ -231,6 +231,100 @@ def test_joining_price_and_settlement_rows_calculates_renewable_share() -> None:
     assert joined_rows[0].renewable_share == pytest.approx(0.75)
 
 
+def test_join_uses_utc_instant_before_market_hour_and_does_not_look_ahead() -> None:
+    joined, skipped = public_surplus_risk_backtest.join_and_score_hourly_rows(
+        price_area="DK1",
+        price_rows=[
+            price_row("DK1", "2026-07-01T14:15:00+02:00", 10.0),
+            price_row("DK1", "2026-07-01T13:00:00Z", 99.0),
+        ],
+        settlement_rows=[
+            settlement_row("DK1", "2026-07-01T12:00:00Z", 100.0, 75.0),
+        ],
+        low_price_threshold_eur_per_mwh=25.0,
+        renewable_share_medium_threshold=0.65,
+        renewable_share_high_threshold=0.80,
+    )
+    assert skipped == 1
+    assert len(joined) == 1
+    assert joined[0].timestamp_utc == "2026-07-01T12:00:00"
+    assert joined[0].price_eur_per_mwh == 10.0
+
+
+def test_repeated_danish_local_hour_keeps_distinct_utc_market_hours() -> None:
+    joined, skipped = public_surplus_risk_backtest.join_and_score_hourly_rows(
+        price_area="DK2",
+        price_rows=[
+            price_row("DK2", "2026-10-25T02:00:00+01:00", 20.0),
+            price_row("DK2", "2026-10-25T02:00:00+02:00", 10.0),
+        ],
+        settlement_rows=[
+            settlement_row("DK2", "2026-10-25T00:00:00Z", 100.0, 75.0),
+            settlement_row("DK2", "2026-10-25T01:00:00Z", 100.0, 75.0),
+        ],
+        low_price_threshold_eur_per_mwh=25.0,
+        renewable_share_medium_threshold=0.65,
+        renewable_share_high_threshold=0.80,
+    )
+    assert skipped == 0
+    assert [(row.timestamp_utc, row.price_eur_per_mwh) for row in joined] == [
+        ("2026-10-25T00:00:00", 10.0),
+        ("2026-10-25T01:00:00", 20.0),
+    ]
+
+
+def test_naive_timestamp_without_source_contract_is_rejected() -> None:
+    row = price_row("DK1", "2026-07-01T12:00:00", 10.0)
+    row["source"] = "unknown"
+    with pytest.raises(
+        public_surplus_risk_backtest.PublicSurplusRiskBacktestError,
+        match="Naive timestamp has no documented UTC source contract",
+    ):
+        public_surplus_risk_backtest.aggregate_hourly_prices([row], price_area="DK1")
+
+
+def test_source_price_and_settlement_offsets_join_at_same_instant() -> None:
+    foundation = public_surplus_risk_backtest.input_foundation
+    prices, _ = foundation.normalize_records(
+        "DayAheadPrices",
+        [{
+            "PriceArea": "DK1",
+            "TimeUTC": "2026-07-01T14:15:00+02:00",
+            "DayAheadPriceDKK": 75.0,
+            "DayAheadPriceEUR": 10.0,
+        }],
+    )
+    settlement, _ = foundation.normalize_records(
+        "ProductionConsumptionSettlement",
+        [{
+            "PriceArea": "DK1",
+            "HourUTC": "2026-07-01T12:00:00Z",
+            "GrossConsumptionMWh": 100.0,
+            "OnshoreWindGe50kW_MWh": 75.0,
+        }],
+    )
+    joined, skipped = public_surplus_risk_backtest.join_and_score_hourly_rows(
+        price_area="DK1",
+        price_rows=prices,
+        settlement_rows=settlement,
+        low_price_threshold_eur_per_mwh=25.0,
+        renewable_share_medium_threshold=0.65,
+        renewable_share_high_threshold=0.80,
+    )
+    assert skipped == 0
+    assert len(joined) == 1
+    assert joined[0].timestamp_utc == "2026-07-01T12:00:00"
+    assert joined[0].price_eur_per_mwh == 10.0
+
+
+def test_date_without_time_is_not_a_market_hour() -> None:
+    prices, skipped = public_surplus_risk_backtest.aggregate_hourly_prices(
+        [price_row("DK1", "2026-07-01", 10.0)], price_area="DK1"
+    )
+    assert prices == {}
+    assert skipped == 1
+
+
 def test_low_medium_high_risk_scoring_is_deterministic() -> None:
     low = public_surplus_risk_backtest.score_joined_row(
         price_eur_per_mwh=50.0,
