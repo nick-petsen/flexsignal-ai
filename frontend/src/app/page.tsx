@@ -46,6 +46,7 @@ import {
   publicRiskWindowSnapshots,
   type PublicBacktestSnapshotArea
 } from "../lib/publicBacktestSnapshot";
+import { formatTimestamp } from "../lib/timestamp";
 
 type EnergyRequestState<Row> =
   | { status: "idle" }
@@ -201,14 +202,14 @@ const navigationItems: {
 ];
 
 const spotPriceColumns: Column<SpotPriceRow>[] = [
-  { key: "timestamp_utc", label: "Timestamp UTC" },
+  { key: "timestamp_utc", label: "Timestamp" },
   { key: "price_eur_per_mwh", label: "EUR/MWh" },
   { key: "price_dkk_per_mwh", label: "DKK/MWh" },
   { key: "source", label: "Source" }
 ];
 
 const powerBalanceColumns: Column<PowerBalanceRow>[] = [
-  { key: "timestamp_utc", label: "Timestamp UTC" },
+  { key: "timestamp_utc", label: "Timestamp" },
   { key: "production_mw", label: "Production MW" },
   { key: "consumption_mw", label: "Consumption MW" },
   { key: "wind_onshore_mw", label: "Wind onshore MW" },
@@ -641,13 +642,7 @@ function formatNumber(value: number): string {
 }
 
 function formatShortTimestamp(timestampUtc: string): string {
-  const timestampMs = Date.parse(timestampUtc);
-
-  if (!Number.isFinite(timestampMs)) {
-    return "n/a";
-  }
-
-  return new Date(timestampMs).toISOString().slice(5, 16).replace("T", " ");
+  return formatTimestamp(timestampUtc, "short");
 }
 
 function ResultTable<Row extends { source_record_id: string }>({
@@ -682,7 +677,9 @@ function ResultTable<Row extends { source_record_id: string }>({
                 <tr key={row.source_record_id}>
                   {columns.map((column) => (
                     <td key={String(column.key)}>
-                      {formatValue(row[column.key])}
+                      {column.key === "timestamp_utc"
+                        ? formatTimestamp(row[column.key])
+                        : formatValue(row[column.key])}
                     </td>
                   ))}
                 </tr>
@@ -1857,7 +1854,7 @@ function buildPublicProofOfWorkMarkdownReport(): string {
   const windowRows = publicRiskWindowSnapshots
     .map(
       (snapshot) =>
-        `| ${snapshot.area} | ${snapshot.start} | ${snapshot.end} | ${
+        `| ${snapshot.area} | ${formatRiskWindowTimestamp(snapshot.start)} | ${formatRiskWindowTimestamp(snapshot.end)} | ${
           snapshot.durationHours
         }h | ${formatNumber(snapshot.score)} | ${snapshot.level} | ${formatNumber(
           snapshot.lowPriceHours
@@ -2637,15 +2634,19 @@ function VerifiedPublicRiskWindowSnapshot() {
 }
 
 function formatRiskWindowTimestamp(timestamp: string): string {
+  if (/(?:Z|[+-]\d{2}:\d{2})$/i.test(timestamp)) {
+    return formatTimestamp(timestamp);
+  }
+
   const [date = "", time = ""] = timestamp.split("T");
   const [year = "", month = "", day = ""] = date.split("-");
   const hourMinute = time.slice(0, 5);
 
   if (!year || !month || !day || !hourMinute) {
-    return timestamp;
+    return formatTimestamp(timestamp);
   }
 
-  return `${day}.${month}.${year} ${hourMinute}`;
+  return `${day}.${month}.${year} ${hourMinute} (timezone unspecified)`;
 }
 
 function ReportSummaryPreviewCard({
@@ -3178,8 +3179,8 @@ function ReportSummaryPreviewResult({
             <dd>{formatValue(summary.price_area)}</dd>
           </div>
           <div>
-            <dt>generated_at_utc</dt>
-            <dd>{formatValue(summary.generated_at_utc)}</dd>
+            <dt>Generated at</dt>
+            <dd>{formatTimestamp(summary.generated_at_utc)}</dd>
           </div>
         </dl>
       </section>
@@ -3259,8 +3260,8 @@ function ReportMarkdownPreviewResult({
             <dd>{formatValue(summary.price_area)}</dd>
           </div>
           <div>
-            <dt>generated_at_utc</dt>
-            <dd>{formatValue(summary.generated_at_utc)}</dd>
+            <dt>Generated at</dt>
+            <dd>{formatTimestamp(summary.generated_at_utc)}</dd>
           </div>
         </dl>
       </section>
@@ -3347,8 +3348,8 @@ function ReportPdfPreviewResult({
             <dd>{formatValue(summary.price_area)}</dd>
           </div>
           <div>
-            <dt>generated_at_utc</dt>
-            <dd>{formatValue(summary.generated_at_utc)}</dd>
+            <dt>Generated at</dt>
+            <dd>{formatTimestamp(summary.generated_at_utc)}</dd>
           </div>
         </dl>
       </section>
@@ -3790,8 +3791,8 @@ function FreshnessReadSummary({
       <h3>{label}</h3>
       <dl className="risk-list">
         <div>
-          <dt>latest_timestamp</dt>
-          <dd>{formatValue(freshness?.latest_timestamp)}</dd>
+          <dt>Latest timestamp</dt>
+          <dd>{formatTimestamp(freshness?.latest_timestamp)}</dd>
         </div>
         <div>
           <dt>row_count</dt>
@@ -3912,8 +3913,8 @@ function ForecastPreviewResult({ data }: { data: ForecastPreviewResponse }) {
           <dd>{formatValue(data.decision_support_only)}</dd>
         </div>
         <div>
-          <dt>generated_at_utc</dt>
-          <dd>{formatValue(data.generated_at_utc)}</dd>
+          <dt>Generated at</dt>
+          <dd>{formatTimestamp(data.generated_at_utc)}</dd>
         </div>
       </dl>
       <div className="forecast-windows">
