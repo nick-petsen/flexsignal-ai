@@ -72,7 +72,13 @@ class RiskPreviewResponse(BaseModel):
     timestamp_utc: str
     risk_level: Literal["low", "medium", "high"]
     risk_score: int
-    confidence_score: float
+    confidence_score: float = Field(
+        description=(
+            "Uncalibrated, rule-based internal input-availability heuristic. "
+            "Uses fixed penalties for missing price or production inputs; "
+            "not a forecast probability or input coverage percentage."
+        )
+    )
     reason_codes: list[str]
     explanation: str
     recommended_human_action: str

@@ -75,6 +75,12 @@ def test_valid_full_report_returns_expected_fields() -> None:
     assert report["decision_support_only"] is True
     assert report["human_review_required"] is True
     assert report["current_risk_summary"]["risk_score"] == 45
+    assert report["current_risk_summary"]["confidence_score"] == 0.9
+    assert "Forecast calibration: Not calibrated" in report["limitations"]
+    assert any(
+        "fixed penalties for missing inputs" in note
+        for note in report["limitations"]
+    )
     assert report["forecast_window_summary"]["windows"][0]["window_label"] == "0-24h"
     assert report["model_versions"] == {
         "report": "report-summary-v0",

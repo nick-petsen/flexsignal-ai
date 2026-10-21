@@ -79,9 +79,11 @@ KPI values.
 Observed manual cockpit smoke confirmed the cockpit buttons were clickable and
 KPI tiles updated after manual clicks. Example observed values may include
 Current risk `Medium`, Risk score `35/100`, Next surplus window `0-24h`,
-Confidence `100%`, Data freshness `OK`, and Economic potential `Not
-calculated yet`. These values came from existing backend/manual flows when
-available and are not fake frontend values. This does not change
+the historical Confidence `100%` display, Data freshness `OK`, and Economic
+potential `Not calculated yet`. That historical confidence display represented
+an internal heuristic, not calibrated forecast certainty; the current frontend
+shows `Forecast calibration: Not calibrated`. The observed values came from
+existing backend/manual flows when available. This does not change
 `rule-engine-v0`, `forecast-window-v0`, scoring thresholds, input composition,
 backtest pairing, model validation status, or predictive-performance claims.
 There is no auto-load, polling, live control, dispatch, activation, or
@@ -761,6 +763,21 @@ Risk levels are:
 
 Confidence starts at `1.0`, is reduced for missing key data, has a floor of
 `0.2`, and is rounded to two decimals.
+
+`confidence_score` is an uncalibrated, rule-based internal input-availability
+heuristic. It starts at `1.0`, subtracts `0.25` when price is missing and
+`0.30` when production or renewable inputs are insufficient, then applies the
+`0.2` floor. It is neither a forecast probability nor a measured input
+coverage percentage. `average_confidence_score` averages this same heuristic
+over scored forecast rows; an empty window reports `0.0`. These values do not
+measure forecast accuracy. Risk scores are separate rule-based risk outputs.
+
+Forecast calibration: Not calibrated. The internal score uses fixed penalties
+for missing inputs and has not been statistically calibrated against outcomes.
+Report summary JSON retains `current_risk_summary.confidence_score` for API
+compatibility. Human-readable Markdown and PDF reports show the calibration
+statement instead of presenting the raw score as forecast certainty. The PDF
+export renders the same Markdown content.
 
 ## Risk Input Composer
 

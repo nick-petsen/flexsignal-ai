@@ -92,6 +92,22 @@ def test_current_risk_summary_renders_core_fields() -> None:
     assert "| recommended_human_action | Human review required before planning. |" in markdown
 
 
+def test_report_does_not_present_internal_score_as_forecast_certainty() -> None:
+    report = _report()
+    assert report["current_risk_summary"]["confidence_score"] == 0.9
+    assert report["current_risk_summary"]["risk_score"] == 45
+
+    markdown = render_report_summary_markdown(report)
+
+    assert "| risk_score | 45 |" in markdown
+    assert "| confidence_score |" not in markdown
+    assert "Forecast calibration: Not calibrated" in markdown
+    assert (
+        "The internal score uses fixed penalties for missing inputs and has "
+        "not been statistically calibrated against outcomes."
+    ) in markdown
+
+
 def test_forecast_windows_render_all_three_window_labels() -> None:
     markdown = render_report_summary_markdown(_report())
 

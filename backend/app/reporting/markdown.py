@@ -6,6 +6,11 @@ from typing import Any
 
 UNAVAILABLE = "Unavailable"
 NOT_PROVIDED = "Not provided"
+CALIBRATION_LABEL = "Forecast calibration: Not calibrated"
+CALIBRATION_EXPLANATION = (
+    "The internal score uses fixed penalties for missing inputs and has not "
+    "been statistically calibrated against outcomes."
+)
 
 MANDATORY_SAFETY_NOTES = [
     "read-only decision support only",
@@ -61,6 +66,10 @@ def render_report_summary_markdown(report: Mapping[str, Any]) -> str:
 def _append_current_risk_summary(lines: list[str], value: Any) -> None:
     lines.append("## Current risk summary")
     lines.append("")
+    lines.append(CALIBRATION_LABEL)
+    lines.append("")
+    lines.append(CALIBRATION_EXPLANATION)
+    lines.append("")
 
     if not isinstance(value, Mapping) or value.get("status") != "available":
         lines.append(f"**Status:** {UNAVAILABLE}")
@@ -77,7 +86,6 @@ def _append_current_risk_summary(lines: list[str], value: Any) -> None:
             ("status", value.get("status")),
             ("risk_level", value.get("risk_level")),
             ("risk_score", value.get("risk_score")),
-            ("confidence_score", value.get("confidence_score")),
             ("reason_codes", value.get("reason_codes")),
             ("recommended_human_action", value.get("recommended_human_action")),
             ("model_version", value.get("model_version")),

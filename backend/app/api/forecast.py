@@ -93,7 +93,13 @@ class ForecastWindowSummary(BaseModel):
     risk_level: RiskLevel
     max_risk_score: int | None
     average_risk_score: float | None
-    average_confidence_score: float
+    average_confidence_score: float = Field(
+        description=(
+            "Mean of the uncalibrated, rule-based internal input-availability "
+            "heuristic across scored rows; not a forecast probability or "
+            "input coverage percentage. Zero for an empty window."
+        )
+    )
     risk_level_counts: dict[str, int]
     top_reason_codes: list[ForecastReasonCodeCount]
     recommended_human_action: str

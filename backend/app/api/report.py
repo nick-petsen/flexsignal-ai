@@ -154,7 +154,13 @@ class ReportSummaryPreviewResponse(BaseModel):
     database_write_performed: bool
     requires_database_url: bool
     decision_support_only: bool
-    report_summary: dict[str, Any]
+    report_summary: dict[str, Any] = Field(
+        description=(
+            "Preserves current_risk_summary.confidence_score for compatibility. "
+            "That score is an uncalibrated, rule-based internal "
+            "input-availability heuristic, not forecast certainty."
+        )
+    )
     recommendations: list[str]
     explanation: str
     safety_boundary: dict[str, bool]
@@ -169,7 +175,13 @@ class ReportMarkdownPreviewResponse(BaseModel):
     requires_database_url: bool
     decision_support_only: bool
     markdown: str
-    report_summary: dict[str, Any]
+    report_summary: dict[str, Any] = Field(
+        description=(
+            "Preserves current_risk_summary.confidence_score for compatibility. "
+            "That score is an uncalibrated, rule-based internal "
+            "input-availability heuristic, not forecast certainty."
+        )
+    )
     safety_boundary: dict[str, bool]
 
 
@@ -184,7 +196,13 @@ class ReportPdfPreviewResponse(BaseModel):
     decision_support_only: bool
     planned_source: str
     planned_output_format: str
-    report_summary: dict[str, Any]
+    report_summary: dict[str, Any] = Field(
+        description=(
+            "Preserves current_risk_summary.confidence_score for compatibility. "
+            "That score is an uncalibrated, rule-based internal "
+            "input-availability heuristic, not forecast certainty."
+        )
+    )
     markdown_excerpt: str
     markdown_character_count: int
     safety_boundary: dict[str, bool]

@@ -146,6 +146,11 @@ def test_preview_accepts_caller_provided_inputs_only() -> None:
     )
     assert "unit-test caller data" in summary["source_notes"]
     assert "unit-test caller data" in markdown
+    assert summary["current_risk_summary"]["risk_score"] == 10
+    assert summary["current_risk_summary"]["confidence_score"] == 0.8
+    assert "| risk_score | 10 |" in markdown
+    assert "| confidence_score |" not in markdown
+    assert "Forecast calibration: Not calibrated" in markdown
 
 
 def test_app_import_works_without_database_url(monkeypatch: Any) -> None:
