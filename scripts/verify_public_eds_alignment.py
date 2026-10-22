@@ -173,6 +173,26 @@ def verify_with_records(
     return results, records_by_source
 
 
+def verify_price_records(
+    root: Path = ARCHIVE_ROOT, start: datetime = START, end: datetime = END,
+) -> tuple[list[tuple[str, int, list[str]]], dict[str, list[object]]]:
+    """Verify the two frozen price archives without requiring settlement inputs."""
+    if (
+        start.tzinfo != timezone.utc or end.tzinfo != timezone.utc
+        or end <= start or (end - start) % timedelta(minutes=15)
+    ):
+        raise ValueError("start and end must delimit UTC quarter-hours")
+    results = []
+    records_by_area = {}
+    for archive_id, dataset, area, field, minutes in ARCHIVES[:2]:
+        timestamps, errors, records = _read_archive(
+            root, archive_id, dataset, area, field, minutes, start, end,
+        )
+        results.append((archive_id, sum(timestamps.values()), errors))
+        records_by_area[area] = records
+    return results, records_by_area
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--archive-root", type=Path, default=ARCHIVE_ROOT)
