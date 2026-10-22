@@ -49,8 +49,15 @@ def archives(tmp_path: Path) -> Path:
                     [0.1, 0.2, 0.3, 0.4][index % 4] if area == "DK1" else
                     [10.01, 10.02, 10.03, 10.04][index % 4]
                 )
+                record["DayAheadPriceDKK"] = (
+                    [0.01, -0.02, 0.03, -0.04][index % 4] if area == "DK1" else
+                    [100.01, 100.02, 100.03, 100.04][index % 4]
+                )
             else:
                 record["GrossConsumptionMWh"] = 100 + index if area == "DK1" else 200 + index
+                record["CentralPowerMWh"] = 50 + index
+                record["LocalPowerMWh"] = 25 + index
+                record["ExchangeNO_MWh"] = None
                 if area == "DK1":
                     record["OnshoreWindGe50kW_MWh"] = None
             records.append(record)
@@ -76,13 +83,22 @@ def test_hourly_mean_area_join_and_observed_fields(tmp_path: Path) -> None:
     assert rows[0] == {
         "price_area": "DK1", "hour_utc": "2026-04-01T00:00:00Z",
         "price_eur_per_mwh": "0.25",
-        "settlement_observed": {"GrossConsumptionMWh": 100, "OnshoreWindGe50kW_MWh": None},
+        "price_dkk_per_mwh": "-0.005",
+        "settlement_observed": {
+            "GrossConsumptionMWh": 100, "CentralPowerMWh": 50,
+            "LocalPowerMWh": 25, "ExchangeNO_MWh": None,
+            "OnshoreWindGe50kW_MWh": None,
+        },
     }
     assert rows[167]["hour_utc"] == "2026-04-07T23:00:00Z"
     assert rows[168] == {
         "price_area": "DK2", "hour_utc": "2026-04-01T00:00:00Z",
         "price_eur_per_mwh": "10.025",
-        "settlement_observed": {"GrossConsumptionMWh": 200},
+        "price_dkk_per_mwh": "100.025",
+        "settlement_observed": {
+            "GrossConsumptionMWh": 200, "CentralPowerMWh": 50,
+            "LocalPowerMWh": 25, "ExchangeNO_MWh": None,
+        },
     }
 
 
@@ -102,6 +118,8 @@ def test_offset_timestamp_at_utc_boundary(tmp_path: Path) -> None:
     (0, lambda rows: rows[0].__setitem__("TimeUTC", "2026-04-01T00:05:00Z"), "misaligned timestamps"),
     (0, lambda rows: rows[0].pop("DayAheadPriceEUR"), "missing or invalid DayAheadPriceEUR"),
     (0, lambda rows: rows[0].__setitem__("DayAheadPriceEUR", None), "missing or invalid DayAheadPriceEUR"),
+    (0, lambda rows: rows[0].pop("DayAheadPriceDKK"), "missing or invalid DayAheadPriceDKK"),
+    (1, lambda rows: rows[0].pop("DayAheadPriceDKK"), "missing or invalid DayAheadPriceDKK"),
 ])
 def test_missing_duplicate_alignment_and_price_rejected(
     tmp_path: Path, archive_index: int, change, expected: str,
@@ -109,6 +127,23 @@ def test_missing_duplicate_alignment_and_price_rejected(
     root = archives(tmp_path)
     change_records(root, archive_index, change)
     with pytest.raises(builder.HourlyInputError, match=expected):
+        builder.build_hourly_input(root)
+
+
+@pytest.mark.parametrize("archive_index", [0, 1])
+@pytest.mark.parametrize("bad_value", [None, "NaN", "Infinity", "1.2", True, {}, []])
+def test_invalid_dkk_price_rejected(tmp_path: Path, archive_index: int, bad_value) -> None:
+    root = archives(tmp_path)
+    change_records(root, archive_index, lambda rows: rows[0].__setitem__("DayAheadPriceDKK", bad_value))
+    with pytest.raises(builder.HourlyInputError, match="missing or invalid DayAheadPriceDKK"):
+        builder.build_hourly_input(root)
+
+
+@pytest.mark.parametrize("bad_value", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_dkk_json_constant_rejected(tmp_path: Path, bad_value: float) -> None:
+    root = archives(tmp_path)
+    change_records(root, 0, lambda rows: rows[0].__setitem__("DayAheadPriceDKK", bad_value))
+    with pytest.raises(builder.HourlyInputError, match="cannot read valid archive"):
         builder.build_hourly_input(root)
 
 
@@ -155,6 +190,7 @@ def test_repeated_cli_output_is_byte_identical(tmp_path: Path, capsys) -> None:
     assert "DK1=168 DK2=168 total=336" in summary_a
     assert summary_a.split("sha256=")[1].split(";")[0] == summary_b.split("sha256=")[1].split(";")[0]
     assert json.loads(first.read_text())["records"][0]["price_eur_per_mwh"] == "0.25"
+    assert json.loads(first.read_text())["records"][0]["price_dkk_per_mwh"] == "-0.005"
 
 
 def test_output_cannot_change_archive(tmp_path: Path, capsys) -> None:

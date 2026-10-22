@@ -34,16 +34,24 @@ def _json_value(value: object) -> object:
     return value
 
 
-def _price(value: object, area: str, stamp: datetime) -> Decimal:
+def _price(value: object, field: str, area: str, stamp: datetime) -> Decimal:
     if isinstance(value, bool) or not isinstance(value, (int, Decimal)):
-        raise HourlyInputError(f"missing or invalid DayAheadPriceEUR for {area} {_utc_text(stamp)}")
+        raise HourlyInputError(f"missing or invalid {field} for {area} {_utc_text(stamp)}")
     try:
         price = Decimal(value)
     except InvalidOperation as exc:
-        raise HourlyInputError(f"invalid DayAheadPriceEUR for {area} {_utc_text(stamp)}") from exc
+        raise HourlyInputError(f"invalid {field} for {area} {_utc_text(stamp)}") from exc
     if not price.is_finite():
-        raise HourlyInputError(f"invalid DayAheadPriceEUR for {area} {_utc_text(stamp)}")
+        raise HourlyInputError(f"invalid {field} for {area} {_utc_text(stamp)}")
     return price
+
+
+def _mean_price(values: list[Decimal]) -> Decimal:
+    with localcontext() as context:
+        integer_digits = max(max(value.adjusted() + 1, 0) for value in values)
+        fractional_digits = max(max(-value.as_tuple().exponent, 0) for value in values)
+        context.prec = max(28, integer_digits + fractional_digits + 4)
+        return sum(values, Decimal(0)) / Decimal(4)
 
 
 def build_hourly_input(archive_root: Path) -> dict:
@@ -55,12 +63,15 @@ def build_hourly_input(archive_root: Path) -> dict:
 
     hourly_rows = []
     for area in ("DK1", "DK2"):
-        quarters: dict[datetime, list[Decimal]] = defaultdict(list)
+        quarters: dict[datetime, list[tuple[Decimal, Decimal]]] = defaultdict(list)
         for record in sources["DayAheadPrices", area]:
             assert isinstance(record, dict)  # Established by the verifier.
             stamp = alignment._utc(record["TimeUTC"], "TimeUTC")
             hour = stamp.replace(minute=0, second=0, microsecond=0)
-            quarters[hour].append(_price(record.get("DayAheadPriceEUR"), area, stamp))
+            quarters[hour].append((
+                _price(record.get("DayAheadPriceEUR"), "DayAheadPriceEUR", area, stamp),
+                _price(record.get("DayAheadPriceDKK"), "DayAheadPriceDKK", area, stamp),
+            ))
 
         settlements = {}
         for record in sources["ProductionConsumptionSettlement", area]:
@@ -74,16 +85,14 @@ def build_hourly_input(archive_root: Path) -> dict:
             values = quarters.get(hour, [])
             if len(values) != 4:
                 raise HourlyInputError(f"expected four price quarters for {area} {_utc_text(hour)}")
-            with localcontext() as context:
-                integer_digits = max(max(value.adjusted() + 1, 0) for value in values)
-                fractional_digits = max(max(-value.as_tuple().exponent, 0) for value in values)
-                context.prec = max(28, integer_digits + fractional_digits + 4)
-                mean = sum(values, Decimal(0)) / Decimal(4)
+            mean_eur = _mean_price([eur for eur, _ in values])
+            mean_dkk = _mean_price([dkk for _, dkk in values])
             settlement = settlements[hour]
             hourly_rows.append({
                 "price_area": area,
                 "hour_utc": _utc_text(hour),
-                "price_eur_per_mwh": format(mean, "f"),
+                "price_eur_per_mwh": format(mean_eur, "f"),
+                "price_dkk_per_mwh": format(mean_dkk, "f"),
                 "settlement_observed": _json_value({
                     key: value for key, value in settlement.items()
                     if key not in ("PriceArea", "HourUTC")
