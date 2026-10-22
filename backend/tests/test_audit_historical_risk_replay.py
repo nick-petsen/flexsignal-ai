@@ -1,4 +1,4 @@
-"""Synthetic contract checks for the read-only P0.9b.1 audit."""
+"""Synthetic contract checks for the read-only historical replay audit."""
 
 from __future__ import annotations
 
@@ -7,6 +7,8 @@ import json
 import sys
 from datetime import timedelta
 from pathlib import Path
+
+import pytest
 
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
@@ -24,6 +26,7 @@ def hourly_payload() -> dict:
                 "price_area": area,
                 "hour_utc": audit.hourly._utc_text(audit.hourly.alignment.START + timedelta(hours=index)),
                 "price_eur_per_mwh": "25.00",
+                "price_dkk_per_mwh": "186.25",
                 "settlement_observed": settlement,
             })
     return {
@@ -43,8 +46,32 @@ def test_complete_observed_mapping_still_blocks_forecast_replay() -> None:
         assert area["row_count"] == 168
         assert area["observed_historical_input"]["status"] == "PASS"
         assert area["current_rule_engine"]["status"] == "BLOCKED"
+        assert area["current_rule_engine"]["price_input"]["status"] == "PASS"
+        assert area["current_rule_engine"]["price_input"]["source_field"] == "price_dkk_per_mwh"
+        assert "price_dkk_per_mwh" not in area["current_rule_engine"]["unresolved_scoring_inputs"]
+        assert "production_mw" in area["current_rule_engine"]["unresolved_scoring_inputs"]
+        assert "production_mw" in " ".join(area["current_rule_engine"]["reasons"])
         assert area["forecast_issuance"]["status"] == "BLOCKED"
+        assert "price_dkk_per_mwh" in area["forecast_issuance"]["unverified_at_issuance"]
         assert "look-ahead bias" in " ".join(area["forecast_issuance"]["reasons"])
+
+
+@pytest.mark.parametrize("bad_price", [None, 100, "NaN", "Infinity", "not a price", "1e9999", "-1e-9999"])
+def test_missing_or_invalid_dkk_price_blocks_affected_area(bad_price: object) -> None:
+    payload = hourly_payload()
+    if bad_price is None:
+        payload["records"][0].pop("price_dkk_per_mwh")
+    else:
+        payload["records"][0]["price_dkk_per_mwh"] = bad_price
+    report = audit.audit_hourly_input(payload)
+    dk1, dk2 = report["areas"]
+    assert report["overall_status"] == "BLOCKED"
+    assert dk1["observed_historical_input"]["status"] == "BLOCKED"
+    assert dk1["current_rule_engine"]["price_input"]["status"] == "BLOCKED"
+    assert "price_dkk_per_mwh" in dk1["current_rule_engine"]["unresolved_scoring_inputs"]
+    assert "price_dkk_per_mwh" in " ".join(dk1["observed_historical_input"]["reasons"])
+    assert dk2["observed_historical_input"]["status"] == "PASS"
+    assert dk2["current_rule_engine"]["price_input"]["status"] == "PASS"
 
 
 def test_missing_null_and_invalid_required_fields_block_only_affected_area() -> None:
@@ -98,6 +125,7 @@ def test_current_engine_contract_drift_is_reported(monkeypatch) -> None:
         "scoring fields changed" in reason
         for reason in report["areas"][0]["current_rule_engine"]["reasons"]
     )
+    assert report["areas"][0]["current_rule_engine"]["price_input"]["status"] == "BLOCKED"
     assert report["areas"][0]["observed_historical_input"]["status"] == "PASS"
 
 
