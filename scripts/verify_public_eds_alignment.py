@@ -9,6 +9,7 @@ import json
 import sys
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from pathlib import Path
 
 
@@ -29,6 +30,19 @@ ARCHIVES = (
 )
 
 
+def _reject_constant(value: str) -> None:
+    raise ValueError(f"nonstandard JSON constant: {value}")
+
+
+def _unique_object(pairs: list[tuple[str, object]]) -> dict:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def _utc(value: object, field: str) -> datetime:
     if not isinstance(value, str) or "T" not in value:
         raise ValueError(f"invalid {field}")
@@ -42,7 +56,7 @@ def _utc(value: object, field: str) -> datetime:
 def _read_archive(
     root: Path, archive_id: str, dataset: str, area: str, field: str, minutes: int,
     start: datetime, end: datetime,
-) -> tuple[Counter[datetime], list[str]]:
+) -> tuple[Counter[datetime], list[str], list[object]]:
     errors: list[str] = []
     directory = root / archive_id
     manifest_path = directory / "MANIFEST.json"
@@ -50,15 +64,21 @@ def _read_archive(
     try:
         if directory.is_symlink() or manifest_path.is_symlink() or input_path.is_symlink():
             raise ValueError("archive paths must not be symlinks")
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = json.loads(
+            manifest_path.read_text(encoding="utf-8"),
+            parse_constant=_reject_constant, object_pairs_hook=_unique_object,
+        )
         raw = input_path.read_bytes()
-        payload = json.loads(raw.decode("utf-8"))
+        payload = json.loads(
+            raw.decode("utf-8"), parse_float=Decimal,
+            parse_constant=_reject_constant, object_pairs_hook=_unique_object,
+        )
     except FileNotFoundError:
-        return Counter(), ["missing MANIFEST.json or INPUT.json"]
+        return Counter(), ["missing MANIFEST.json or INPUT.json"], []
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
-        return Counter(), [f"cannot read valid archive: {type(exc).__name__}"]
+        return Counter(), [f"cannot read valid archive: {type(exc).__name__}"], []
     if not isinstance(manifest, dict) or not isinstance(payload, dict):
-        return Counter(), ["manifest and input must be JSON objects"]
+        return Counter(), ["manifest and input must be JSON objects"], []
     if manifest.get("input_file") != "INPUT.json":
         errors.append("manifest input_file mismatch")
     if manifest.get("input_sha256") != hashlib.sha256(raw).hexdigest():
@@ -71,8 +91,8 @@ def _read_archive(
         errors.append("manifest PriceArea mismatch")
     records = payload.get("records")
     if not isinstance(records, list):
-        return Counter(), errors + ["input records must be a list"]
-    if manifest.get("record_count") != len(records):
+        return Counter(), errors + ["input records must be a list"], []
+    if type(manifest.get("record_count")) is not int or manifest["record_count"] != len(records):
         errors.append("manifest record_count mismatch")
 
     timestamps: Counter[datetime] = Counter()
@@ -106,13 +126,21 @@ def _read_archive(
         errors.append(f"{out_of_range} out-of-range timestamps")
     if misaligned:
         errors.append(f"{misaligned} misaligned timestamps")
-    return timestamps, errors
+    return timestamps, errors, records
 
 
 def verify(
     root: Path = ARCHIVE_ROOT, start: datetime = START, end: datetime = END,
 ) -> list[tuple[str, int, list[str]]]:
     """Return one deterministic result per archive, using an exclusive UTC end."""
+    results, _ = verify_with_records(root, start, end)
+    return results
+
+
+def verify_with_records(
+    root: Path = ARCHIVE_ROOT, start: datetime = START, end: datetime = END,
+) -> tuple[list[tuple[str, int, list[str]]], dict[tuple[str, str], list[object]]]:
+    """Verify once and return the same parsed archive records to offline callers."""
     if (
         start.tzinfo != timezone.utc or end.tzinfo != timezone.utc
         or end <= start or (end - start) % timedelta(hours=1)
@@ -120,9 +148,11 @@ def verify(
         raise ValueError("start and end must delimit whole UTC hours")
     results = []
     by_area: dict[str, dict[str, Counter[datetime]]] = {}
+    records_by_source: dict[tuple[str, str], list[object]] = {}
     for archive_id, dataset, area, field, minutes in ARCHIVES:
-        timestamps, errors = _read_archive(root, archive_id, dataset, area, field, minutes, start, end)
+        timestamps, errors, records = _read_archive(root, archive_id, dataset, area, field, minutes, start, end)
         by_area.setdefault(area, {})[field] = timestamps
+        records_by_source[dataset, area] = records
         results.append((archive_id, sum(timestamps.values()), errors))
     for area in ("DK1", "DK2"):
         prices = by_area[area]["TimeUTC"]
@@ -140,7 +170,7 @@ def verify(
             noun = "record" if mismatched == 1 else "records"
             verb = "lacks" if mismatched == 1 else "lack"
             results[index][2].append(f"{mismatched} hourly {noun} {verb} exactly four price quarter-hours")
-    return results
+    return results, records_by_source
 
 
 def main(argv: list[str] | None = None) -> int:
