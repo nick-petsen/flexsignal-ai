@@ -88,6 +88,9 @@ windows or joined hours remain the same.
 
 ## Required follow-up
 
+For future manually obtained public EDS responses, use the local archive
+workflow in [PUBLIC_EDS_INPUT_ARCHIVE.md](PUBLIC_EDS_INPUT_ARCHIVE.md).
+
 First, locate the original read-only EDS response archive, if one exists,
 including raw `TimeUTC`/`HourUTC` strings and values for DK1/DK2 prices and
 settlement, its request metadata and ordering, the resolved end timestamp,

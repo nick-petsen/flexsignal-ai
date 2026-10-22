@@ -16,6 +16,8 @@ frontend/.turbo/
 
 # Local customer pilot artifacts
 artifacts/customer-pilots/
+# Local raw public EDS input archives
+artifacts/public-eds-inputs/
 customer-data/
 pilot-data/
 *.customer.csv
