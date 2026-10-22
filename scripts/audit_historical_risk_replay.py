@@ -8,6 +8,7 @@ import json
 import sys
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
+from math import isfinite
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1] / "backend"
@@ -74,6 +75,17 @@ def _finite_number(value: object) -> bool:
         return False
 
 
+def _valid_dkk_price(value: object) -> bool:
+    """Require the builder's text type and a finite rule-engine numeric value."""
+    if not isinstance(value, str) or not _finite_number(value):
+        return False
+    try:
+        numeric = float(value)
+        return isfinite(numeric) and (numeric != 0 or Decimal(value) == 0)
+    except (OverflowError, ValueError):
+        return False
+
+
 def _coverage(rows: list[dict], field: str) -> dict[str, int]:
     settlements = [row.get("settlement_observed") for row in rows]
     return {
@@ -121,6 +133,12 @@ def _area_report(area: str, rows: list[dict], structural_errors: list[str]) -> d
     )
     if bad_prices:
         reasons.append(f"price_eur_per_mwh is absent or invalid in {bad_prices} rows")
+    bad_dkk_prices = sum(not _valid_dkk_price(row.get("price_dkk_per_mwh")) for row in rows)
+    if bad_dkk_prices:
+        reasons.append(
+            f"price_dkk_per_mwh is absent, invalid, or outside the rule-engine numeric range "
+            f"in {bad_dkk_prices} rows"
+        )
 
     coverage = {field: _coverage(rows, field) for field in SOURCE_FIELDS}
     bad_settlements = sum(
@@ -186,8 +204,19 @@ def _area_report(area: str, rows: list[dict], structural_errors: list[str]) -> d
         )
 
     historical_status = "PASS" if not reasons else "BLOCKED"
+    price_contract_ok = "price_dkk_per_mwh" in rule_engine.NUMERIC_FIELDS
+    price_reasons = []
+    if bad_dkk_prices:
+        price_reasons.append(f"price_dkk_per_mwh is absent or invalid in {bad_dkk_prices} rows")
+    if not price_contract_ok:
+        price_reasons.append("rule-engine-v0 no longer accepts price_dkk_per_mwh as a numeric field")
+    if not price_reasons:
+        price_reasons.append(
+            "P0.9a provides the native observed DKK/MWh hourly mean of four "
+            "day-ahead quarters; all values satisfy the rule-engine-v0 numeric price contract"
+        )
     current_reasons = [
-        "rule-engine-v0 price scoring uses price_dkk_per_mwh; P0.9a has only price_eur_per_mwh and no issuance-time FX rate",
+        *(price_reasons if bad_dkk_prices or not price_contract_ok else []),
         "rule-engine-v0 renewable share divides onshore wind, offshore wind, and solar MW by production_mw; P0.9a has no direct validated production MW denominator",
         "wind_onshore_mw, wind_offshore_mw, and solar_mw have only observed hourly MWh components, not issuance-time forecasts",
     ]
@@ -204,14 +233,22 @@ def _area_report(area: str, rows: list[dict], structural_errors: list[str]) -> d
         "observed_historical_input": {
             "status": historical_status,
             "reasons": reasons or [
-                "EUR/MWh price and complete observed settlement fields map "
-                "to the historical public engine"
+                "EUR/MWh price and complete observed settlement fields map to the "
+                "historical public engine; native observed DKK/MWh price is present"
             ],
         },
         "current_rule_engine": {
             "status": "BLOCKED",
             "contract_required_inputs": ["price_area", "timestamp_utc"],
-            "unresolved_scoring_inputs": list(CURRENT_SCORING_FIELDS),
+            "price_input": {
+                "status": "BLOCKED" if bad_dkk_prices or not price_contract_ok else "PASS",
+                "source_field": "price_dkk_per_mwh",
+                "reasons": price_reasons,
+            },
+            "unresolved_scoring_inputs": (
+                list(CURRENT_SCORING_FIELDS) if bad_dkk_prices or not price_contract_ok
+                else list(CURRENT_SCORING_FIELDS[1:])
+            ),
             "reasons": current_reasons,
         },
         "forecast_issuance": {
@@ -221,7 +258,7 @@ def _area_report(area: str, rows: list[dict], structural_errors: list[str]) -> d
                 "settlement_observed.GrossConsumptionMWh",
                 "settlement_observed.wind/solar/hydro generation",
             ],
-            "unverified_at_issuance": ["price_eur_per_mwh"],
+            "unverified_at_issuance": ["price_eur_per_mwh", "price_dkk_per_mwh"],
         },
         "status": "BLOCKED",
     }

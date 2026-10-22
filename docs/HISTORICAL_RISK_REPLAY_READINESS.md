@@ -1,4 +1,4 @@
-# Historical risk replay readiness (P0.9b.1)
+# Historical risk replay readiness (P0.9b.4)
 
 Run the read-only audit against the same four local archives as P0.9a:
 
@@ -26,9 +26,9 @@ separately in each area's 168 settlement rows.
 | --- | --- | --- |
 | Historical public engine: area and UTC hour | `price_area`, `hour_utc` | Direct, after frozen period and unique-hour checks. |
 | Historical public engine: EUR/MWh price | `price_eur_per_mwh` | Direct hourly mean of four observed day-ahead quarters. |
+| Current `rule-engine-v0`: DKK/MWh price | `price_dkk_per_mwh` | Native hourly mean of four observed `DayAheadPriceDKK` quarters, with no FX conversion. The audit requires a finite decimal string representable by the rule engine's numeric price input. Observed price mapping passes for both areas. Issuance-time vintage remains unproven. |
 | Historical public engine: gross consumption | `settlement_observed.GrossConsumptionMWh` | Direct; must be present, numeric, finite, and positive. |
 | Historical public engine: renewable generation | Wind and solar component fields plus one hydro/other-renewable field in `settlement_observed` | Existing `normalize_production_consumption_record` sums these fields. The audit requires every wind and solar component and at least one hydro/other-renewable alternative, avoiding an unmarked partial sum. Values must be finite and nonnegative. |
-| Current `rule-engine-v0`: DKK/MWh price | No matching P0.9a field | `price_eur_per_mwh` is EUR/MWh. No issuance-time exchange-rate input is archived. A rename would change the meaning of the thresholds. |
 | Current `rule-engine-v0`: production MW | No direct validated P0.9a total | Settlement has hourly MWh components; the historical normalizer can derive a different `production_total_mwh`, but that is neither a verified current-engine denominator nor an issuance-time forecast. |
 | Current `rule-engine-v0`: onshore wind, offshore wind, solar MW | Corresponding hourly MWh settlement components | An hourly energy total could represent average MW for that hour, but these values are observed after the hour, so they cannot be used as forecast inputs without a separately archived issuance-time forecast. |
 | Current `rule-engine-v0`: consumption and net exchange MW | Gross consumption and exchange MWh settlement fields | Context only in v0 scoring; observed and unavailable as issuance-time forecasts. Exchange sign conventions remain unvalidated. |
@@ -41,9 +41,11 @@ closed. The validator technically permits omitted numerical
 fields and then returns a low-information score with missing-data reason codes.
 The audit treats DKK price and production/renewables as **required for a
 meaningful compatibility claim**, so it fails closed instead of calling the
-engine with missing values. The historical public engine is a separate scoring
-implementation with EUR/MWh price and gross-consumption-based renewable share;
-this audit checks its input mapping only.
+engine with missing values. The `price_input` finding checks the observed DKK
+field independently; it does not establish when that price was published.
+The historical public engine is a separate scoring implementation with EUR/MWh
+price and gross-consumption-based renewable share; this audit checks its input
+mapping only.
 
 In `rule-engine-v0`, `production_mw` is the denominator for the sum of
 `wind_onshore_mw`, `wind_offshore_mw`, and `solar_mw`. The historical public
@@ -56,9 +58,10 @@ Those denominators have different meanings. The audit does not infer
 The local frozen April 2026 archives yield 168 rows each for DK1 and DK2.
 Both areas pass **observed historical input** mapping, with no absent or null
 required gross-consumption or wind/solar fields and a present hydro field.
-Both are **BLOCKED** for current `rule-engine-v0` compatibility because its
-DKK/MWh price and production MW denominator cannot be mapped safely. Both are
-**BLOCKED** for forecast issuance because issuance-time inputs and vintages
+The native observed DKK/MWh price passes the current rule engine's price input
+check in both areas. Both remain **BLOCKED** for current `rule-engine-v0`
+compatibility because the production MW denominator has not been validated.
+Both are **BLOCKED** for forecast issuance because issuance-time inputs and vintages
 are unproven. Overall readiness is **BLOCKED**. The complete JSON report stays
 local and is not committed.
 
@@ -75,8 +78,9 @@ revision timestamps, or the exact forecast inputs visible at issuance.
 
 An `observed_historical_input=PASS` means only that the frozen rows can be
 mapped to the older historical public engine's input fields without filling
-required values. It is **not** a forecast replay pass, a risk score, a risk
-window result, or an accuracy claim. Overall readiness remains `BLOCKED` while
-current-engine units and issuance-time provenance are unresolved. The April
+required values, with a valid native DKK price also present. It is **not** a
+forecast replay pass, a risk score, a risk window result, or an accuracy claim.
+Overall readiness remains `BLOCKED` while
+production semantics and issuance-time provenance are unresolved. The April
 2026 archive period also cannot verify the old 129/72 window counts from a
 different input period whose original records have not been found locally.
