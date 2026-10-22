@@ -65,3 +65,6 @@ never force-add raw
 datasets or customer information. The committed public snapshot at
 `frontend/src/data/public-surplus-risk-backtest-snapshot.json` is a different,
 derived artifact and is not modified by this workflow.
+
+For the fixed four-archive April 2026 input set, see
+[Frozen hourly EDS backtest input](HOURLY_EDS_BACKTEST_INPUT.md).
