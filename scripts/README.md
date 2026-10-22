@@ -1,5 +1,26 @@
 # Data Source Validation Scripts
 
+## Offline Public EDS Archive Alignment
+
+Run the local, read-only verifier after placing the four April 1–8, 2026 UTC
+DK1/DK2 `DayAheadPrices` and `ProductionConsumptionSettlement` archives under
+`artifacts/public-eds-inputs/` with their exact archive IDs:
+
+```bash
+python3 scripts/verify_public_eds_alignment.py
+```
+
+If the archives are in another local checkout, pass its
+`artifacts/public-eds-inputs` directory with `--archive-root`.
+
+It checks each `INPUT.json` against its `MANIFEST.json` SHA-256 and byte length,
+dataset and area, the complete 15-minute or hourly UTC grid, and four price
+quarter-hours per production/consumption hour. Each archive and the overall
+result print `PASS` or `FAIL`; failure returns exit status 1. The interval is
+`[2026-04-01T00:00:00Z, 2026-04-08T00:00:00Z)`. Timestamps without offsets are
+interpreted as UTC. This checks local file integrity and time alignment; it
+does not independently establish API provenance or calculate prices or risk.
+
 `validate_data_sources.py` is for manual validation of candidate public data source APIs before ingestion code is implemented.
 
 The script performs one read-only HTTP `GET` request per run. It does not store data, write to the database, create ingestion jobs, or modify application behavior.
