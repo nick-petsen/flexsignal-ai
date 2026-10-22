@@ -1,5 +1,13 @@
 # Data Source Validation Scripts
 
+## Historical Negative-Price Baseline
+
+`historical_negative_price_baseline.py` produces deterministic, offline JSON
+from the two frozen DK1/DK2 `DayAheadPrices` archives at their original
+15-minute resolution. See
+[Historical negative-price baseline](../docs/HISTORICAL_NEGATIVE_PRICE_BASELINE.md)
+for the command, output fields, validation rules, and limitations.
+
 ## Offline Public EDS Archive Alignment
 
 Run the local, read-only verifier after placing the four April 1–8, 2026 UTC
