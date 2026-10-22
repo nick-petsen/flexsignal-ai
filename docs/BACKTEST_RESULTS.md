@@ -62,6 +62,11 @@ operational data.
 
 ## Public Surplus-Risk Backtest Snapshot v1
 
+**Historical impact verification: NOT VERIFIED.** The original hourly EDS
+inputs and resolved end timestamp for the figures below are unavailable in
+this workspace, so their validity after the timestamp normalization correction
+is unknown. See [Historical Backtest Impact Verification v0](BACKTEST_IMPACT_VERIFICATION.md).
+
 Snapshot v1 documents the first observed public DK1/DK2 surplus-risk
 proof-of-work result in a compact, shareable format. The system identified
 historical public DK1/DK2 surplus-risk windows using market price,
