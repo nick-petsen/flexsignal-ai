@@ -86,14 +86,16 @@ def group_negative_windows(observations: list[tuple[datetime, Decimal]]) -> list
     return windows
 
 
-def build_baseline(archive_root: Path) -> dict:
-    """Verify frozen price archives and return a deterministic retrospective summary."""
+def load_verified_prices(
+    archive_root: Path,
+) -> tuple[list[str], dict[str, list[tuple[datetime, Decimal]]]]:
+    """Return native DKK prices only after both frozen archives pass validation."""
     results, records_by_area = alignment.verify_price_records(archive_root)
     failures = [f"{archive_id}: {'; '.join(errors)}" for archive_id, _, errors in results if errors]
     if failures:
         raise PriceBaselineError("archive verification failed: " + " | ".join(failures))
 
-    areas = []
+    observations_by_area = {}
     for area in ("DK1", "DK2"):
         observations = []
         for record in records_by_area[area]:
@@ -101,6 +103,16 @@ def build_baseline(archive_root: Path) -> dict:
             stamp = alignment._utc(record["TimeUTC"], "TimeUTC")
             observations.append((stamp, _price(record.get("DayAheadPriceDKK"), area, stamp)))
         observations.sort(key=lambda item: item[0])
+        observations_by_area[area] = observations
+    return [archive_id for archive_id, _, _ in results], observations_by_area
+
+
+def build_baseline(archive_root: Path) -> dict:
+    """Verify frozen price archives and return a deterministic retrospective summary."""
+    archive_ids, observations_by_area = load_verified_prices(archive_root)
+    areas = []
+    for area in ("DK1", "DK2"):
+        observations = observations_by_area[area]
         windows = group_negative_windows(observations)
         prices = [price for _, price in observations]
         negative_prices = [price for price in prices if price < 0]
@@ -133,7 +145,7 @@ def build_baseline(archive_root: Path) -> dict:
             "window_rule": "consecutive negative 15-minute intervals within one price area",
             "timestamps": "UTC start-inclusive/end-exclusive",
             "mean_rounding": "six decimal places, half even",
-            "input_archive_ids": [archive_id for archive_id, _, _ in results],
+            "input_archive_ids": archive_ids,
         },
         "areas": areas,
     }

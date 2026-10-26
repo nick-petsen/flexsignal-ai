@@ -1,5 +1,12 @@
 # Data Source Validation Scripts
 
+## Manual Flexibility Price Scenario
+
+`manual_flexibility_price_scenario.py` compares two caller-selected historical
+DKK price quarters in the frozen archives. See
+[Manual flexibility price scenario](../docs/MANUAL_FLEXIBILITY_PRICE_SCENARIO.md)
+for the command, output and limitations.
+
 ## Historical Negative-Price Baseline
 
 `historical_negative_price_baseline.py` produces deterministic, offline JSON
